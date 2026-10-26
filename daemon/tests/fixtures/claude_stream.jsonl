@@ -1,0 +1,6 @@
+{"type": "system", "subtype": "hook_started", "hook_id": "h1", "hook_name": "SessionStart", "hook_event": "SessionStart", "session_id": "00000000-0000-4000-8000-000000000001"}
+{"type": "system", "subtype": "hook_response", "hook_id": "h1", "hook_name": "SessionStart", "hook_event": "SessionStart", "output": "", "stdout": "", "stderr": "", "exit_code": 0}
+{"type": "system", "subtype": "init", "cwd": "/tmp/goop-run", "session_id": "00000000-0000-4000-8000-000000000001", "tools": [], "mcp_servers": [], "model": "example-model", "permissionMode": "default"}
+{"type": "assistant", "message": {"role": "assistant", "content": [{"type": "text", "text": "Hi there, friend!"}]}, "parent_tool_use_id": null, "session_id": "00000000-0000-4000-8000-000000000001"}
+{"type": "rate_limit_event", "rate_limit_info": {"status": "allowed"}, "session_id": "00000000-0000-4000-8000-000000000001"}
+{"type": "result", "subtype": "success", "is_error": false, "result": "Hi there, friend!", "session_id": "00000000-0000-4000-8000-000000000001", "duration_ms": 1200, "total_cost_usd": 0.001, "permission_denials": [], "terminal_reason": "completed"}

@@ -1,0 +1,18 @@
+#!/usr/bin/env bash
+# Talk to the running goop (test hooks and controls). Works for the Omarchy plugin and a standalone instance.
+#
+#   goopctl list                      addresses of windows that have a goop
+#   goopctl say <addr> "question"     ask that goop something
+#   goopctl speak <addr> "text"       say text aloud
+#   goopctl mood <mood> <ms>          idle|startled|thinking|happy|error on every goop
+#   goopctl mute true|false           mute the voice
+#   goopctl hush                      stop talking
+#   goopctl reload                    re-read plugin code after editing it
+set -euo pipefail
+here="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+if [ "${1:-}" = reload ]; then exec omarchy-shell shell rescanPlugins; fi
+# the plugin runs inside omarchy-shell; a standalone dev instance is addressed by its path
+if omarchy-shell shell ping >/dev/null 2>&1 && omarchy-shell goop list >/dev/null 2>&1; then
+  exec omarchy-shell goop "$@"
+fi
+exec quickshell ipc -p "$here/shell" call goop "$@"
