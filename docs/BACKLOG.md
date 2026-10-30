@@ -13,7 +13,7 @@ Tracks: **L** launch · **V** visual · **A** agent · **P** other apps · **T**
 
 | ID | Decision | Recommendation |
 |---|---|---|
-| L1 | Official name and permanent plugin id | Product name **Goop**; repo `omarchy-goop`; id `io.github.magonox.goop`. See `docs/PUBLISHING.md`: ids are permanent. |
+| L1 | ~~Official name and permanent plugin id~~ | **Decided 2026-10-30: Goop** (owner's pick), repo `omarchy-goop`, id `io.github.magonox.goop`. Fallbacks if it gets taken: Goopy, then Goopi. Checked against the registry that day (6,112 sources, 99 retired ids): none of goop/goopy/goopi/gloop exist. Re-check right before submitting; ids are permanent. |
 | L2 | License | MIT (matches the Omarchy ecosystem). A license file is required by the marketplace. |
 
 ## Now
@@ -24,7 +24,7 @@ Tracks: **L** launch · **V** visual · **A** agent · **P** other apps · **T**
 | L4 | Marketplace-ready README: install, **removal**, external dependencies | todo | Required by the submission guide. Mostly written. |
 | L5 | `preview.png` in the repo root | todo | Optional but it is the card image. Needs a good screenshot (see M1). |
 | L6 | Self-check against the security baseline | todo | `setup.sh` is an installer (pip, model download) so it will be flagged `review-required`, not rejected. Keep: no `curl | sh`, no unpinned remote code. |
-| V1 | Gooey outline: edges that wobble like liquid instead of a plain circle | todo | Plan: `QtQuick.Shapes` closed curve through ~8 points whose radii oscillate with different phases per goop. |
+| V1 | Gooey outline: edges that wobble like liquid instead of a plain circle | doing | First pass in (2026-10-30): `shell/goo.js` + `GooBody.qml`, jelly squash-and-stretch breathing, livelier when speaking/thinking/startled, the peel blobs use the same shape. CPU unchanged (5-6% of a core for the whole shell). **Waiting on owner feedback**: more or less wobble? Knobs: amplitudes in `goo.js` (`a2/a3/a4/ab`, sag), breathing 0.05 in `Goop.qml`. |
 | V2 | Drips: a small drop forms at the bottom, falls a few pixels, fades | todo | Random interval per goop; calmer while speaking. |
 
 ## Next

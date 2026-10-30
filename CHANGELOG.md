@@ -6,6 +6,8 @@ Work is planned in [`docs/BACKLOG.md`](docs/BACKLOG.md).
 ## [Unreleased]
 
 ### Added
+- V1 (first pass): liquid goop bodies. A smooth closed curve whose rim moves with slow waves and a travelling slosh bump, a heavier bottom,
+  jelly squash-and-stretch breathing, and livelier motion while speaking, thinking or startled. The peel blobs use the same shape.
 - Tracking: `docs/BACKLOG.md`, this changelog, `docs/PUBLISHING.md` (marketplace research).
 
 ## [0.1.0] - 2026-10-30 (first working version, not yet published)

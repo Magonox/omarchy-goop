@@ -2,6 +2,7 @@ import QtQuick
 import Quickshell
 import Quickshell.Io
 import Quickshell.Wayland
+import "goo.js" as Goo
 
 // Goop: lives on windows. The first active window gets one; drag any goop onto another window to peel off a copy.
 Scope {
@@ -44,6 +45,12 @@ PanelWindow {
     property string dragColor: "#e5484d"    // color/seed the blob keeps when it lands
     property int dragSeed: 0
     property real popScale: 1
+    property real gooT: 0                   // seconds; drives the liquid wobble of every goop
+    readonly property real gooT0: Date.now()
+    function computeAnyVisible() { for (var i = 0; i < spots.length; i++) if (spots[i].vis) return true; return false; }
+    readonly property bool anyVisible: computeAnyVisible()
+    // 30 fps is plenty for a slow wobble, and it only runs while a goop is on screen
+    Timer { interval: 33; repeat: true; running: win.anyVisible || win.dragging; onTriggered: win.gooT = (Date.now() - win.gooT0) / 1000 }
     property bool ttsReady: false
     property bool muted: false
     property string speakingAddr: ""        // the goop whose mouth is moving
@@ -344,6 +351,11 @@ PanelWindow {
             property string sessionId: ""       // resume token, so follow-ups keep context
             property bool busy: false
             property var offer: null            // quick replies shown under the bubble, or null
+            // how agitated this goop is: speaking, thinking and surprise make the liquid wobble more
+            readonly property real energy: Math.max(win.speakingAddr === modelData ? 0.45 + win.levelS * 0.9 : 0,
+                ({ thinking: 0.55, startled: 0.9, happy: 0.4, error: 0.3 })[win.moodOf(modelData)] || 0)
+            property real energyS: energy
+            Behavior on energyS { NumberAnimation { duration: 300 } }
             readonly property var chipGeo: chips.visible ? ({ x: gp.x + chips.x, y: gp.y + chips.y, w: chips.width, h: chips.height }) : null
             onChipGeoChanged: win.setChipRect(modelData, chipGeo)
             Component.onDestruction: win.setChipRect(modelData, null)
@@ -440,11 +452,15 @@ PanelWindow {
             // --- body ---
             Item {
                 anchors.fill: parent
-                scale: 1 + 0.035 * Math.sin(gp.phase)                                   // breathing
-                Rectangle {
-                    width: parent.width * (1 + gp.squish); height: parent.height * (1 - gp.squish)
-                    x: (parent.width - width) / 2; y: (parent.height - height) / 2
-                    radius: Math.min(width, height) / 2
+                // breathing as jelly: wider-and-shorter then taller-and-narrower, so the volume stays about the same
+                transform: Scale {
+                    origin.x: win.r; origin.y: win.r
+                    xScale: 1 + 0.05 * Math.sin(gp.phase)
+                    yScale: 1 - 0.05 * Math.sin(gp.phase) + 0.015 * Math.sin(gp.phase * 2)
+                }
+                GooBody {
+                    anchors.centerIn: parent
+                    r: win.r; seed: gp.seed; squish: gp.squish; energy: gp.energyS; t: win.gooT
                     color: win.colorOf(modelData)
                 }
                 Eyes {
@@ -594,10 +610,12 @@ PanelWindow {
             }
             if (win.srcVisible) {
                 c.fillStyle = srcCol;
-                c.beginPath(); c.arc(sx, sy, rs, 0, Math.PI * 2); c.fill();
+                Goo.draw(c, Goo.points(sx, sy, rs, win.gooT, win.seedOf(win.srcAddr), 0, 0.3));
+                c.fill();
             }
             c.fillStyle = win.dragColor;
-            c.beginPath(); c.arc(x, y, R, 0, Math.PI * 2); c.fill();
+            Goo.draw(c, Goo.points(x, y, R, win.gooT + 1.7, win.dragSeed, 0, 0.9));   // the pulled blob is more agitated
+            c.fill();
         }
     }
     Connections {
@@ -609,6 +627,7 @@ PanelWindow {
         function onSettlingChanged() { goo.requestPaint() }
         function onSpotsChanged() { if (win.dragging || win.settling) goo.requestPaint() }
         function onSrcVisibleChanged() { goo.requestPaint() }
+        function onGooTChanged() { if (win.dragging || win.settling) goo.requestPaint() }
     }
     // eyes of the two blobs while peeling: the source glances at the blob, the blob looks where it is heading
     Eyes {
