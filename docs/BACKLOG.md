@@ -68,11 +68,17 @@ of the screen: the model is built up, exploded into components and the flow foll
 | ID | Item | Status | Notes |
 |---|---|---|---|
 | E1 | ~~Feasibility spike~~ | **done 2026-10-30** | Works. Qt Quick 3D in its own process: 11-24% of a core, about 260 MB while playing; the pure-JS canvas version needed 67-87%. It must run **outside** the shell (an in-shell test aborted the Omarchy shell). Details in the design doc. Try it: `bin/goopctl explain3d dam` (needs `qt6-quick3d`). |
-| E2 | Storyboard **JSON** format and interpreter (reveal/explode/highlight/flow/rotate/label/camera), narration sync with Piper | todo | Today the dam is hand-written JS (`shell/explainer3d/dam3d.js`); the data format comes next. Cutting that JS down to a parts library + a JSON storyboard is the real E2. |
-| E7 | Launch from goop: "Explain visually" in the ask box/bubble starts the explainer process with a storyboard path, goop narrates, a key or click dismisses | todo | The shell only spawns the separate process (see E1). Fall back to voice-only when `qt6-quick3d` is missing (the setup checklist already reports it). |
+| E2 | **Vocabulary proof**: storyboard JSON schema, parametric parts library, layout templates (axis, stack, radial, network, scene, assembly), camera director, animation verbs; proven with **three hand-written lessons in unrelated styles** (jet engine, Wi-Fi in a room, spacecraft) before any model is involved | todo | Next. Generalises `shell/explainer3d/dam3d.js` (the dam becomes lesson #4). Nothing subject-specific may stay in code. |
+| E3 | **Planner** `daemon/explain.py`: source (screenshot/page text) + schema + examples -> validated storyboard via the existing providers, with a repair loop; fixtures and tests | todo | The model never writes coordinates or code. Uses the strongest configured model. |
+| E4 | Playback: the renderer reads a storyboard file; Piper narration per step; steps end with their audio | todo | |
+| E7 | Offer + launch from goop ("Want me to show you in 3D?" as quick replies; setting Never/Offer/Auto): "Explain visually" in the ask box/bubble starts the explainer process with a storyboard path, goop narrates, a key or click dismisses | todo | The shell only spawns the separate process (see E1). Fall back to voice-only when `qt6-quick3d` is missing (the setup checklist already reports it). |
 | E8 | Soft edges so close-ups never show a window boundary | todo | `MultiEffect` mask and built-in vignette both failed (see design doc); the ground-sinks trick covers the dam. Other ideas: shader fade, smaller frame. |
 | E3 | Planner: article/screen -> plan -> storyboard with validation, a layout engine (semantics, not coordinates) and a repair loop | todo | LLMs are weak at 3D placement, so they never write coordinates. Uses the existing agent providers. |
 | E4 | Experience: "Explain visually" trigger, pause/skip/close/replay, captions, saved explainers in `~/.local/share/goop/explainers/` | todo | |
+| E9 | **Teacher mode**: after the lesson the model stays on screen, paused; the user asks, goop answers by voice and drives the model (highlight, zoom, explode, label) over a control channel (JSON lines on the renderer's stdin); a check question at the end | todo | The point of the feature: understanding, then more questions. |
+| E10 | Page text for grounding (browser adapter, see P1) | todo | Screenshot-only sees just the visible slice of an article. |
+| E11 | Vision critic: render a frame, have a vision model review framing, overlaps and labels, repair | later | |
+| E12 | Streaming: start playing as soon as the first steps are planned | later | Hides the planner's latency. |
 | E5 | Parametric parts library, glTF models, vision critique of rendered frames | later | Blender only to author curated assets, never at runtime. |
 | E6 | Flat animated-diagram fallback (Qt Quick Shapes) when Quick 3D is not installed | later | Plus a doctor/wizard hint with the pacman command. |
 

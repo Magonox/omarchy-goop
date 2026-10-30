@@ -120,3 +120,63 @@ sinks away during close-ups so nothing runs into the frame border.
 (`hyprctl dispatch 'hl.dsp.focus({ workspace = "9" })'`, then back), with `QS_DISABLE_CRASH_HANDLER=1` to suppress the crash dialog.
 
 **Still open:** a JSON storyboard format instead of hand-written JS (E2), narration, the planner (E3), and the soft-edge question.
+
+
+## Making it dynamic (owner direction, 2026-10-30)
+
+Goal: any topic the user is reading (airplane turbines, how a Wi-Fi system works, how a spaceship works...). Goop reads the content, decides on its
+own whether a 3D explanation would help, builds a model, and explains the parts "like a teacher does with kids", then stays available for questions.
+The dam is only the first golden example; nothing about a specific subject may live in code.
+
+### Three layers: the AI directs, code builds the set
+
+1. **Teaching plan (the model).** Reads the source (screenshot now, page text once the browser adapter exists), decides whether and what kind of 3D
+   explanation fits, and writes a lesson: the big idea, 3-10 parts with roles and relations, steps with kid-friendly narration and one analogy
+   each, and a question to check understanding. **It never writes coordinates or code.**
+2. **Scene builder (deterministic code).** A fixed visual vocabulary, layout templates and a camera director turn the plan into positions,
+   materials and shots. This is where spatial correctness lives, because models are weak at 3D placement.
+3. **Playback (renderer).** Interprets the storyboard, syncs Piper narration to each step, and keeps listening for questions.
+
+### The visual vocabulary (what the model may ask for)
+
+- **Bodies:** box, cylinder, sphere, cone/frustum, dome/dish, ring, disc, fan/blades, gear, wing (extruded profile), tank, panel, mast, node.
+- **Connections:** pipe or cable between two named parts; arrow; bracket.
+- **Media in motion:** flow (drops along a path), waves (expanding rings/arcs, for signals), heat/glow, sparks, pulses.
+- **Containers and context:** casing (translucent shell with a cutaway), room (walls), ground/terrain, sky or space backdrop.
+- **Layout templates:** `axis` (a sequence along one direction: engine, pipeline), `stack` (layers), `radial` (parts around a hub: rotor, satellite),
+  `network` (hub and nodes in a space: Wi-Fi in a room), `scene` (ground plus landmarks: dam), `assembly` (a main body with named attachment
+  points: spacecraft). **Verbs:** reveal, explode, highlight, flow, spin, pulse, zoom, label, cutaway, analogy, ask.
+
+The model picks template + parts + relations by name; the code decides everything else. Expect **schematic, labelled, animated models** (educational
+diagrams), not accurate CAD: say so, and let the narration carry the meaning.
+
+### Fit by subject (honest)
+
+| Subject | Fit | How |
+|---|---|---|
+| Mechanical (turbine, engine, dam, pump) | very good | `axis` / `scene` + flow + spin + explode |
+| Systems with signals (Wi-Fi, radio, networks) | good, abstract | `network` + waves; metaphors (walls absorb, distance weakens) |
+| Vehicles and assemblies (spaceship, aircraft) | good | `assembly` + explode, per-part highlight |
+| Biology, chemistry, software architecture | later | needs more vocabulary (membranes, molecules, boxes-and-arrows) |
+
+### Decisions and behaviour
+
+- **Whether to build one is goop's call, but never an ambush.** It *offers* ("Want me to show you in 3D?" with quick-reply buttons). A setting
+  (Never / Offer / Auto) lets the owner choose; default Offer.
+- **Questions are the point.** After the lesson the model stays on screen, paused. The user asks (click goop, later voice); goop answers by voice
+  and *drives the model*: highlight, zoom, explode, add a label. This needs a control channel from goop to the renderer process (commands as lines
+  on its stdin).
+- **Grounded in the article, honest about simplification.** The plan cites what the page said; the narration marks simplified parts.
+- **Validation before playback:** schema check, bounds (part count, step count, duration), layout collision check, camera framing, a repair loop
+  that returns errors to the model; later a vision critic that reviews a rendered frame.
+- **Latency:** the planner call takes tens of seconds. Show a "preparing" state; later start playing as soon as the first steps are ready.
+- **Cost:** one planner call per lesson (use the strongest model configured for it, not the quick-chat model) plus vision for the source. Cache by topic.
+
+### Order of work
+
+1. **Vocabulary proof (E2):** the storyboard schema, the parts library, the layout templates and the verbs, proven with **three hand-written lessons in
+   different styles** (a jet engine on `axis`, Wi-Fi in a room on `network`, a spacecraft on `assembly`) before any model is involved. If three
+   unrelated subjects work, the vocabulary is expressive enough.
+2. **Planner (E3):** `daemon/explain.py` turns source + schema + examples into a validated storyboard through the existing providers.
+3. **Playback and narration (E4)** and **launch from goop (E7)**, then **teacher mode (E9)**, **page text (E10)**, the **vision critic (E11)** and
+   **streaming (E12)**.
