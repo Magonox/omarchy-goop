@@ -215,7 +215,7 @@ Panel {
           spacing: Style.space(10)
           PanelSectionHeader { text: "3D LESSONS"; foreground: root.fg; fontFamily: root.fontFamily }
           Repeater {
-            model: [{ k: "offer", t: "Offer first" }, { k: "auto", t: "Build automatically" }, { k: "never", t: "Never" }]
+            model: [{ k: "offer", t: "On: ask me first" }, { k: "auto", t: "On: build automatically" }, { k: "never", t: "Off" }]
             Button {
               required property var modelData
               width: parent.width
@@ -237,8 +237,8 @@ Panel {
             color: root.dim
             font.family: root.fontFamily
             font.pixelSize: Style.font.caption
-            text: root.st.explainers === "auto" ? "Goop builds a narrated 3D model whenever it thinks one would help."
-                : root.st.explainers === "never" ? "Goop never builds 3D models."
+            text: root.st.explainers === "auto" ? "Goop builds a narrated 3D model whenever it thinks one would help, without asking."
+                : root.st.explainers === "never" ? "3D lessons are off. Goop only explains in words."
                 : "Goop asks first, then builds a narrated 3D model of what you are reading."
           }
         }

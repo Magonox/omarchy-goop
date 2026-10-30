@@ -27,6 +27,7 @@ def checks(provider_name="claude", provider_problem=None, which=shutil.which, ex
         tool("pdf", "Reading PDFs (pdftotext)", "pdftotext", False, "Install poppler so goops can read PDFs"),
         {"id": "quick3d", "label": "3D explainers (qt6-quick3d)", "ok": exists(QUICK3D_PLUGIN), "required": False,
          "hint": "Run: sudo pacman -S qt6-quick3d (about 10 MB)"},
+        tool("lessons", "3D lesson planner (claude CLI)", "claude", False, "3D lessons are planned with the claude CLI for now; install Claude Code to use them"),
     ]
 
 
