@@ -1,0 +1,13 @@
+#!/usr/bin/env bash
+# Play a 3D lesson in its own process (never inside the Omarchy shell).
+#   goop-explain jet_engine | wifi | spacecraft | dam | /path/to/storyboard.json
+# GOOP_SPEED=4 plays faster (testing). Needs the optional package qt6-quick3d.
+set -euo pipefail
+here="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+name="${1:?usage: goop-explain <lesson|storyboard.json>}"
+if [ ! -e /usr/lib/qt6/qml/QtQuick3D/libqquick3dplugin.so ]; then echo "3D lessons need qt6-quick3d: sudo pacman -S qt6-quick3d" >&2; exit 1; fi
+if [ "$name" = dam ]; then exec quickshell -n -p "$here/shell/explainer3d"; fi
+mkdir -p "$HOME/.cache/goop/scenes"
+scene="$HOME/.cache/goop/scenes/$(basename "${name%.json}").scene.json"
+python3 "$here/daemon/build_scene.py" "$name" -o "$scene"
+GOOP_SCENE="$scene" exec quickshell -n -p "$here/shell/explainer3d"

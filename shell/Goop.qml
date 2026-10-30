@@ -782,7 +782,7 @@ PanelWindow {
         function explain(name: string): void { explainer.play(); }
         function explainStop(): void { explainer.stop(); }
         // The 3D version runs as its own program: a failure inside Qt Quick 3D must never be able to take down the shell (it once did).
-        function explain3d(name: string): void { Quickshell.execDetached(["quickshell", "-n", "-p", root.here + "/explainer3d"]); }
+        function explain3d(name: string): void { Quickshell.execDetached([root.here + "/../bin/goop-explain", name]); }
         function reply(addr: string, text: string): void { win.injectReply(addr, text); }
         function answer(addr: string, yes: bool): void { win.offerAnswered(addr, yes); }
         function openAsk(addr: string): void { win.openAsk(addr); }

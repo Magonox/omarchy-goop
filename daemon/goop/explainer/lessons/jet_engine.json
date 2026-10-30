@@ -1,0 +1,32 @@
+{
+  "version": 1,
+  "title": "How a jet engine works",
+  "layout": {"template": "axis"},
+  "parts": [
+    {"id": "casing", "kind": "casing", "label": "Engine casing", "spans": ["fan", "nozzle"]},
+    {"id": "shaft", "kind": "shaft", "label": "Shaft", "spans": ["fan", "turbine"]},
+    {"id": "fan", "kind": "fan", "label": "Fan"},
+    {"id": "compressor", "kind": "compressor", "label": "Compressor"},
+    {"id": "chamber", "kind": "chamber", "label": "Combustor"},
+    {"id": "turbine", "kind": "turbine", "label": "Turbine"},
+    {"id": "nozzle", "kind": "nozzle", "label": "Nozzle"}
+  ],
+  "steps": [
+    {"say": "A jet engine is like a giant hair dryer that pushes an airplane forward. Let's open one up and see how it works!",
+     "do": [{"label": ["casing"]}, {"zoom": "all"}]},
+    {"say": "At the very front is the fan. It spins like a huge windmill and scoops in lots and lots of air.",
+     "do": [{"reveal": ["fan"]}, {"label": ["fan"]}, {"spin": ["fan"]}]},
+    {"say": "Next the air goes into the compressor. It squeezes the air into a smaller space, like squishing a balloon. Squeezed air gets hot and full of energy!",
+     "do": [{"reveal": ["compressor"]}, {"label": ["compressor"]}, {"spin": ["compressor"]}, {"flow": {"from": "fan", "to": "compressor", "medium": "air"}}]},
+    {"say": "In the combustor, fuel is sprayed into that squeezed air and lit, like a campfire that never goes out. The hot gas wants to push outward really fast!",
+     "do": [{"reveal": ["chamber"]}, {"label": ["chamber"]}, {"highlight": ["chamber"]}, {"flow": {"from": "compressor", "to": "chamber", "medium": "fuel"}}]},
+    {"say": "The rushing hot gas spins the turbine, which is like a second windmill. A long shaft connects it back to the fan, so the engine keeps itself going.",
+     "do": [{"reveal": ["turbine"]}, {"label": ["turbine", "shaft"]}, {"spin": ["turbine"]}, {"flow": {"from": "chamber", "to": "turbine", "medium": "exhaust"}}]},
+    {"say": "Finally the gas shoots out the back through the nozzle. Pushing gas backward pushes the plane forward, just like a balloon zooming around when you let it go!",
+     "do": [{"reveal": ["nozzle"]}, {"label": ["nozzle"]}, {"highlight": ["nozzle"]}, {"flow": {"from": "turbine", "to": "nozzle", "medium": "exhaust"}}]},
+    {"say": "Let's pull the engine apart to see the whole team in a row: fan, compressor, combustor, turbine and nozzle. Each one does a small job, and together they make a lot of push!",
+     "do": [{"explode": "all"}, {"label": ["fan", "compressor", "chamber", "turbine", "nozzle"]}, {"zoom": "all"}]}
+  ],
+  "recap": "So remember: scoop the air in, squeeze it, light it, spin the turbine, and shoot it out the back. That is how a jet engine flies a plane!",
+  "question": "What do you think would happen if the fan stopped spinning?"
+}

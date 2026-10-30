@@ -1,0 +1,29 @@
+{
+  "version": 1,
+  "title": "How Wi-Fi reaches your devices",
+  "layout": {"template": "network"},
+  "parts": [
+    {"id": "router", "kind": "router", "label": "Router"},
+    {"id": "laptop", "kind": "device", "variant": "laptop", "label": "Laptop", "distance": "near"},
+    {"id": "phone", "kind": "device", "variant": "phone", "label": "Phone", "distance": "medium"},
+    {"id": "tv", "kind": "device", "variant": "tv", "label": "Smart TV", "distance": "far"},
+    {"id": "wall1", "kind": "wall", "label": "Wall", "between": ["router", "phone"]},
+    {"id": "wall2", "kind": "wall", "label": "Thick wall", "between": ["router", "tv"]}
+  ],
+  "steps": [
+    {"say": "Wi-Fi is like an invisible whisper that your router sends through the air, so your devices can listen. Let's see how far it travels!",
+     "do": [{"reveal": ["router"]}, {"label": ["router"]}]},
+    {"say": "The router sends out radio waves in every direction, like ripples spreading out when you drop a pebble into a pond.",
+     "do": [{"pulse": "router"}, {"zoom": "all"}]},
+    {"say": "This laptop is close to the router, so the ripples reach it fast and strong. See all the signal bars? Quick and happy!",
+     "do": [{"reveal": ["laptop"]}, {"label": ["laptop"]}, {"highlight": ["laptop"]}]},
+    {"say": "Now the phone is farther away, and there is a wall in the way. Walls soak up some of the waves, like a thick blanket muffling a sound. So the signal gets weaker.",
+     "do": [{"reveal": ["wall1", "phone"]}, {"label": ["phone", "wall1"]}, {"highlight": ["wall1"]}]},
+    {"say": "The TV is the farthest, with another wall to cross. Only a tiny whisper of signal makes it all the way, so videos might stop and wait. That is called buffering!",
+     "do": [{"reveal": ["wall2", "tv"]}, {"label": ["tv"]}, {"highlight": ["tv"]}]},
+    {"say": "Here is a trick: put the router in the middle of your home and away from thick walls, and the waves reach everybody better.",
+     "do": [{"highlight": ["router"]}, {"zoom": "all"}]}
+  ],
+  "recap": "Remember: Wi-Fi is invisible ripples. The closer you are and the fewer walls in the way, the stronger your signal.",
+  "question": "Where in your house would you put the router, and why?"
+}

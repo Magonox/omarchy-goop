@@ -118,3 +118,74 @@ function skirt(x0, x1, z0, z1, nx, nz, fn, bottom) {
     quad(m, [x0, bottom, z1], [x1, bottom, z1], [x1, bottom, z0], [x0, bottom, z0], [0, -1, 0]);
     return m;
 }
+
+// ---- transforms and compound meshes, for the shape library ----
+// o: {pos: [x, y, z], rx, ry, rz (degrees, applied in that order), s: number or [sx, sy, sz]}
+function T(m, o) {
+    var s = o.s === undefined ? [1, 1, 1] : (typeof o.s === "number" ? [o.s, o.s, o.s] : o.s), d = Math.PI / 180;
+    var rx = (o.rx || 0) * d, ry = (o.ry || 0) * d, rz = (o.rz || 0) * d, pos = o.pos || [0, 0, 0], out = { p: [], n: [], i: m.i.slice() };
+    function rot(v) {
+        var x = v[0], y = v[1], z = v[2], a = y * Math.cos(rx) - z * Math.sin(rx), b = y * Math.sin(rx) + z * Math.cos(rx);
+        y = a; z = b;
+        a = x * Math.cos(ry) + z * Math.sin(ry); b = -x * Math.sin(ry) + z * Math.cos(ry);
+        x = a; z = b;
+        a = x * Math.cos(rz) - y * Math.sin(rz); b = x * Math.sin(rz) + y * Math.cos(rz);
+        return [a, b, z];
+    }
+    for (var k = 0; k < m.p.length; k += 3) {
+        var p = rot([m.p[k] * s[0], m.p[k + 1] * s[1], m.p[k + 2] * s[2]]), n = rot([m.n[k], m.n[k + 1], m.n[k + 2]]);
+        out.p.push(p[0] + pos[0], p[1] + pos[1], p[2] + pos[2]);
+        out.n.push(n[0], n[1], n[2]);
+    }
+    return out;
+}
+
+function merge(list) {
+    var out = { p: [], n: [], i: [] };
+    list.forEach(function (m) {
+        var base = out.p.length / 3;
+        out.p = out.p.concat(m.p); out.n = out.n.concat(m.n);
+        m.i.forEach(function (ix) { out.i.push(ix + base); });
+    });
+    return out;
+}
+
+// a cone or frustum on the y axis from y = oy: radius r0 at the bottom, r1 at the top, smooth sides, flat caps
+function frustum(r0, r1, h, seg, oy) {
+    oy = oy || 0;
+    var m = mesh(), slope = r0 - r1, ring = [], bot = vert(m, [0, oy, 0], [0, -1, 0]), top = vert(m, [0, oy + h, 0], [0, 1, 0]);
+    for (var i = 0; i <= seg; i++) {
+        var a = i / seg * 2 * Math.PI, c = Math.cos(a), s = Math.sin(a), n = norm([h * c, slope, h * s]);
+        ring.push({ sb: vert(m, [r0 * c, oy, r0 * s], n), st: vert(m, [r1 * c, oy + h, r1 * s], n),
+                    cb: vert(m, [r0 * c, oy, r0 * s], [0, -1, 0]), ct: vert(m, [r1 * c, oy + h, r1 * s], [0, 1, 0]) });
+    }
+    for (var j = 0; j < seg; j++) { var q = ring[j], n2 = ring[j + 1]; m.i.push(q.sb, n2.sb, n2.st, q.sb, n2.st, q.st, bot, q.cb, n2.cb, top, n2.ct, q.ct); }
+    return m;
+}
+
+// a sphere, or its upper cap when `cap` < pi (a dome): radius r around the origin
+function sphere(r, segU, segV, cap) {
+    cap = cap === undefined ? Math.PI : cap;
+    var m = mesh(), idx = [];
+    for (var j = 0; j <= segV; j++) {
+        var th = j / segV * cap, row = [];
+        for (var i = 0; i <= segU; i++) {
+            var a = i / segU * 2 * Math.PI, nx = Math.sin(th) * Math.cos(a), ny = Math.cos(th), nz = Math.sin(th) * Math.sin(a);
+            row.push(vert(m, [r * nx, r * ny, r * nz], [nx, ny, nz]));
+        }
+        idx.push(row);
+    }
+    for (var b = 0; b < segV; b++) for (var u = 0; u < segU; u++) m.i.push(idx[b][u], idx[b + 1][u], idx[b + 1][u + 1], idx[b][u], idx[b + 1][u + 1], idx[b][u + 1]);
+    return m;
+}
+
+// an open tube on the y axis (no caps), centred on y = 0
+function tube(r, h, seg) {
+    var m = mesh();
+    for (var i = 0; i < seg; i++) {
+        var a0 = i / seg * 2 * Math.PI, a1 = (i + 1) / seg * 2 * Math.PI, c0 = Math.cos(a0), s0 = Math.sin(a0), c1 = Math.cos(a1), s1 = Math.sin(a1);
+        var q = [vert(m, [r * c0, -h / 2, r * s0], [c0, 0, s0]), vert(m, [r * c1, -h / 2, r * s1], [c1, 0, s1]), vert(m, [r * c1, h / 2, r * s1], [c1, 0, s1]), vert(m, [r * c0, h / 2, r * s0], [c0, 0, s0])];
+        m.i.push(q[0], q[1], q[2], q[0], q[2], q[3]);
+    }
+    return m;
+}
