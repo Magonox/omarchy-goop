@@ -29,6 +29,25 @@ Tracks: **L** launch · **V** visual · **A** agent · **P** other apps · **T**
 | S1 | **Goop settings in the top bar** | doing | In (2026-10-30): a ghost button in the bar opens a popup (animations Full/Reduced/Off, voice toggle, agent picker, setup checklist that collapses to one line when healthy, Open config / Docs). Built on Omarchy's `Panel` + `KeyboardPanel`. Live state comes from `~/.cache/goop/status.json`. **Waiting on owner feedback** (look, contents). Ideas: speed slider, per-goop provider (A2), show recent audit entries, a Test voice button. |
 | V6 | `animations: auto`: drop to reduced on battery or high load | todo | Idea from the performance work; needs a reliable power signal. |
 
+## First-run experience (owner request 2026-10-30: "think as the user would")
+
+Today a new user gets a README, an optional `setup.sh`, and a bare error bubble if something is missing. Every choice lives in a config
+file. Goal: install, see goop, and be talking to it within two minutes, with nothing hidden.
+
+| ID | Item | Status | Notes |
+|---|---|---|---|
+| S2 | **Setup wizard**: runs by itself on first start, re-runnable from the settings panel ("Run setup again") | decision | Steps: 1 What goop can do + privacy, 2 Checks (doctor), 3 Agent, 4 Voice, 5 Access level, 6 Animations, 7 Test it end to end. Form factor, level names and key handling need the owner's call. |
+| S2a | Agent step: **presets** (Claude Code, OpenAI, xAI Grok, Gemini, OpenRouter, Ollama, custom URL), key entry (saved to a `chmod 600` file, never the config), **model list fetched from the endpoint** (`GET /models`) or Claude aliases with plain-language notes (fast/cheap vs smart), and a **Test connection** button | todo | Replaces hand-editing `providers`. The panel's AGENT section grows an "Add agent" flow too (today it only lists configured agents). |
+| S2b | Voice step: install with a size warning and progress (~275 MB), **audition voices** with a Hear-it button, speed slider, skip option | todo | Reuses `setup.sh`, `voices.py`. Quiet fallback when skipped. |
+| S2c | **Access level** setting enforced in `tools.py`: *Look only* (see and read, never act) / *Ask first* (default: cards for actions, safe commands automatic) / *Ask for everything* (also every read and command) | todo | Today `read_files` and `auto_approve_safe` exist but there is no single, understandable switch and nothing disables acting tools. |
+| S2d | Animations step: recommend a level from the hardware (core count, laptop/battery) | todo | Pairs with V6 (`auto`). |
+| S2e | Final step: a real test (ask the agent, speak the answer) and a 3-line tour (peel, click, approve) | todo | |
+| Q3 | **Multi-monitor support** | todo | Overlay and perch math assume one display at 0,0. Must work before publishing: other users have several. |
+| Q4 | Config version + migrations for `omarchy plugin update` | todo | So later releases can rename or add settings without breaking old configs. |
+| Q5 | Friendly first-run errors: a missing CLI/key opens the wizard at the right step instead of a bare message | todo | Today: "the claude CLI was not found on PATH". |
+| Q6 | Offer (never force) a Hyprland keybinding to summon the ask box on the focused window | todo | A snippet to copy; goop does not edit the user's bindings. |
+| Q7 | Languages: voice and agent language (today English voice only) | todo | Needs a voice per language and a prompt language hint. |
+
 ## Next
 
 | ID | Item | Status | Notes |
