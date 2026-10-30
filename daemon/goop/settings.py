@@ -17,6 +17,11 @@ def _read(path):
 
 
 def parse(key, raw):
+    if key == "provider":
+        from .agent import registry
+        if raw not in registry.names():
+            raise ValueError(f"unknown agent {raw!r}; configured: {', '.join(registry.names())}")
+        return raw
     if key in CHOICES:
         if raw not in CHOICES[key]:
             raise ValueError(f"{key} must be one of: {', '.join(CHOICES[key])}")

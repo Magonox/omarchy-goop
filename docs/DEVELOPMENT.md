@@ -20,6 +20,20 @@ Goop is an **Omarchy plugin** (`manifest.json`: kind `overlay`, `keepLoaded: tru
 hook `~/.config/omarchy/hooks/theme-set.d/zz-shell-overrides.sh` re-adds `shawn.goop` (a `jq` line next to `shawn.idle`). Without
 it the day/night theme timer would switch goop off at sunset.
 
+## Bar button and settings panel
+
+- `shell/GoopPanel.qml` is the manifest's `barWidget` entry (a `Panel` from `qs.Ui`: bar button + `KeyboardPanel` popup). The overlay
+  (`Goop.qml`) and the panel are separate components in the same plugin.
+- **They cannot see each other.** Third-party plugins only get scoped `PluginBarApi` / `PluginShellApi` facades (no `panelLoaders`),
+  so they communicate through files: the overlay writes `~/.cache/goop/status.json` (debounced, only when the state really changes);
+  the panel watches it. Settings flow the other way through `~/.config/goop/config.json` (`daemon/settings.py`, watched by the overlay).
+- Open it without a click: `omarchy-shell shawn.goop open` (or `close`). It dismisses itself after a few seconds without interaction.
+- **Hot reload only covers the overlay's visuals.** A changed bar widget, a new IPC function or a manifest change needs
+  `omarchy-restart-shell` (about 2 s, same as login).
+- Placing the widget on a bar that already lists the plugin: `omarchy plugin disable shawn.goop && omarchy plugin enable shawn.goop`
+  (`omarchy bar put` skips a plugin it thinks is already placed). The user's theme hook re-adds both the plugin and the bar button.
+- Screenshots of the screen can include whatever the owner is doing: crop tightly when checking visuals.
+
 ## Architecture
 
 ```

@@ -6,6 +6,8 @@ Work is planned in [`docs/BACKLOG.md`](docs/BACKLOG.md).
 ## [Unreleased]
 
 ### Added
+- S1: **settings button in the bar** (`shell/GoopPanel.qml`, manifest kind `bar-widget`): animations, voice mute (now saved in config), agent picker,
+  and a setup checklist from `daemon/doctor.py` (`goop/doctor.py`, 6 tests). Changing the agent is validated against the configured providers.
 - V2: drips. A bulge forms at the bottom of a goop, stretches on a thin neck, lets go and falls (`shell/Drip.qml`).
 - Animation levels `full` / `reduced` / `off`, switchable live (`goopctl animations ...`, `~/.config/goop/config.json`). Measured CPU for the
   whole shell: about 7% / 1.7% / 1.0% of one core. `off` also stops the cursor-tracking process. `daemon/settings.py` and `goopctl config`
@@ -32,6 +34,9 @@ Work is planned in [`docs/BACKLOG.md`](docs/BACKLOG.md).
 - Shrink-wrapping ask box with click-away close.
 - Omarchy plugin packaging (`manifest.json`, overlay, keepLoaded), `setup.sh` for the voice runtime, `bin/goopctl`.
 - Privacy deny list, audit log, 87 tests.
+
+### Fixed
+- The overlay re-assigned its goop list on every window poll even when nothing changed, causing needless recomputation (and starving a debounce timer).
 
 ### Fixed during development
 - Workspace switches mid-drag no longer cancel the peel.

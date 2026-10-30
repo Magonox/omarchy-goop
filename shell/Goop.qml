@@ -12,6 +12,21 @@ Scope {
     // and standalone. Everything below uses plain paths: Process commands are not sandboxed by Quickshell's file layer.
     readonly property string here: Qt.resolvedUrl("Goop.qml").toString().replace("file://", "").replace(/\/[^\/]*$/, "")
     readonly property string daemon: here + "/../daemon"
+    // The bar widget's settings panel (GoopPanel.qml) cannot reach this overlay directly (third-party plugins only get scoped
+    // shell facades), so the live state is published to a small file that the panel watches.
+    // A string, so it only "changes" when the state really does (an object would re-fire on every dependency re-evaluation).
+    readonly property string statusJson: JSON.stringify({ goops: win.perched.length, voiceReady: win.ttsReady, muted: win.muted,
+                                                          animations: win.animations, provider: win.provider })
+    readonly property string statusPath: Quickshell.env("HOME") + "/.cache/goop/status.json"
+    onStatusJsonChanged: statusWrite.restart()
+    Timer {
+        id: statusWrite
+        interval: 300
+        onTriggered: Quickshell.execDetached(["bash", "-c", "mkdir -p \"$(dirname \"$2\")\" && printf '%s' \"$1\" > \"$2.tmp\" && mv \"$2.tmp\" \"$2\"",
+                                              "_", root.statusJson, root.statusPath])
+    }
+    function setSetting(key, value) { Quickshell.execDetached(["python3", root.daemon + "/settings.py", "set", key, String(value)]); }
+
     readonly property string venvPython: Quickshell.env("HOME") + "/.local/share/goop/venv/bin/python"   // created by setup.sh
 
 PanelWindow {
@@ -51,10 +66,17 @@ PanelWindow {
     readonly property bool animLive: animations === "full"
     readonly property bool animEyes: animations !== "off"
     property bool cfgMissing: false
+    property string provider: "claude"
+    function setMuted(on) {
+        muted = on;
+        if (ttsReady) tts.write(JSON.stringify({ cmd: "mute", on: on }) + "\n");
+    }
     function applyConfig(t) {
         try {
-            var a = JSON.parse(t).animations;
+            var c = JSON.parse(t), a = c.animations;
             animations = (a === "reduced" || a === "off") ? a : "full";
+            provider = c.provider || "claude";
+            setMuted(!!(c.tts && c.tts.muted));      // muting from the panel (or goopctl) is saved, so it survives a restart
         } catch (e) { animations = "full"; }
     }
     FileView {
@@ -110,7 +132,7 @@ PanelWindow {
     function ttsEvent(line) {
         var e;
         try { e = JSON.parse(line); } catch (x) { return; }
-        if (e.type === "ready") ttsReady = true;
+        if (e.type === "ready") { ttsReady = true; if (muted) tts.write('{"cmd":"mute","on":true}\n'); }
         else if (e.type === "start") speakingAddr = e.id;
         else if (e.type === "level") { if (e.id === speakingAddr) level = e.v; }
         else if (e.type === "end") { if (speakingAddr === e.id) { speakingAddr = ""; level = 0; } }
@@ -252,8 +274,10 @@ PanelWindow {
                     win.geo = g;
                     win.approvals = s.approvals || [];
                     // a closed window takes its goop with it (never mid-drag)
-                    if (!win.dragging && !win.settling)
-                        win.perched = win.perched.filter(function (a) { return g[a] !== undefined; });
+                    if (!win.dragging && !win.settling) {
+                        var kept = win.perched.filter(function (a) { return g[a] !== undefined; });
+                        if (kept.length !== win.perched.length) win.perched = kept;     // only when a window actually closed
+                    }
                     // no goop anywhere: the first active window gets one
                     if (win.perched.length === 0 && !win.dragging && !win.settling) {
                         var seed = (s.active && g[s.active] && g[s.active].visible) ? s.active : first;
@@ -748,7 +772,7 @@ PanelWindow {
         function list(): string { return win.perched.join("\n"); }
         function say(addr: string, text: string): void { win.ask(addr, text); }
         function speak(addr: string, text: string): void { win.speak(addr, text); }
-        function mute(on: bool): void { win.muted = on; if (win.ttsReady) tts.write(JSON.stringify({ cmd: "mute", on: on }) + "\n"); }
+        function mute(on: bool): void { win.setMuted(on); root.setSetting("tts.muted", on ? "true" : "false"); }
         function hush(): void { win.stopSpeech(); }
         function drip(): void { win.dripNow(); }
         function reply(addr: string, text: string): void { win.injectReply(addr, text); }

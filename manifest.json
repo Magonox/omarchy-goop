@@ -4,10 +4,21 @@
   "name": "Goop",
   "version": "0.1.0",
   "author": "Shawn",
-  "description": "A small animated creature that lives on your windows. Peel copies onto other windows, ask them about what's in the window, and let them act with your approval. On-device voice.",
-  "kinds": ["overlay"],
+  "description": "A small animated creature that lives on your windows. Peel copies onto other windows, ask them about what's in the window, and let them act with your approval. On-device voice, and a settings button in the bar.",
+  "kinds": [
+    "overlay",
+    "bar-widget"
+  ],
   "keepLoaded": true,
   "entryPoints": {
-    "overlay": "shell/Goop.qml"
+    "overlay": "shell/Goop.qml",
+    "barWidget": "shell/GoopPanel.qml"
+  },
+  "barWidget": {
+    "displayName": "Goop",
+    "description": "Goop settings: animations, voice, agent and a setup checklist",
+    "category": "AI",
+    "allowMultiple": false,
+    "defaultSection": "right"
   }
 }

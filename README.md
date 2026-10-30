@@ -39,6 +39,7 @@ Goop loads with the Omarchy shell, so it is running whenever you are logged in.
 | Drag a goop onto another window | A copy peels off and lands there. Dropping on a window that has one springs back. |
 | Press **Approve** on a card | The action runs. **Deny** or ignore it for 90 s and nothing happens. |
 | Press **Keep going / Yes** under a reply | Answers "yes" for you; the goop continues. |
+| Click the ghost icon in the bar | Goop's settings: animation level, voice on/off, which agent, and a setup checklist. |
 
 `bin/goopctl` talks to the running goop: `goopctl list | say <addr> "..." | speak <addr> "..." | mute true | hush | reload`.
 
@@ -76,6 +77,8 @@ compatible endpoint, Ollama, LM Studio, OpenRouter, Groq, Together...) to `~/.co
 - A conversation is remembered per goop for a week (`~/.cache/goop/sessions/`), so "yes, keep going" works with any provider.
 
 ## Animations and performance
+
+The quickest way is the **Goop button in the top bar** (a ghost icon): pick Full, Reduced or Off. Or from a terminal:
 
 Goops are animated, and the animation level is yours to choose. It applies instantly, no restart:
 
