@@ -2,7 +2,7 @@
 straight back to a model for a repair pass."""
 import re
 
-from . import codegen, custom, vocab
+from . import codegen, vocab
 
 _ID = re.compile(r"^[a-z][a-z0-9_]{0,23}$")
 
@@ -53,8 +53,6 @@ def validate(story):
             lo_c, hi_c = codegen.LIMITS["code"]
             if not isinstance(p.get("code"), str) or not lo_c <= len(p["code"]) <= hi_c:
                 errs.append(f"part {pid!r}: a code part needs code: a string of {lo_c}-{hi_c} characters defining function build(M) that returns [{{material, look, mesh}}]")
-        if p.get("kind") == "custom":
-            errs += custom.validate(p.get("pieces"), f"part {pid!r}")
         if p.get("size", "medium") not in vocab.SIZES:
             errs.append(f"part {pid!r}: size must be one of: {_list(vocab.SIZES)}")
         if p.get("material", "steel") not in vocab.MATERIALS:
@@ -78,12 +76,12 @@ def validate(story):
         if p.get("kind") == "device" and p.get("variant", "laptop") not in ("laptop", "phone", "tv", "speaker", "antenna"):
             errs.append(f"part {pid!r}: device variant must be one of: laptop, phone, tv, speaker, antenna")
         if template == "network":
-            if p.get("kind") not in ("router", "tower", "wall") and p.get("distance", "medium") not in vocab.DISTANCES:
+            if not vocab.is_sender(p) and not vocab.is_blocker(p) and p.get("distance", "medium") not in vocab.DISTANCES:
                 errs.append(f"part {pid!r}: distance must be one of: {_list(vocab.DISTANCES)}")
-            if p.get("kind") == "wall":
+            if vocab.is_blocker(p):
                 bt = p.get("between")
                 if not (isinstance(bt, list) and len(bt) == 2):
-                    errs.append(f"part {pid!r}: a wall needs between: [part_id, part_id]")
+                    errs.append(f"part {pid!r}: a wall (any part with between) needs between: [part_id, part_id]")
                 else:
                     for r in bt:
                         known(r, f"wall {pid!r} between")
@@ -98,8 +96,8 @@ def validate(story):
                         errs.append(f"part {pid!r}: attach.count must be 1-8")
             if p.get("inside") is not None:
                 known(p.get("inside"), f"part {pid!r} inside")
-    if template == "network" and not any(p.get("kind") in ("router", "tower") for p in ids.values()):
-        errs.append("a network lesson needs a part of kind router or tower (the thing that sends the signal)")
+    if template == "network" and not any(vocab.is_sender(p) for p in ids.values()):
+        errs.append("a network lesson needs a sender: one part with \"sender\": true (the thing the signal spreads from)")
 
     steps = story.get("steps")
     slo, shi = vocab.LIMITS["steps"]

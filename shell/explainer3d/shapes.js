@@ -48,8 +48,6 @@ function build(sh) {
     }
     case "tower":
         return tower(sh);
-    case "custom":
-        return custom(sh);
     case "mesh":
         return sh.meshes.map(function (m) { return { role: roleOf(m.look, m.material), mesh: M.T({ p: m.p, n: m.n, i: m.i }, { s: sh.scale || 1 }) }; });
     case "device":
@@ -96,51 +94,8 @@ function build(sh) {
     return [{ role: "main", mesh: M.box(1, 1, 1, -0.5) }];
 }
 
-// a part the model described as a recipe of basic pieces (daemon/goop/explainer/custom.py): build each piece, turn and place it, copy it when asked to
-// repeat, then merge by material so the whole part is a handful of meshes, and centre it on the origin like every other shape
-function pieceMesh(pc) {
-    var h = pc.h;
-    switch (pc.form) {
-    case "box": return M.box(pc.w, pc.h, pc.d, -pc.h / 2);
-    case "cylinder": return M.cyl(pc.r, h, 32, -h / 2);
-    case "cone": return M.frustum(pc.r, Math.max(pc.top || 0, 0.002), h, 32, -h / 2);
-    case "sphere": return M.sphere(pc.r, 24, 12);
-    case "ring": return M.torus(pc.r, pc.t, 40, 10);
-    case "disc":
-        if (pc.hole > 0) return M.lathe([[pc.hole, -h / 2], [pc.r, -h / 2], [pc.r, h / 2], [pc.hole, h / 2], [pc.hole, -h / 2]], 48);
-        return M.cyl(pc.r, h, 48, -h / 2);
-    case "lathe": return M.lathe(pc.profile, 36);
-    default: return M.extrude(pc.outline, h);
-    }
-}
-
 function roleOf(look, name) {
     return look === "glass" ? "g:" + name : look === "glow" ? "w:" + name : look === "screen" ? "screen" : look === "led" ? "led" : "m:" + name;
-}
-
-function custom(sh) {
-    var groups = {}, order = [];
-    sh.pieces.forEach(function (pc) {
-        var turn = pc.turn || [0, 0, 0], m = M.T(pieceMesh(pc), { pos: pc.at || [0, 0, 0], rx: turn[0], ry: turn[1], rz: turn[2] });
-        var copies = [m], rep = pc.repeat;
-        if (rep) {
-            copies = [];
-            for (var k = 0; k < rep.count; k++) {
-                if (rep.around) {
-                    var a = 360 * k / rep.count;
-                    copies.push(M.T(m, rep.around === "x" ? { rx: a } : rep.around === "z" ? { rz: a } : { ry: a }));
-                } else {
-                    copies.push(M.T(m, { pos: [k * rep.along[0], k * rep.along[1], k * rep.along[2]] }));
-                }
-            }
-        }
-        var look = pc.look || "solid", name = pc.material || "";
-        var role = roleOf(look, name);
-        if (!groups[role]) { groups[role] = []; order.push(role); }
-        groups[role] = groups[role].concat(copies);
-    });
-    var c = sh.center || [0, 0, 0];
-    return order.map(function (role) { return { role: role, mesh: M.T(M.merge(groups[role]), { pos: [-c[0], -c[1], -c[2]], s: sh.scale || 1 }) }; });
 }
 
 function tower(sh) {

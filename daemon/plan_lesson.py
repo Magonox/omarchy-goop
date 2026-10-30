@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """Plan a lesson from the command line (for trying the planner without the goop):
-    plan_lesson.py "how a Blu-ray disc works" --notes "facts..." [--mode pieces|code] [--model opus] [--out file.json]
+    plan_lesson.py "how a Blu-ray disc works" --notes "facts..." [--model opus] [--out file.json]
 Prints the path of the saved storyboard; play it with bin/goop-explain <path>."""
 import argparse, json, os, sys, time
 
@@ -13,7 +13,6 @@ def main():
     ap.add_argument("topic")
     ap.add_argument("--notes", default="")
     ap.add_argument("--notes-file")
-    ap.add_argument("--mode", default="pieces", choices=("pieces", "code"))
     ap.add_argument("--model", default="opus")
     ap.add_argument("--out")
     a = ap.parse_args()
@@ -27,7 +26,7 @@ def main():
         print(f"model call {len(calls)}: {calls[-1]}s, {len(reply)} characters" + (" (a repair pass)" if len(calls) > 1 else ""), file=sys.stderr)
         return reply
     try:
-        story, scene = planner.plan(a.topic, notes, run, mode=a.mode)
+        story, scene = planner.plan(a.topic, notes, run)
     except planner.PlanError as e:
         sys.exit(f"failed: {e}")
     path = a.out or play.save(story)

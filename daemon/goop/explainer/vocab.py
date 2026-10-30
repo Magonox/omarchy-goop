@@ -42,9 +42,8 @@ KINDS = {
     "panel": {"type": "panel", "w": 3.4, "d": 1.3, "r": 1.7, "h": 0.1, "material": "solar"},
     "dish": {"type": "dish", "r": 0.7, "h": 0.6, "material": "white"},
     "thruster": {"type": "thruster", "r": 0.18, "h": 0.35, "material": "dark_steel"},
-    # anything else: the model describes the part as a recipe of basic pieces (see custom.py)
-    "custom": {"type": "custom", "r": 1.0, "h": 1.0, "material": "steel"},
-    # a part whose geometry the model wrote as code, run in a sandbox (see codegen.py)
+    # a part whose geometry the model wrote as code, run in a sandbox (see codegen.py): how every lesson the planner writes is made.
+    # The ready-made kinds above remain for the hand-written demo lessons.
     "code": {"type": "mesh", "r": 1.0, "h": 1.0, "material": "steel"},
     # plain shapes for anything else
     "box": {"type": "box", "w": 1.2, "h": 1.0, "d": 1.2, "r": 0.9, "material": "steel"},
@@ -52,6 +51,16 @@ KINDS = {
     "sphere": {"type": "sphere", "r": 0.7, "h": 1.4, "material": "blue"},
     "cone": {"type": "cone", "r": 0.7, "h": 1.2, "material": "red"},
 }
+
+def is_sender(part):
+    """The part a network lesson spreads its signal from: flagged "sender": true, or a router or tower."""
+    return part.get("sender") is True or part.get("kind") in ("router", "tower")
+
+
+def is_blocker(part):
+    """A part that sits between two others and weakens the signal (a wall, a hill, a building): kind wall, or any part with "between"."""
+    return part.get("kind") == "wall" or "between" in part
+
 
 TEMPLATES = ("axis", "network", "assembly")
 VERBS = ("reveal", "label", "highlight", "flow", "spin", "explode", "pulse", "zoom", "cutaway")

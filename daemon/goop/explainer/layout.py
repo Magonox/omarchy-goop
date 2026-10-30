@@ -3,7 +3,7 @@ Every template returns {placed, instances, bounds}: `placed` maps an id to its p
 it became (a part attached "at sides" or in a "ring" becomes several)."""
 import math
 
-from . import custom, vocab
+from . import vocab
 
 
 def _shape(part):
@@ -14,8 +14,6 @@ def _shape(part):
         shape["variant"] = part.get("variant", "laptop")
     if part["kind"] == "code":              # geometry came out of the sandbox, already centred; only its size is needed
         shape |= {"type": "mesh", "meshes": part["_meshes"], "scale": f, "r": round(part["_dims"]["r"] * f, 3), "h": round(part["_dims"]["h"] * f, 3)}
-    if part["kind"] == "custom":            # measured from its pieces, so every template can place it like any other part
-        shape |= custom.measure(part["pieces"], f) | {"pieces": part["pieces"], "scale": f}
     return shape
 
 
@@ -35,9 +33,9 @@ def _r3(v):
 
 
 def _along(pl):
-    """How much room a part takes along the row: its length when it lies on the axis, its width when it is a custom shape (a flat disc is wide, not long)."""
+    """How much room a part takes along the row: its length when it lies on the axis, its width when it is a code part (a flat disc is wide, not long)."""
     shape = pl["shape"]
-    if pl["kind"] == "custom":
+    if pl["kind"] == "code":
         return round(2 * shape["r"], 3)
     return shape["h"]
 
@@ -80,13 +78,13 @@ def network(story):
     placed, parts = {}, story["parts"]
     for p in parts:
         placed[p["id"]] = _place(p)
-    router = next(p for p in parts if p["kind"] in ("router", "tower"))
+    router = next(p for p in parts if vocab.is_sender(p))
     rpos = [-4.6, placed[router["id"]]["shape"]["h"] / 2, 0.0]
     placed[router["id"]]["pos"] = _r3(rpos)
-    devices = [p for p in parts if p["kind"] not in ("router", "tower", "wall")]       # any other part sits around the sender at its distance
+    devices = [p for p in parts if not vocab.is_sender(p) and not vocab.is_blocker(p)]       # any other part sits around the sender at its distance
     n = len(devices)
     angles = [0.0] if n == 1 else [-38 + 76 * i / (n - 1) for i in range(n)]
-    walls = [p for p in parts if p["kind"] == "wall"]
+    walls = [p for p in parts if vocab.is_blocker(p)]
     for a, d in zip(angles, devices):
         pl = placed[d["id"]]
         dist = vocab.DISTANCES[d.get("distance", "medium")]

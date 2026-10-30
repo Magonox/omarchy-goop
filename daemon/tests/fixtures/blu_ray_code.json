@@ -1,0 +1,277 @@
+{
+  "version": 1,
+  "title": "How a Blu-ray disc is made and read",
+  "layout": {
+    "template": "axis"
+  },
+  "parts": [
+    {
+      "id": "glass_master",
+      "kind": "code",
+      "label": "Glass master",
+      "size": "medium",
+      "code": "function build(M) {\n  const t = m => M.T(m, {rx: 40});\n  const glass = M.merge([M.cyl(1.6, 0.12, 48, 0), M.T(M.torus(1.6, 0.025, 48, 10), {pos: [0, 0.06, 0]})]);\n  const track = [];\n  let p = null;\n  for (let i = 0; i <= 300; i++) {\n    const a = i * 0.16, r = 0.45 + 1.05 * i / 300;\n    const q = [r * Math.cos(a), 0.125, r * Math.sin(a)];\n    if (p) track.push(M.pipe(p, q, 0.008, 6));\n    p = q;\n  }\n  const base = [M.cyl(1.72, 0.1, 48, -0.1), M.cyl(1.2, 0.18, 40, -0.28), M.cyl(0.8, 0.12, 32, -0.4)];\n  for (let i = 0; i < 12; i++) {\n    const a = i * Math.PI / 6;\n    base.push(M.T(M.cyl(0.04, 0.02, 12, 0), {pos: [1.64 * Math.cos(a), 0, 1.64 * Math.sin(a)]}));\n  }\n  const hub = M.merge([M.cyl(0.2, 0.08, 28, 0.12), M.cyl(0.08, 0.05, 20, 0.2), M.T(M.torus(0.2, 0.02, 28, 8), {pos: [0, 0.2, 0]})]);\n  return [\n    {material: 'glass', look: 'glass', mesh: t(glass)},\n    {material: 'blue', look: 'glow', mesh: t(M.merge(track))},\n    {material: 'dark_steel', look: 'solid', mesh: t(M.merge(base))},\n    {material: 'steel', look: 'solid', mesh: t(hub)}\n  ];\n}"
+    },
+    {
+      "id": "stamper",
+      "kind": "code",
+      "label": "Metal stamper",
+      "size": "medium",
+      "code": "function build(M) {\n  const t = m => M.T(m, {rx: 40});\n  const plate = M.lathe([[0.28, 0], [1.6, 0], [1.6, 0.12], [0.28, 0.12], [0.28, 0]], 48);\n  const bumps = [];\n  for (let ring = 0; ring < 7; ring++) {\n    const r = 0.5 + ring * 0.17;\n    const n = 16 + ring * 5;\n    for (let i = 0; i < n; i++) {\n      if ((i + ring) % 4 === 3) continue;\n      const a = i * 2 * Math.PI / n;\n      bumps.push(M.T(M.box(0.09 + 0.05 * (i % 3), 0.04, 0.035, 0), {pos: [r * Math.cos(a), 0.12, r * Math.sin(a)], ry: -a * 180 / Math.PI + 90}));\n    }\n  }\n  const rims = [M.T(M.torus(1.6, 0.03, 48, 10), {pos: [0, 0.06, 0]}), M.T(M.torus(0.28, 0.03, 32, 10), {pos: [0, 0.12, 0]})];\n  const back = [M.lathe([[0.32, -0.08], [1.5, -0.08], [1.5, 0], [0.32, 0], [0.32, -0.08]], 48)];\n  for (let i = 0; i < 8; i++) {\n    const a = i * Math.PI / 4;\n    back.push(M.T(M.cyl(0.035, 0.025, 12, 0), {pos: [1.5 * Math.cos(a), 0.12, 1.5 * Math.sin(a)]}));\n  }\n  return [\n    {material: 'steel', look: 'solid', mesh: t(M.merge([plate].concat(bumps)))},\n    {material: 'copper', look: 'solid', mesh: t(M.merge(rims))},\n    {material: 'dark_steel', look: 'solid', mesh: t(M.merge(back))}\n  ];\n}"
+    },
+    {
+      "id": "press",
+      "kind": "code",
+      "label": "Plastic press",
+      "size": "large",
+      "code": "function build(M) {\n  const frame = [M.box(3, 0.3, 2, -1.7), M.box(3, 0.3, 2, 1.6)];\n  for (const x of [-1.25, 1.25]) for (const z of [-0.75, 0.75]) {\n    frame.push(M.T(M.cyl(0.11, 3.1, 24, -1.5), {pos: [x, 0, z]}));\n    frame.push(M.T(M.cyl(0.18, 0.06, 24, 0), {pos: [x, 1.9, z]}));\n  }\n  const ram = [M.cyl(0.32, 0.9, 32, 0.7), M.cyl(1, 0.22, 44, 0.48), M.cyl(1, 0.22, 44, -1.2), M.cyl(0.5, 0.2, 32, -1.4)];\n  const trim = [M.T(M.torus(1, 0.025, 44, 8), {pos: [0, 0.48, 0]}), M.T(M.torus(1, 0.025, 44, 8), {pos: [0, -0.98, 0]}), M.T(M.torus(0.34, 0.03, 32, 8), {pos: [0, 1.5, 0]})];\n  const die = M.cyl(0.92, 0.04, 44, 0.44);\n  const melt = M.cyl(0.88, 0.1, 44, -0.98);\n  const feed = [M.pipe([2.0, -0.5, 0], [0.9, -0.93, 0], 0.07, 16), M.T(M.frustum(0.08, 0.42, 0.65, 28, 0), {pos: [2.0, -0.52, 0]}), M.T(M.torus(0.42, 0.025, 28, 8), {pos: [2.0, 0.13, 0]}), M.pipe([2.0, -0.55, 0], [2.0, -1.7, 0], 0.05, 12)];\n  const pellets = [];\n  for (let i = 0; i < 12; i++) {\n    const a = i * 2.4, r = 0.08 + 0.022 * i;\n    pellets.push(M.T(M.sphere(0.06, 12, 8), {pos: [2.0 + r * Math.cos(a), 0.1 + (i % 2) * 0.04, r * Math.sin(a)]}));\n  }\n  return [\n    {material: 'dark_steel', look: 'solid', mesh: M.merge(frame)},\n    {material: 'steel', look: 'solid', mesh: M.merge(ram.concat(feed).concat([die]))},\n    {material: 'copper', look: 'solid', mesh: M.merge(trim)},\n    {material: 'orange', look: 'glow', mesh: melt},\n    {material: 'white', look: 'solid', mesh: M.merge(pellets)}\n  ];\n}"
+    },
+    {
+      "id": "disc",
+      "kind": "code",
+      "label": "Blu-ray disc",
+      "size": "large",
+      "code": "function build(M) {\n  const t = m => M.T(m, {rx: 40});\n  const ringDisc = (a, b, y0, y1) => M.lathe([[a, y0], [b, y0], [b, y1], [a, y1], [a, y0]], 56);\n  const metal = ringDisc(0.62, 1.7, 0, 0.04);\n  const clear = M.merge([ringDisc(0.22, 1.8, 0.04, 0.12), ringDisc(0.22, 1.8, -0.08, 0)]);\n  const track = [];\n  let p = null;\n  for (let i = 0; i <= 320; i++) {\n    const a = i * 0.16, r = 0.66 + 0.98 * i / 320;\n    const q = [r * Math.cos(a), 0.046, r * Math.sin(a)];\n    if (p) track.push(M.pipe(p, q, 0.006, 6));\n    p = q;\n  }\n  const hub = M.merge([ringDisc(0.24, 0.56, 0.12, 0.13), M.T(M.torus(0.24, 0.015, 32, 8), {pos: [0, 0.12, 0]}), M.T(M.torus(0.56, 0.012, 40, 8), {pos: [0, 0.13, 0]})]);\n  const edge = M.merge([M.T(M.torus(1.8, 0.012, 56, 8), {pos: [0, 0.12, 0]}), M.T(M.torus(1.8, 0.012, 56, 8), {pos: [0, -0.08, 0]})]);\n  return [\n    {material: 'steel', look: 'solid', mesh: t(metal)},\n    {material: 'blue', look: 'glow', mesh: t(M.merge(track))},\n    {material: 'glass', look: 'glass', mesh: t(clear)},\n    {material: 'white', look: 'solid', mesh: t(hub)},\n    {material: 'steel', look: 'solid', mesh: t(edge)}\n  ];\n}"
+    },
+    {
+      "id": "pit_track",
+      "kind": "code",
+      "label": "Pits and lands (zoomed)",
+      "size": "large",
+      "code": "function build(M) {\n  const lengths = [0.5, 0.25, 0.7, 0.35, 0.9, 0.3, 0.55, 0.4, 0.75, 0.25, 0.6];\n  const gaps = [0.2, 0.32, 0.18, 0.4, 0.22, 0.3, 0.2, 0.36];\n  const lands = [], floors = [];\n  const rows = [-0.55, 0, 0.55];\n  rows.forEach((z, row) => {\n    floors.push(M.T(M.box(3.9, 0.02, 0.28, -0.25), {pos: [0, 0, z]}));\n    let x = -1.95, i = row * 3;\n    while (x < 1.8) {\n      const len = Math.min(lengths[i % lengths.length], 1.95 - x);\n      lands.push(M.T(M.box(len, 0.13, 0.28, -0.25), {pos: [x + len / 2, 0, z]}));\n      x += len + gaps[i % gaps.length];\n      i++;\n    }\n  });\n  const strips = [];\n  for (const z of [-0.84, -0.275, 0.275, 0.84]) strips.push(M.T(M.box(3.9, 0.13, 0.27, -0.25), {pos: [0, 0, z]}));\n  const base = M.merge([M.box(4, 0.3, 2, -0.55), M.T(M.box(4.04, 0.04, 2.04, 0), {pos: [0, -0.57, 0]})]);\n  const clear = M.box(4, 0.45, 2, -0.12);\n  return [\n    {material: 'dark_steel', look: 'solid', mesh: base},\n    {material: 'blue', look: 'solid', mesh: M.merge(floors)},\n    {material: 'steel', look: 'solid', mesh: M.merge(lands.concat(strips))},\n    {material: 'glass', look: 'glass', mesh: clear}\n  ];\n}"
+    },
+    {
+      "id": "lens",
+      "kind": "code",
+      "label": "Focusing lens",
+      "size": "medium",
+      "code": "function build(M) {\n  const glass = M.lathe([[0, -0.2], [0.25, -0.18], [0.5, -0.1], [0.7, 0], [0.5, 0.1], [0.25, 0.18], [0, 0.2]], 40);\n  const mount = [M.torus(0.74, 0.07, 44, 12), M.T(M.torus(0.74, 0.03, 44, 8), {pos: [0, 0.12, 0]}), M.T(M.torus(0.74, 0.03, 44, 8), {pos: [0, -0.12, 0]})];\n  const arms = [M.box(1.9, 0.14, 0.3, -1.05), M.pipe([-0.75, 0, 0], [-0.75, -0.95, 0], 0.05, 16), M.pipe([0.75, 0, 0], [0.75, -0.95, 0], 0.05, 16)];\n  for (const x of [-0.8, 0.8]) arms.push(M.T(M.cyl(0.05, 0.03, 14, 0), {pos: [x, -0.91, 0.1]}));\n  const coils = [];\n  for (let i = 0; i < 7; i++) {\n    const y = -0.85 + i * 0.08;\n    coils.push(M.T(M.torus(0.14, 0.025, 20, 8), {pos: [-1.0, y, 0]}));\n    coils.push(M.T(M.torus(0.14, 0.025, 20, 8), {pos: [1.0, y, 0]}));\n  }\n  return [\n    {material: 'glass', look: 'glass', mesh: M.T(glass, {rz: 90})},\n    {material: 'steel', look: 'solid', mesh: M.T(M.merge(mount), {rz: 90})},\n    {material: 'dark_steel', look: 'solid', mesh: M.merge(arms)},\n    {material: 'copper', look: 'solid', mesh: M.merge(coils)}\n  ];\n}"
+    },
+    {
+      "id": "laser",
+      "kind": "code",
+      "label": "Blue-violet laser",
+      "size": "medium",
+      "code": "function build(M) {\n  const side = m => M.T(m, {rz: 90});\n  const body = [M.cyl(0.42, 1.6, 36, -0.8), M.frustum(0.42, 0.16, 0.4, 36, 0.8)];\n  const fins = [];\n  for (let i = 0; i < 8; i++) fins.push(M.T(M.torus(0.44, 0.035, 36, 8), {pos: [0, -0.65 + i * 0.15, 0]}));\n  const tip = M.merge([M.cyl(0.13, 0.04, 24, 1.2), M.T(M.sphere(0.1, 20, 12), {pos: [0, 1.25, 0]})]);\n  const collar = M.T(M.torus(0.17, 0.03, 28, 8), {pos: [0, 1.2, 0]});\n  const base = [M.box(1.5, 0.12, 1, -0.82), M.box(0.25, 0.42, 0.5, -0.45, -0.5), M.box(0.25, 0.42, 0.5, -0.45, 0.5)];\n  for (const x of [-0.6, 0.6]) for (const z of [-0.38, 0.38]) base.push(M.T(M.cyl(0.05, 0.03, 12, 0), {pos: [x, -0.7, z]}));\n  const wires = [M.pipe([0.8, 0.12, 0], [1.3, 0.12, 0], 0.03, 10), M.pipe([0.8, -0.12, 0], [1.3, -0.12, 0], 0.03, 10), M.pipe([0.8, 0, 0.12], [1.3, 0, 0.12], 0.03, 10)];\n  return [\n    {material: 'dark_steel', look: 'solid', mesh: side(M.merge(body))},\n    {material: 'steel', look: 'solid', mesh: M.merge([side(M.merge(fins)), side(collar)])},\n    {material: 'blue', look: 'glow', mesh: side(tip)},\n    {material: 'dark_steel', look: 'solid', mesh: M.merge(base)},\n    {material: 'copper', look: 'solid', mesh: M.merge(wires)}\n  ];\n}"
+    },
+    {
+      "id": "sensor",
+      "kind": "code",
+      "label": "Light sensor",
+      "size": "medium",
+      "code": "function build(M) {\n  const t = m => M.T(m, {rx: 35});\n  const board = M.box(2, 0.1, 2, -0.35);\n  const chip = [M.box(1.1, 0.16, 1.1, -0.25)];\n  const window = M.box(0.8, 0.05, 0.8, -0.09);\n  const cells = [];\n  for (let i = 0; i < 4; i++) for (let j = 0; j < 4; j++) {\n    cells.push(M.T(M.box(0.15, 0.015, 0.15, 0), {pos: [-0.27 + i * 0.18, -0.09, -0.27 + j * 0.18]}));\n  }\n  const pins = [];\n  for (let i = 0; i < 8; i++) {\n    const p = -0.49 + i * 0.14;\n    pins.push(M.box(0.07, 0.03, 0.26, -0.27, p));\n    pins.push(M.T(M.box(0.07, 0.03, 0.26, -0.27, p), {pos: [0, 0, 0]}));\n  }\n  const shifted = pins.map((m, i) => M.T(m, {pos: [0, 0, i % 2 ? 0.66 : -0.66]}));\n  const traces = [];\n  for (let i = 0; i < 6; i++) traces.push(M.T(M.box(0.04, 0.01, 0.5, -0.25), {pos: [-0.5 + i * 0.2, 0, 0.74]}));\n  const screws = [];\n  for (const x of [-0.85, 0.85]) for (const z of [-0.85, 0.85]) screws.push(M.T(M.cyl(0.06, 0.03, 14, -0.25), {pos: [x, 0, z]}));\n  const led = M.T(M.cyl(0.05, 0.04, 14, -0.25), {pos: [0.8, 0, 0.3]});\n  return [\n    {material: 'green', look: 'solid', mesh: t(board)},\n    {material: 'dark_steel', look: 'solid', mesh: t(M.merge(chip))},\n    {material: 'gold', look: 'solid', mesh: t(M.merge(shifted.concat(traces)))},\n    {material: 'solar', look: 'screen', mesh: t(M.merge(cells))},\n    {material: 'glass', look: 'glass', mesh: t(window)},\n    {material: 'steel', look: 'solid', mesh: t(M.merge(screws))},\n    {material: 'green', look: 'led', mesh: t(led)}\n  ];\n}"
+    }
+  ],
+  "steps": [
+    {
+      "say": "A Blu-ray disc looks like a shiny circle, but it hides a super long spiral track, like one tiny path winding round and round. Let's find out how it's made and read!",
+      "do": [
+        {
+          "reveal": [
+            "disc"
+          ]
+        },
+        {
+          "label": [
+            "disc"
+          ]
+        },
+        {
+          "spin": [
+            "disc"
+          ]
+        },
+        {
+          "zoom": "all"
+        }
+      ]
+    },
+    {
+      "say": "It all starts with a glass master. This perfect glass disc carries the movie or game as a spiral pattern of tiny marks, far too small for your eyes to see.",
+      "do": [
+        {
+          "reveal": [
+            "glass_master"
+          ]
+        },
+        {
+          "label": [
+            "glass_master"
+          ]
+        },
+        {
+          "highlight": [
+            "glass_master"
+          ]
+        },
+        {
+          "zoom": "glass_master"
+        }
+      ]
+    },
+    {
+      "say": "Next, the glass master is used to make a metal stamper. It works like a cookie cutter or a rubber stamp, carrying the same pattern so it can be copied again and again.",
+      "do": [
+        {
+          "reveal": [
+            "stamper"
+          ]
+        },
+        {
+          "label": [
+            "stamper"
+          ]
+        },
+        {
+          "flow": {
+            "from": "glass_master",
+            "to": "stamper",
+            "medium": "power"
+          }
+        },
+        {
+          "highlight": [
+            "stamper"
+          ]
+        }
+      ]
+    },
+    {
+      "say": "Now the press squeezes soft, hot plastic against the stamper. The pattern gets pressed into the plastic, like a footprint in wet sand. That is how many matching discs can be made!",
+      "do": [
+        {
+          "reveal": [
+            "press"
+          ]
+        },
+        {
+          "label": [
+            "press"
+          ]
+        },
+        {
+          "flow": {
+            "from": "stamper",
+            "to": "press",
+            "medium": "power"
+          }
+        },
+        {
+          "flow": {
+            "from": "press",
+            "to": "disc",
+            "medium": "power"
+          }
+        },
+        {
+          "zoom": "press"
+        }
+      ]
+    },
+    {
+      "say": "Let's zoom way in! The track is made of tiny dips called pits and flat parts called lands. A shiny reflective layer covers them, and a clear plastic layer sits on top to protect them.",
+      "do": [
+        {
+          "reveal": [
+            "pit_track"
+          ]
+        },
+        {
+          "label": [
+            "pit_track"
+          ]
+        },
+        {
+          "cutaway": [
+            "pit_track"
+          ]
+        },
+        {
+          "zoom": "pit_track"
+        }
+      ]
+    },
+    {
+      "say": "To read the disc, the player shines a blue-violet laser. A lens focuses that light into a tiny spot on the track, like a magnifying glass focusing sunlight, while the disc spins.",
+      "do": [
+        {
+          "reveal": [
+            "lens",
+            "laser"
+          ]
+        },
+        {
+          "label": [
+            "lens",
+            "laser"
+          ]
+        },
+        {
+          "flow": {
+            "from": "laser",
+            "to": "lens",
+            "medium": "signal"
+          }
+        },
+        {
+          "flow": {
+            "from": "lens",
+            "to": "pit_track",
+            "medium": "signal"
+          }
+        },
+        {
+          "spin": [
+            "disc"
+          ]
+        }
+      ]
+    },
+    {
+      "say": "The light bounces off the shiny layer and goes to a sensor. Pits and lands change the returning light, a bit like a flickering secret code. The player turns those changes into ones and zeros.",
+      "do": [
+        {
+          "reveal": [
+            "sensor"
+          ]
+        },
+        {
+          "label": [
+            "sensor"
+          ]
+        },
+        {
+          "flow": {
+            "from": "pit_track",
+            "to": "sensor",
+            "medium": "signal"
+          }
+        },
+        {
+          "pulse": "sensor"
+        },
+        {
+          "highlight": [
+            "sensor"
+          ]
+        }
+      ]
+    },
+    {
+      "say": "Why blue-violet? Its light waves are shorter, just 405 nanometers. Think of writing with a sharper pencil: smaller pits fit on the disc, so it holds more than a DVD or CD.",
+      "do": [
+        {
+          "highlight": [
+            "laser",
+            "pit_track"
+          ]
+        },
+        {
+          "zoom": "all"
+        }
+      ]
+    }
+  ],
+  "recap": "A Blu-ray is pressed from a stamper made using a glass master, and a blue-violet laser reads its tiny pits and lands by bouncing light off them.",
+  "question": "If you could store anything on a Blu-ray disc, what would you put on it?"
+}

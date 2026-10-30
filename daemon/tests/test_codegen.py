@@ -47,6 +47,24 @@ class Sandbox(unittest.TestCase):
         build.build(s)
         self.assertNotIn("_meshes", s["parts"][0])
 
+    def test_network_layout_works_with_code_parts(self):
+        box = "function build(M){ return [{material:'steel', look:'solid', mesh: M.box(1,1,1,-0.5)}]; }"
+        parts = [{"id": "src", "kind": "code", "label": "Sender", "code": box, "sender": True},
+                 {"id": "rx", "kind": "code", "label": "Receiver", "code": box, "distance": "far"},
+                 {"id": "blocker", "kind": "code", "label": "Hill", "code": box, "between": ["src", "rx"]}]
+        st = {"version": 1, "title": "T", "layout": {"template": "network"}, "parts": parts,
+              "steps": [{"say": "The sender sends a signal out to everyone nearby.", "do": [{"reveal": ["src", "rx", "blocker"]}, {"pulse": "src"}]},
+                        {"say": "A hill in the way makes the signal weaker for the receiver.", "do": [{"label": ["blocker"]}]}]}
+        scene = build.build(st)
+        pos = {p["id"]: p["pos"] for p in scene["parts"]}
+        self.assertLess(pos["src"][0], pos["rx"][0])                       # the receiver is out in the room, the sender at the back
+        self.assertLess(pos["src"][0], pos["blocker"][0])
+        self.assertLess(pos["blocker"][0], pos["rx"][0] + 1e-6)            # the blocker sits between them
+        st["parts"][0].pop("sender")
+        with self.assertRaises(build.StoryboardError) as cm:
+            build.build(st)
+        self.assertIn('"sender": true', str(cm.exception))
+
     def test_runtime_errors_come_back_as_repairable_messages(self):
         with self.assertRaises(build.StoryboardError) as cm:
             build.build(story("function build(M){ return M.nothing.here(); }"))

@@ -4,13 +4,15 @@ from unittest import mock
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from goop import access, settings, tools
 from goop.agent import prompt
-from goop.explainer import planner
+from goop.explainer import codegen, planner
 
-LESSONS = os.path.join(os.path.dirname(planner.__file__), "lessons")
+FIXTURES = os.path.join(os.path.dirname(os.path.abspath(__file__)), "fixtures")
+needs_deno = unittest.skipUnless(codegen.available(), "deno is not installed")
 
 
-def lesson(name="antenna"):
-    with open(os.path.join(LESSONS, name + ".json")) as f:
+def lesson(name="blu_ray_code"):
+    """A lesson whose every part is model-written code (a real planner answer, kept as a fixture)."""
+    with open(os.path.join(FIXTURES, name + ".json")) as f:
         return json.load(f)
 
 
@@ -34,6 +36,7 @@ class Extract(unittest.TestCase):
             planner.extract_json("I cannot do that")
 
 
+@needs_deno
 class Plan(unittest.TestCase):
     def test_valid_first_try(self):
         run = runner(json.dumps(lesson()))
@@ -45,12 +48,11 @@ class Plan(unittest.TestCase):
 
     def test_errors_are_sent_back_and_repaired(self):
         bad = lesson()
-        bad["parts"][0]["kind"] = "flux_capacitor"
+        bad["parts"][0]["code"] = "function build(M) { return M.nothing.here(); }"
         run = runner(json.dumps(bad), json.dumps(lesson()))
         story, scene = planner.plan("antennas", "", run)
         self.assertEqual(len(run.seen), 2)
-        self.assertIn("flux_capacitor", run.seen[1])          # the validator's message reaches the model
-        self.assertIn("is not in the vocabulary", run.seen[1])
+        self.assertIn("your code threw an error", run.seen[1])     # the sandbox's message reaches the model
         self.assertTrue(scene["duration"] > 0)
 
     def test_bad_json_is_repaired_too(self):
@@ -64,12 +66,22 @@ class Plan(unittest.TestCase):
             planner.plan("antennas", "", run)
         self.assertEqual(len(run.seen), planner.REPAIRS + 1)
 
-    def test_system_prompt_lists_the_vocabulary(self):
+    def test_a_ready_made_part_is_refused(self):
+        bad = lesson()
+        bad["parts"][0] = {"id": "p1", "kind": "cylinder", "label": "Plain"}
+        run = runner(json.dumps(bad), json.dumps(lesson()))
+        planner.plan("antennas", "", run)
+        self.assertIn("every part must be kind", run.seen[1])
+
+    def test_system_prompt_teaches_code_parts_only(self):
         sp = planner.system_prompt()
-        for word in ("tower", "assembly", "network", "axis", "flow", "recap"):
+        for word in ("assembly", "network", "axis", "flow", "recap", "M.lathe", "M.extrude", "sender"):
             self.assertIn(word, sp)
+        self.assertNotIn("READY-MADE", sp)
+        self.assertNotIn("custom", sp)
 
 
+@needs_deno
 class Tool(unittest.TestCase):
     def setUp(self):
         self.window = mock.patch.object(tools, "_window", return_value=({"title": "Antenna article", "class": "chromium"}, set()))
@@ -153,64 +165,3 @@ class Switches(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
-
-
-class CustomParts(unittest.TestCase):
-    def story(self, pieces):
-        s = lesson("wifi")
-        s["parts"].append({"id": "thing", "kind": "custom", "label": "Thing", "pieces": pieces})
-        return s
-
-    def test_blu_ray_lesson_builds_with_custom_parts(self):
-        from goop.explainer import build
-        scene = build.build(lesson("blu_ray"))
-        disc = next(p for p in scene["parts"] if p["id"] == "disc")
-        self.assertEqual(disc["shape"]["type"], "custom")
-        self.assertGreater(disc["shape"]["r"], 3.0)
-        self.assertIn("gold", disc["palette"])
-
-    def test_bad_pieces_name_the_valid_choices(self):
-        from goop.explainer import schema
-        errs = schema.validate(self.story([{"form": "teapot"}]))
-        self.assertTrue(any("form must be one of" in e and "lathe" in e for e in errs))
-        errs = schema.validate(self.story([{"form": "lathe", "profile": [[-1, 0], [1, 1]]}]))
-        self.assertTrue(any("never negative" in e for e in errs))
-        errs = schema.validate(self.story([{"form": "box", "w": 99, "h": 1, "d": 1}]))
-        self.assertTrue(any("between" in e for e in errs))
-        errs = schema.validate(self.story([{"form": "box", "w": 1, "h": 1, "d": 1, "repeat": {"count": 999, "around": "y"}}]))
-        self.assertTrue(any("repeat needs" in e for e in errs))
-        self.assertTrue(any("custom part needs pieces" in e for e in schema.validate(self.story("nope"))))
-
-    def test_total_piece_count_is_capped(self):
-        from goop.explainer import schema
-        pieces = [{"form": "sphere", "r": 0.1, "repeat": {"count": 24, "along": [0.1, 0, 0]}} for _ in range(6)]
-        self.assertTrue(any("after repeats" in e for e in schema.validate(self.story(pieces))))
-
-    def test_measure_matches_the_pieces(self):
-        from goop.explainer import custom
-        m = custom.measure([{"form": "box", "w": 2, "h": 1, "d": 2, "at": [0, 3, 0]}], 1.0)
-        self.assertEqual(m["h"], 1.0)
-        self.assertEqual(m["center"], [0.0, 3.0, 0.0])
-        self.assertAlmostEqual(m["r"], 2 ** 0.5, places=2)
-        spun = custom.measure([{"form": "box", "w": 0.1, "h": 0.1, "d": 0.1, "at": [1, 0, 0], "repeat": {"count": 4, "around": "y"}}], 2.0)
-        self.assertAlmostEqual(spun["r"], 2.1, delta=0.2)            # the circle of copies, scaled by the part size
-
-    def test_custom_parts_work_in_every_template(self):
-        from goop.explainer import build
-        for tpl in ("axis", "network", "assembly"):
-            s = lesson("wifi") if tpl == "network" else lesson("jet_engine") if tpl == "axis" else lesson("spacecraft")
-            s["parts"].append({"id": "thing", "kind": "custom", "label": "Thing", "pieces": [{"form": "cylinder", "r": 0.5, "h": 0.5}]})
-            if tpl == "assembly":
-                s["parts"][-1]["attach"] = {"to": s["parts"][0]["id"], "at": "front"}
-            scene = build.build(s)
-            self.assertIn("thing", [p["id"] for p in scene["parts"]], tpl)
-
-    def test_planner_prompt_explains_custom_parts(self):
-        sp = planner.system_prompt()
-        for word in ("CUSTOM PARTS", "lathe", "extrude", "repeat", "never borrow", "Never borrow"):
-            if word in sp:
-                break
-        else:
-            self.fail("custom parts are not explained")
-        self.assertIn("lathe", sp)
-        self.assertIn("extrude", sp)

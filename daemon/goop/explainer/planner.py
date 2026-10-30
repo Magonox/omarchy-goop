@@ -5,7 +5,7 @@ and sends the exact errors back for a repair pass when it is wrong. The model on
 `run(system, prompt) -> str` is the model call; claude_runner() is the default, tests pass a fake."""
 import json, os, re, shutil, subprocess
 
-from . import build, codegen, custom, vocab
+from . import build, vocab
 
 REPAIRS = 2
 TIMEOUT = 150
@@ -49,40 +49,23 @@ function build(M) {
   const handle = M.T(M.torus(0.25, 0.05, 32, 10), {pos: [0.55, 0.45, 0], rx: 90});
   return [{material: "white", look: "solid", mesh: M.merge([body, handle])}];
 }
-Use only kind "code" for parts, and only the templates "axis" (a row) or "assembly" (a vehicle or machine; parts may have attach or inside as described above)."""
+Every part is kind "code"."""
 
-def system_prompt(mode="pieces"):
-    kinds = ", ".join(k for k in vocab.KINDS)
-    no_code = "You never write coordinates." if mode == "code" else "You never write code or coordinates."
-    parts = _CODE_PARTS.replace("@MATERIALS@", ", ".join(vocab.MATERIALS)) if mode == "code" else f"""PART KINDS (use only these): {kinds}.
-A part is {{"id":"lowercase_id","kind":K,"label":"up to {vocab.LIMITS['label']} chars, shown on screen","size":optional one of {list(vocab.SIZES)}}}. Use the closest kind and say what it really is in the label;
-a plain "box", "cylinder", "sphere" or "cone" is fine for anything without a better match. {vocab.LIMITS['parts'][0]}-{vocab.LIMITS['parts'][1]} parts.
-
-READY-MADE KINDS are for things that really are that thing: "panel" is a solar panel, "engine" a rocket engine, "capsule" a spacecraft cabin. Never borrow one for something
-else (a data layer is not a solar panel). When nothing fits, describe the part yourself with kind "custom".
-
-CUSTOM PARTS: {{"id":..,"kind":"custom","label":..,"pieces":[...]}} with {custom.LIMITS['pieces'][0]}-{custom.LIMITS['pieces'][1]} pieces. Each piece is {{"form":F,<sizes>,"at":[x,y,z],"turn":[rx,ry,rz],"material":M,"look":L,"repeat":R}}.
-Units are relative to the part (about 1.0 = a hand-sized object, y is up, keep numbers within +-{custom.LIMITS['at']:g}); the engine places and measures the whole part, so you only describe its own shape.
-Forms: box (w,h,d); cylinder (r,h); cone (r,h, optional top radius); sphere (r); ring (r major, t tube); disc (r,h, optional hole radius: a CD, washer or coin);
-lathe (profile: [[radius,height],...] revolved around the vertical axis: bottles, bowls, bulbs, vases, cups); extrude (outline: [[x,z],...] pushed up by h: gears, brackets, wings, logos).
-"look" is one of {list(custom.LOOKS)} (default solid; glass is see-through, glow shines). "material" is one of {list(vocab.MATERIALS)}.
-"repeat": {{"count":2-24,"around":"x"|"y"|"z"}} copies the piece in a circle around the part's centre (spokes, bolts, teeth, pits), or {{"count":..,"along":[dx,dy,dz]}} steps copies along a line.
-Build a part from its largest piece outward and use several pieces (4-10) so it reads as the real thing: a disc is a flat disc with a hole, thin layers on top and a ring of small bumps.
-
-"""
+def system_prompt():
+    parts = _CODE_PARTS.replace("@MATERIALS@", ", ".join(vocab.MATERIALS))
     return f"""You write short animated 3D lessons as JSON for a desktop companion. A fixed engine turns your JSON into a 3D model that floats on screen
-while you narrate it to a child of about ten. You choose parts and the order in which to explain them. {no_code}
+while you narrate it to a child of about ten. You choose the parts, design each part's shape in code, and decide the order in which to explain them. You never write coordinates for the scene.
 Output ONE JSON object and nothing else (no markdown fence, no commentary).
 
 SHAPE: {{"version":1,"title":str,"layout":{{"template":T}},"parts":[...],"steps":[...],"recap":str,"question":str}}
 
-TEMPLATES (pick the one that fits the idea):
-- "axis": things in a row along one line, like an engine or a pipeline. Parts go in the order they appear; a "casing" or "shaft" part needs "spans":[first_id,last_id].
-- "network": one sender in the middle and receivers around it at a distance, like Wi-Fi, radio, TV or a phone mast. Needs one part of kind "router" or "tower" (the sender);
-  every other part is placed around it at a "distance" (near, medium, far); real devices are kind "device" with "variant" (laptop, phone, tv, speaker, antenna) and show signal bars, other kinds (a cable, a box) are just shapes; a "wall" needs "between":[id,id] and weakens the signal.
-- "assembly": a vehicle or machine made of pieces. Parts may have "attach":{{"to":id,"at":one of {list(vocab.ATTACH_AT)},"count":1-8}} or "inside":id.
+TEMPLATES (pick the one that fits the idea; the engine places the parts):
+- "axis": things in a row along one line, like a pipeline, a production line or a sequence. Parts go in the order they appear.
+- "assembly": one machine or vehicle made of pieces, stacked bottom to top. A part may have "attach":{{"to":id,"at":one of {list(vocab.ATTACH_AT)},"count":1-8}} (hung on another part) or "inside":id.
+- "network": one part with "sender":true in the middle (a tower, router, speaker, sun) and the other parts placed around it, each with a "distance" (near, medium, far); a part with "between":[id,id] sits between those two parts as a blocker (a wall, a hill) and weakens the signal.
 
 {parts}
+
 STEPS ({vocab.LIMITS['steps'][0]}-{vocab.LIMITS['steps'][1]}): {{"say":"narration","do":[actions]}}. Narration is spoken aloud, so write it like a friendly teacher talking to kids: plain words,
 one idea per step, a vivid everyday comparison for the hard parts. {vocab.LIMITS['say'][0]}-{vocab.LIMITS['say'][1]} characters each; about 20-45 words is ideal. Whole lesson under {vocab.LIMITS['duration']} seconds (about 6-8 steps).
 Actions (each object has exactly one key): "reveal":[ids] makes parts appear; "label":[ids] shows their names; "highlight":[ids]; "spin":[ids]; "cutaway":[ids] makes a part see-through;
@@ -94,6 +77,8 @@ TRUTH: only teach what the notes and common knowledge support. Do not invent fig
 
 EXAMPLE (a different topic, to show the format only):
 {_example()}"""
+
+
 
 
 def user_prompt(topic, notes, title=""):
@@ -115,14 +100,17 @@ def extract_json(text):
     return json.loads(text[start:end + 1])
 
 
-def plan(topic, notes, run, title="", repairs=REPAIRS, mode="pieces"):
-    system = system_prompt(mode)
+def plan(topic, notes, run, title="", repairs=REPAIRS):
+    system = system_prompt()
     prompt = user_prompt(topic, notes, title)
     problem = None
     for attempt in range(repairs + 1):
         reply = run(system, prompt if problem is None else prompt + "\n\n" + problem)
         try:
             story = extract_json(reply)
+            others = [p.get("id") for p in story.get("parts", []) if isinstance(p, dict) and p.get("kind") != "code"] if isinstance(story, dict) else []
+            if others:
+                raise build.StoryboardError([f"every part must be kind \"code\" with its own build(M) code; these are not: {', '.join(map(str, others))}"])
             return story, build.build(story)
         except ValueError as e:                     # bad JSON, or a StoryboardError (also a ValueError) with the validator's messages
             errors = e.errors if isinstance(e, build.StoryboardError) else [str(e)]

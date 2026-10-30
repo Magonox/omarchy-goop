@@ -5,6 +5,13 @@ Work is planned in [`docs/BACKLOG.md`](docs/BACKLOG.md).
 
 ## [Unreleased]
 
+### Changed
+- E5c: **lessons are made entirely from model-written code.** The planner no longer offers ready-made shapes or the basic-pieces recipe (both removed: `custom`
+  kind, `custom.py`, the `explain_parts` setting); every part is `kind: "code"` and a plan that uses anything else is sent back for repair. 3D lessons now need
+  `deno` (the sandbox); without it the tool says how to install it. The network layout works with code parts: one part with `"sender": true`, blockers
+  are any part with `"between"`. The hand-written jet engine, Wi-Fi, spacecraft and antenna lessons stay as demos and tests (they use the old library).
+  Measured: a code-built lesson plays at about 10% of one core and 257 MB, the same as the library lessons.
+
 ### Added
 - E5b: **model-written code parts** (`kind: "code"`, `goop/explainer/codegen.py`): the model writes each part's geometry as a small JavaScript function using the renderer's
   own mesh helpers (box, lathe, extrude, torus, raw triangles, loops). It runs in **Deno with no permissions** (no files, network, environment or subprocesses), a 256 MB
