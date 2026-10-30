@@ -50,6 +50,8 @@ function build(sh) {
         return tower(sh);
     case "custom":
         return custom(sh);
+    case "mesh":
+        return sh.meshes.map(function (m) { return { role: roleOf(m.look, m.material), mesh: M.T({ p: m.p, n: m.n, i: m.i }, { s: sh.scale || 1 }) }; });
     case "device":
         return device(sh);
     case "wall":
@@ -112,6 +114,10 @@ function pieceMesh(pc) {
     }
 }
 
+function roleOf(look, name) {
+    return look === "glass" ? "g:" + name : look === "glow" ? "w:" + name : look === "screen" ? "screen" : look === "led" ? "led" : "m:" + name;
+}
+
 function custom(sh) {
     var groups = {}, order = [];
     sh.pieces.forEach(function (pc) {
@@ -129,7 +135,7 @@ function custom(sh) {
             }
         }
         var look = pc.look || "solid", name = pc.material || "";
-        var role = look === "glass" ? "g:" + name : look === "glow" ? "w:" + name : look === "screen" ? "screen" : look === "led" ? "led" : "m:" + name;
+        var role = roleOf(look, name);
         if (!groups[role]) { groups[role] = []; order.push(role); }
         groups[role] = groups[role].concat(copies);
     });

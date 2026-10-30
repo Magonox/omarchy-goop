@@ -2,7 +2,7 @@
 straight back to a model for a repair pass."""
 import re
 
-from . import custom, vocab
+from . import codegen, custom, vocab
 
 _ID = re.compile(r"^[a-z][a-z0-9_]{0,23}$")
 
@@ -49,6 +49,10 @@ def validate(story):
         label = p.get("label")
         if not isinstance(label, str) or not label.strip() or len(label) > vocab.LIMITS["label"]:
             errs.append(f"part {pid!r}: label must be 1-{vocab.LIMITS['label']} characters")
+        if p.get("kind") == "code":
+            lo_c, hi_c = codegen.LIMITS["code"]
+            if not isinstance(p.get("code"), str) or not lo_c <= len(p["code"]) <= hi_c:
+                errs.append(f"part {pid!r}: a code part needs code: a string of {lo_c}-{hi_c} characters defining function build(M) that returns [{{material, look, mesh}}]")
         if p.get("kind") == "custom":
             errs += custom.validate(p.get("pieces"), f"part {pid!r}")
         if p.get("size", "medium") not in vocab.SIZES:

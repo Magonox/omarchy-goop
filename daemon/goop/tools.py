@@ -5,7 +5,7 @@ import json, os, subprocess, time
 
 from . import access, actions, approvals, classify, config, hypr, packet, proc, screenshot
 from .adapters import folder as folder_adapter, terminal as terminal_adapter
-from .explainer import planner, play
+from .explainer import codegen, planner, play
 
 AUDIT = os.path.expanduser("~/.cache/goop/audit.log")
 PREVIEW_LINES = 14
@@ -86,10 +86,15 @@ def explain_in_3d(address, args):
         _approve(address, "lesson", f"Build a 3D lesson about \"{topic}\"?",
                  "Goop plans it with a strong model (a minute or so), then shows a narrated 3D model on screen. "
                  "Your topic and these notes are sent to the model.\n" + notes[:300])
-    try:
-        story, scene = planner.plan(topic, notes, _lesson_runner(), title=w.get("title") or "")
-    except planner.PlanError as e:
-        raise ToolError(f"the lesson could not be built: {e}")
+    pref = config.load().get("explain_parts")
+    modes = ["code", "pieces"] if (pref == "code" or (pref != "pieces" and codegen.available())) else ["pieces"]
+    for n, mode in enumerate(modes):        # model-written code first; if it cannot be made to work, the basic-pieces way
+        try:
+            story, scene = planner.plan(topic, notes, _lesson_runner(), title=w.get("title") or "", mode=mode)
+            break
+        except planner.PlanError as e:
+            if n == len(modes) - 1:
+                raise ToolError(f"the lesson could not be built: {e}")
     play.stop()
     play.launch(play.save(story), address)
     return {"text": f"Playing a {scene['duration']:.0f}-second narrated lesson called \"{story['title']}\". It narrates itself; say at most one short sentence."}

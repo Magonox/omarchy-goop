@@ -12,6 +12,8 @@ def _shape(part):
     shape = {k: (round(v * f, 3) if k in ("r", "h", "w", "d", "t", "r0", "r1") else v) for k, v in kind.items() if k != "material"}
     if part["kind"] == "device":
         shape["variant"] = part.get("variant", "laptop")
+    if part["kind"] == "code":              # geometry came out of the sandbox, already centred; only its size is needed
+        shape |= {"type": "mesh", "meshes": part["_meshes"], "scale": f, "r": round(part["_dims"]["r"] * f, 3), "h": round(part["_dims"]["h"] * f, 3)}
     if part["kind"] == "custom":            # measured from its pieces, so every template can place it like any other part
         shape |= custom.measure(part["pieces"], f) | {"pieces": part["pieces"], "scale": f}
     return shape

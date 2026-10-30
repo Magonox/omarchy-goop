@@ -5,7 +5,7 @@ and sends the exact errors back for a repair pass when it is wrong. The model on
 `run(system, prompt) -> str` is the model call; claude_runner() is the default, tests pass a fake."""
 import json, os, re, shutil, subprocess
 
-from . import build, custom, vocab
+from . import build, codegen, custom, vocab
 
 REPAIRS = 2
 TIMEOUT = 150
@@ -22,21 +22,39 @@ def _example():
         return json.dumps(json.load(f), separators=(",", ":"))
 
 
-def system_prompt():
+_CODE_PARTS = """PARTS: every part is {"id":"lowercase_id","kind":"code","label":"up to 24 chars, shown on screen","size":optional small|medium|large|huge,"code":"..."}. 6-12 parts.
+The "code" is JavaScript text (escape newlines as \\n inside the JSON string) that defines function build(M) and returns a list of {material, look, mesh}. You design every part's
+shape yourself, so make it look like the real thing: use many shapes (8-20 per part) and small details (rims, screws, labels, lenses, vents), not a single box.
+Only the part's own shape goes in the code, centred around its own middle, y up. The engine places and sizes it in the scene. About 1 unit is a hand-sized object; keep the part within +-3.
+Helpers on M (all return a mesh; degrees for angles; origins are noted):
+  M.box(w,h,d,oy,ox)       box centred on x and z, its bottom face at y=oy (ox shifts it in x)
+  M.cyl(r,h,seg,oy)        cylinder on the y axis standing on y=oy, with caps
+  M.frustum(r0,r1,h,seg,oy) cone or cut cone on the y axis from y=oy (r0 bottom radius, r1 top radius)
+  M.sphere(r,segU,segV,cap) sphere around the origin (cap < PI gives a dome, e.g. Math.PI/2)
+  M.torus(R,r,segR,segr)   a ring lying flat around the y axis (major radius R, tube radius r)
+  M.tube(r,h,seg)          an open tube on the y axis, centred on y=0 (no caps)
+  M.lathe(profile,seg)     a profile [[radius,height],...] revolved around the y axis (discs with holes, bottles, bowls, bulbs, cups, vases)
+  M.extrude(outline,h)     an outline [[x,z],...] pushed up by h and centred on y=0 (gears, brackets, wings, logos)
+  M.prism(profile,z0,z1)   a profile [[x,y],...] (counter-clockwise) pushed along z from z0 to z1
+  M.pipe(a,b,r,seg)        a cylinder between points a=[x,y,z] and b=[x,y,z]
+  M.T(mesh,{pos:[x,y,z],rx,ry,rz,s})  move, turn (x then y then z) and scale a mesh (s is a number or [sx,sy,sz]); returns a new mesh
+  M.merge([mesh,...])      join meshes that share a material into one
+  M.mesh(), M.vert(m,[x,y,z],[nx,ny,nz]) -> index, and m.i.push(a,b,c): build raw triangles yourself (counter-clockwise seen from outside) for anything else.
+material is one of @MATERIALS@; look is solid, glass (see-through), glow (shines) or screen/led (small lit areas). Group same-material meshes with M.merge so a part returns 2-8 items.
+Use loops freely: teeth around a gear, bolts around a rim, a spiral track, stacked layers, blades. Segment counts 24-48 keep curves smooth. Plain JavaScript only: no imports, no async,
+no randomness needed; total under 40000 vertices; it must finish in a few seconds. Errors you cause come back to you with the message so you can fix them.
+Example of one part's code (a mug):
+function build(M) {
+  const body = M.lathe([[0,0],[0.5,0],[0.5,0.9],[0.46,0.9],[0.46,0.06],[0,0.06]], 40);
+  const handle = M.T(M.torus(0.25, 0.05, 32, 10), {pos: [0.55, 0.45, 0], rx: 90});
+  return [{material: "white", look: "solid", mesh: M.merge([body, handle])}];
+}
+Use only kind "code" for parts, and only the templates "axis" (a row) or "assembly" (a vehicle or machine; parts may have attach or inside as described above)."""
+
+def system_prompt(mode="pieces"):
     kinds = ", ".join(k for k in vocab.KINDS)
-    return f"""You write short animated 3D lessons as JSON for a desktop companion. A fixed engine turns your JSON into a 3D model that floats on screen
-while you narrate it to a child of about ten. You choose parts and the order in which to explain them. You never write code or coordinates.
-Output ONE JSON object and nothing else (no markdown fence, no commentary).
-
-SHAPE: {{"version":1,"title":str,"layout":{{"template":T}},"parts":[...],"steps":[...],"recap":str,"question":str}}
-
-TEMPLATES (pick the one that fits the idea):
-- "axis": things in a row along one line, like an engine or a pipeline. Parts go in the order they appear; a "casing" or "shaft" part needs "spans":[first_id,last_id].
-- "network": one sender in the middle and receivers around it at a distance, like Wi-Fi, radio, TV or a phone mast. Needs one part of kind "router" or "tower" (the sender);
-  every other part is placed around it at a "distance" (near, medium, far); real devices are kind "device" with "variant" (laptop, phone, tv, speaker, antenna) and show signal bars, other kinds (a cable, a box) are just shapes; a "wall" needs "between":[id,id] and weakens the signal.
-- "assembly": a vehicle or machine made of pieces. Parts may have "attach":{{"to":id,"at":one of {list(vocab.ATTACH_AT)},"count":1-8}} or "inside":id.
-
-PART KINDS (use only these): {kinds}.
+    no_code = "You never write coordinates." if mode == "code" else "You never write code or coordinates."
+    parts = _CODE_PARTS.replace("@MATERIALS@", ", ".join(vocab.MATERIALS)) if mode == "code" else f"""PART KINDS (use only these): {kinds}.
 A part is {{"id":"lowercase_id","kind":K,"label":"up to {vocab.LIMITS['label']} chars, shown on screen","size":optional one of {list(vocab.SIZES)}}}. Use the closest kind and say what it really is in the label;
 a plain "box", "cylinder", "sphere" or "cone" is fine for anything without a better match. {vocab.LIMITS['parts'][0]}-{vocab.LIMITS['parts'][1]} parts.
 
@@ -51,6 +69,20 @@ lathe (profile: [[radius,height],...] revolved around the vertical axis: bottles
 "repeat": {{"count":2-24,"around":"x"|"y"|"z"}} copies the piece in a circle around the part's centre (spokes, bolts, teeth, pits), or {{"count":..,"along":[dx,dy,dz]}} steps copies along a line.
 Build a part from its largest piece outward and use several pieces (4-10) so it reads as the real thing: a disc is a flat disc with a hole, thin layers on top and a ring of small bumps.
 
+"""
+    return f"""You write short animated 3D lessons as JSON for a desktop companion. A fixed engine turns your JSON into a 3D model that floats on screen
+while you narrate it to a child of about ten. You choose parts and the order in which to explain them. {no_code}
+Output ONE JSON object and nothing else (no markdown fence, no commentary).
+
+SHAPE: {{"version":1,"title":str,"layout":{{"template":T}},"parts":[...],"steps":[...],"recap":str,"question":str}}
+
+TEMPLATES (pick the one that fits the idea):
+- "axis": things in a row along one line, like an engine or a pipeline. Parts go in the order they appear; a "casing" or "shaft" part needs "spans":[first_id,last_id].
+- "network": one sender in the middle and receivers around it at a distance, like Wi-Fi, radio, TV or a phone mast. Needs one part of kind "router" or "tower" (the sender);
+  every other part is placed around it at a "distance" (near, medium, far); real devices are kind "device" with "variant" (laptop, phone, tv, speaker, antenna) and show signal bars, other kinds (a cable, a box) are just shapes; a "wall" needs "between":[id,id] and weakens the signal.
+- "assembly": a vehicle or machine made of pieces. Parts may have "attach":{{"to":id,"at":one of {list(vocab.ATTACH_AT)},"count":1-8}} or "inside":id.
+
+{parts}
 STEPS ({vocab.LIMITS['steps'][0]}-{vocab.LIMITS['steps'][1]}): {{"say":"narration","do":[actions]}}. Narration is spoken aloud, so write it like a friendly teacher talking to kids: plain words,
 one idea per step, a vivid everyday comparison for the hard parts. {vocab.LIMITS['say'][0]}-{vocab.LIMITS['say'][1]} characters each; about 20-45 words is ideal. Whole lesson under {vocab.LIMITS['duration']} seconds (about 6-8 steps).
 Actions (each object has exactly one key): "reveal":[ids] makes parts appear; "label":[ids] shows their names; "highlight":[ids]; "spin":[ids]; "cutaway":[ids] makes a part see-through;
@@ -83,8 +115,8 @@ def extract_json(text):
     return json.loads(text[start:end + 1])
 
 
-def plan(topic, notes, run, title="", repairs=REPAIRS):
-    system = system_prompt()
+def plan(topic, notes, run, title="", repairs=REPAIRS, mode="pieces"):
+    system = system_prompt(mode)
     prompt = user_prompt(topic, notes, title)
     problem = None
     for attempt in range(repairs + 1):

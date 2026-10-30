@@ -44,6 +44,8 @@ KINDS = {
     "thruster": {"type": "thruster", "r": 0.18, "h": 0.35, "material": "dark_steel"},
     # anything else: the model describes the part as a recipe of basic pieces (see custom.py)
     "custom": {"type": "custom", "r": 1.0, "h": 1.0, "material": "steel"},
+    # a part whose geometry the model wrote as code, run in a sandbox (see codegen.py)
+    "code": {"type": "mesh", "r": 1.0, "h": 1.0, "material": "steel"},
     # plain shapes for anything else
     "box": {"type": "box", "w": 1.2, "h": 1.0, "d": 1.2, "r": 0.9, "material": "steel"},
     "cylinder": {"type": "cylinder", "r": 0.6, "h": 1.2, "material": "steel"},

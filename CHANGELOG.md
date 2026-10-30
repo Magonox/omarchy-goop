@@ -6,6 +6,11 @@ Work is planned in [`docs/BACKLOG.md`](docs/BACKLOG.md).
 ## [Unreleased]
 
 ### Added
+- E5b: **model-written code parts** (`kind: "code"`, `goop/explainer/codegen.py`): the model writes each part's geometry as a small JavaScript function using the renderer's
+  own mesh helpers (box, lathe, extrude, torus, raw triangles, loops). It runs in **Deno with no permissions** (no files, network, environment or subprocesses), a 256 MB
+  memory cap, a 6 s limit and output checks; errors go back to the model for repair. Lessons use it by default when `deno` is installed (setting `explain_parts`:
+  auto/code/pieces) and fall back to basic pieces if code cannot be made to work. Blu-ray test: 8 parts, 101 s to plan, 3.6 MB scene (the pieces version took 40 s).
+  `daemon/plan_lesson.py` plans from the command line. 7 new tests, including hostile code.
 - E5: **custom parts**: the model can now describe a part it has no ready-made shape for as a recipe of up to 24 basic pieces (box, cylinder, cone, sphere,
   ring, disc with a hole, `lathe` = a profile revolved into a bottle/bowl/disc, `extrude` = an outline pushed into a gear/bracket), with material, look (glass,
   glow...), turn and repeat (a circle of bolts or pits). Data only, validated with repairable errors (`goop/explainer/custom.py`); the engine measures and places the
