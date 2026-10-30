@@ -59,6 +59,21 @@ file. Goal: install, see goop, and be talking to it within two minutes, with not
 | A2 | Per-goop provider: peel a copy and make it a different LLM, color-coded | todo | `agent.py --provider` exists; the shell must remember one per goop. |
 | P1 | Browser adapter (Chromium debug port, read pages via CDP) | todo | |
 
+## 3D explainers (owner idea 2026-10-30; research in `docs/design/3d-explainer.md`)
+
+Goop explains something from an article ("how a water dam works") by voice **and** a windowless 3D animation floating in the middle
+of the screen: the model is built up, exploded into components and the flow followed, narrated step by step. Recommended renderer:
+**Qt Quick 3D** (optional system package `qt6-quick3d`, 7 MiB, not installed here yet). The model writes a storyboard as data, never code.
+
+| ID | Item | Status | Notes |
+|---|---|---|---|
+| E1 | Feasibility spike: transparent frameless Quick 3D overlay with an exploded dam of primitives; measure CPU/GPU/memory; confirm transparency and click-through on Hyprland | blocked | Needs `sudo pacman -S qt6-quick3d` (owner), or fall back to QtWebEngine + three.js. |
+| E2 | Storyboard JSON format, interpreter (reveal/explode/highlight/flow/rotate/label/camera) and narration sync with Piper | todo | Hand-written dam storyboard is the golden example. |
+| E3 | Planner: article/screen -> plan -> storyboard with validation, a layout engine (semantics, not coordinates) and a repair loop | todo | LLMs are weak at 3D placement, so they never write coordinates. Uses the existing agent providers. |
+| E4 | Experience: "Explain visually" trigger, pause/skip/close/replay, captions, saved explainers in `~/.local/share/goop/explainers/` | todo | |
+| E5 | Parametric parts library, glTF models, vision critique of rendered frames | later | Blender only to author curated assets, never at runtime. |
+| E6 | Flat animated-diagram fallback (Qt Quick Shapes) when Quick 3D is not installed | later | Plus a doctor/wizard hint with the pacman command. |
+
 ## Later
 
 | ID | Item | Notes |
