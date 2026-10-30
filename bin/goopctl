@@ -8,9 +8,16 @@
 #   goopctl mute true|false           mute the voice
 #   goopctl hush                      stop talking
 #   goopctl reload                    re-read plugin code after editing it
+#   goopctl drip                      make every goop drip now (to see the animation)
+#   goopctl animations full|reduced|off   turn the liquid wobble, breathing and drips down (applies instantly, saved)
+#   goopctl config get [key] | set <key> <value>    read or change ~/.config/goop/config.json
 set -euo pipefail
 here="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 if [ "${1:-}" = reload ]; then exec omarchy-shell shell rescanPlugins; fi
+case "${1:-}" in
+  animations) shift; exec python3 "$here/daemon/settings.py" set animations "${1:?usage: goopctl animations full|reduced|off}" ;;
+  config) shift; exec python3 "$here/daemon/settings.py" "$@" ;;
+esac
 # the plugin runs inside omarchy-shell; a standalone dev instance is addressed by its path
 if omarchy-shell shell ping >/dev/null 2>&1 && omarchy-shell goop list >/dev/null 2>&1; then
   exec omarchy-shell goop "$@"

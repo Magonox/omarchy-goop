@@ -75,6 +75,20 @@ compatible endpoint, Ollama, LM Studio, OpenRouter, Groq, Together...) to `~/.co
 - Check setup: `python3 daemon/providers.py` (what is ready) and `python3 daemon/providers.py --test grok` (sends one tiny request).
 - A conversation is remembered per goop for a week (`~/.cache/goop/sessions/`), so "yes, keep going" works with any provider.
 
+## Animations and performance
+
+Goops are animated, and the animation level is yours to choose. It applies instantly, no restart:
+
+```bash
+bin/goopctl animations full       # liquid wobble, jelly breathing, drips, blinking, eyes follow the cursor
+bin/goopctl animations reduced    # plain round goops; blinking and eye-tracking only
+bin/goopctl animations off        # static goops; no blinking, and the cursor-tracking process stops
+```
+
+Measured on an Intel i7-8559U laptop (4 cores, 2018), the whole Omarchy shell with goops showing: **full about 7% of one core,
+reduced about 1.7%, off about 1.0%**. Animations cost CPU, not memory: the shell's memory stays at about 450 MB at every level.
+(Also in `~/.config/goop/config.json` as `"animations"`.)
+
 ## Configuration
 
 `~/.config/goop/config.json` (all optional):

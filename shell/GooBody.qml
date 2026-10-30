@@ -14,14 +14,31 @@ Item {
     width: r * 2
     height: r * 2
 
-    Shape {
-        width: body.width
-        height: body.height
-        preferredRendererType: Shape.CurveRenderer     // smooth anti-aliased edges without multisampling
-        ShapePath {
-            fillColor: body.color
-            strokeWidth: -1
-            PathSvg { path: Goo.svg(Goo.points(body.r, body.r, body.r, body.t, body.seed, body.squish, body.energy)) }
+    property bool live: true            // false = a plain disc (no per-frame path work, no Shape)
+
+    Loader {
+        active: body.live
+        anchors.fill: parent
+        sourceComponent: Component {
+            Shape {
+                width: body.width
+                height: body.height
+                preferredRendererType: Shape.CurveRenderer     // smooth anti-aliased edges without multisampling
+                ShapePath {
+                    fillColor: body.color
+                    strokeWidth: -1
+                    PathSvg { path: Goo.svg(Goo.points(body.r, body.r, body.r, body.t, body.seed, body.squish, body.energy)) }
+                }
+            }
         }
+    }
+    Rectangle {
+        visible: !body.live
+        width: parent.width * (1 + body.squish)
+        height: parent.height * (1 - body.squish)
+        x: (parent.width - width) / 2
+        y: (parent.height - height) / 2
+        radius: Math.min(width, height) / 2
+        color: body.color
     }
 }

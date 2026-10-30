@@ -45,12 +45,36 @@ PanelWindow {
     property string dragColor: "#e5484d"    // color/seed the blob keeps when it lands
     property int dragSeed: 0
     property real popScale: 1
+    // --- animation level, from ~/.config/goop/config.json (watched: `goopctl animations off` applies instantly) ---
+    //   full: liquid wobble, jelly breathing, drips   reduced: plain round goops, blinking and gaze   off: static, no cursor tracking
+    property string animations: "full"
+    readonly property bool animLive: animations === "full"
+    readonly property bool animEyes: animations !== "off"
+    property bool cfgMissing: false
+    function applyConfig(t) {
+        try {
+            var a = JSON.parse(t).animations;
+            animations = (a === "reduced" || a === "off") ? a : "full";
+        } catch (e) { animations = "full"; }
+    }
+    FileView {
+        id: userCfg
+        path: Quickshell.env("HOME") + "/.config/goop/config.json"
+        watchChanges: true
+        printErrors: false                      // a missing file is normal until the user changes a setting
+        onFileChanged: reload()
+        onLoaded: { win.cfgMissing = false; win.applyConfig(text()); }
+        onLoadFailed: { win.cfgMissing = true; win.animations = "full"; }     // no config file yet: defaults
+    }
+    Timer { interval: 3000; repeat: true; running: win.cfgMissing; onTriggered: userCfg.reload() }
+    signal dripNow()
+
     property real gooT: 0                   // seconds; drives the liquid wobble of every goop
     readonly property real gooT0: Date.now()
     function computeAnyVisible() { for (var i = 0; i < spots.length; i++) if (spots[i].vis) return true; return false; }
     readonly property bool anyVisible: computeAnyVisible()
     // 30 fps is plenty for a slow wobble, and it only runs while a goop is on screen
-    Timer { interval: 33; repeat: true; running: win.anyVisible || win.dragging; onTriggered: win.gooT = (Date.now() - win.gooT0) / 1000 }
+    Timer { interval: 33; repeat: true; running: (win.anyVisible || win.dragging) && win.animLive; onTriggered: win.gooT = (Date.now() - win.gooT0) / 1000 }
     property bool ttsReady: false
     property bool muted: false
     property string speakingAddr: ""        // the goop whose mouth is moving
@@ -262,7 +286,7 @@ PanelWindow {
 
     // --- cursor feed for gaze (only while a goop exists) ---
     Process {
-        running: win.perched.length > 0
+        running: win.perched.length > 0 && win.animEyes
         command: ["python3", root.daemon + "/cursor.py"]
         stdout: SplitParser {
             onRead: line => {
@@ -373,7 +397,7 @@ PanelWindow {
                 from: gp.seed % 6; to: gp.seed % 6 + 6.2832
                 duration: 3200 + (gp.seed % 7) * 180
                 loops: Animation.Infinite
-                running: gp.visible
+                running: gp.visible && win.animLive
             }
 
             // --- talking to the agent ---
@@ -449,26 +473,41 @@ PanelWindow {
                 function onOfferAnswered(addr, yes) { if (addr === modelData) gp.answerOffer(yes); }
             }
 
+            // --- drips (full animations only), drawn first so the goop overlaps where they join ---
+            Loader {
+                id: dripLoader
+                x: gp.width / 2; y: gp.height - 1
+                active: win.animLive && gp.visible
+                sourceComponent: Component {
+                    Drip {
+                        color: win.colorOf(modelData)
+                        calm: win.speakingAddr === modelData ? 2.5 : (win.moodOf(modelData) === "thinking" ? 0.5 : 1)
+                    }
+                }
+            }
+            Connections { target: win; function onDripNow() { if (dripLoader.item) dripLoader.item.trigger() } }
+
             // --- body ---
             Item {
                 anchors.fill: parent
                 // breathing as jelly: wider-and-shorter then taller-and-narrower, so the volume stays about the same
                 transform: Scale {
                     origin.x: win.r; origin.y: win.r
-                    xScale: 1 + 0.05 * Math.sin(gp.phase)
-                    yScale: 1 - 0.05 * Math.sin(gp.phase) + 0.015 * Math.sin(gp.phase * 2)
+                    xScale: win.animLive ? 1 + 0.05 * Math.sin(gp.phase) : 1
+                    yScale: win.animLive ? 1 - 0.05 * Math.sin(gp.phase) + 0.015 * Math.sin(gp.phase * 2) : 1
                 }
                 GooBody {
                     anchors.centerIn: parent
-                    r: win.r; seed: gp.seed; squish: gp.squish; energy: gp.energyS; t: win.gooT
+                    r: win.r; seed: gp.seed; squish: gp.squish; energy: gp.energyS; t: win.gooT; live: win.animLive
                     color: win.colorOf(modelData)
                 }
                 Eyes {
                     x: win.r; y: win.r
                     seed: gp.seed
                     mood: win.moodOf(modelData)
-                    gx: gp.spot ? win.gaze(win.cx - gp.spot.x, win.cy - gp.spot.y, 0) : 0
-                    gy: gp.spot ? win.gaze(win.cx - gp.spot.x, win.cy - gp.spot.y, 1) : 0
+                    alive: win.animEyes
+                    gx: (win.animEyes && gp.spot) ? win.gaze(win.cx - gp.spot.x, win.cy - gp.spot.y, 0) : 0
+                    gy: (win.animEyes && gp.spot) ? win.gaze(win.cx - gp.spot.x, win.cy - gp.spot.y, 1) : 0
                 }
                 Item {   // mouth: five little bars that dance with the voice; nothing else on the goop moves
                     id: mouth
@@ -610,11 +649,13 @@ PanelWindow {
             }
             if (win.srcVisible) {
                 c.fillStyle = srcCol;
-                Goo.draw(c, Goo.points(sx, sy, rs, win.gooT, win.seedOf(win.srcAddr), 0, 0.3));
+                if (win.animLive) { Goo.draw(c, Goo.points(sx, sy, rs, win.gooT, win.seedOf(win.srcAddr), 0, 0.3)); }
+                else { c.beginPath(); c.arc(sx, sy, rs, 0, Math.PI * 2); }
                 c.fill();
             }
             c.fillStyle = win.dragColor;
-            Goo.draw(c, Goo.points(x, y, R, win.gooT + 1.7, win.dragSeed, 0, 0.9));   // the pulled blob is more agitated
+            if (win.animLive) { Goo.draw(c, Goo.points(x, y, R, win.gooT + 1.7, win.dragSeed, 0, 0.9)); }   // the pulled blob is more agitated
+            else { c.beginPath(); c.arc(x, y, R, 0, Math.PI * 2); }
             c.fill();
         }
     }
@@ -709,6 +750,7 @@ PanelWindow {
         function speak(addr: string, text: string): void { win.speak(addr, text); }
         function mute(on: bool): void { win.muted = on; if (win.ttsReady) tts.write(JSON.stringify({ cmd: "mute", on: on }) + "\n"); }
         function hush(): void { win.stopSpeech(); }
+        function drip(): void { win.dripNow(); }
         function reply(addr: string, text: string): void { win.injectReply(addr, text); }
         function answer(addr: string, yes: bool): void { win.offerAnswered(addr, yes); }
         function openAsk(addr: string): void { win.openAsk(addr); }

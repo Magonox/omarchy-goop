@@ -25,7 +25,9 @@ Tracks: **L** launch · **V** visual · **A** agent · **P** other apps · **T**
 | L5 | `preview.png` in the repo root | todo | Optional but it is the card image. Needs a good screenshot (see M1). |
 | L6 | Self-check against the security baseline | todo | `setup.sh` is an installer (pip, model download) so it will be flagged `review-required`, not rejected. Keep: no `curl | sh`, no unpinned remote code. |
 | V1 | Gooey outline: edges that wobble like liquid instead of a plain circle | doing | First pass in (2026-10-30): `shell/goo.js` + `GooBody.qml`, jelly squash-and-stretch breathing, livelier when speaking/thinking/startled, the peel blobs use the same shape. CPU unchanged (5-6% of a core for the whole shell). **Waiting on owner feedback**: more or less wobble? Knobs: amplitudes in `goo.js` (`a2/a3/a4/ab`, sag), breathing 0.05 in `Goop.qml`. |
-| V2 | Drips: a small drop forms at the bottom, falls a few pixels, fades | todo | Random interval per goop; calmer while speaking. |
+| V2 | Drips: a small drop forms at the bottom, falls a few pixels, fades | doing | In (2026-10-30): `shell/Drip.qml`, every 7-16 s per goop (rarer while speaking, more often while thinking), `goopctl drip` to see one now. **Waiting on owner feedback** (frequency, size). |
+| S1 | **Goop settings in the top bar**: a bar widget with a popup (animations Full/Reduced/Off, mute, agent, status, setup checklist, links) | doing | Owner request 2026-10-30. Built on Omarchy's `BarWidget` + `Panel` + `KeyboardPanel`; shows only while goop runs. |
+| V6 | `animations: auto`: drop to reduced on battery or high load | todo | Idea from the performance work; needs a reliable power signal. |
 
 ## Next
 

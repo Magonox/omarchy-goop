@@ -8,6 +8,7 @@ Item {
     property real gx: 0                 // gaze direction, -1..1
     property real gy: 0
     property string mood: "idle"        // idle | startled | thinking | happy | error
+    property bool alive: true           // false: no blinking (animations off)
 
     readonly property real half: 4.2 + (seed % 5) * 0.55
     readonly property real baseW: 2.6 + (seed % 3) * 0.45
@@ -64,7 +65,11 @@ Item {
             blinkT.start();
         }
     }
-    Component.onCompleted: { blinkT.interval = blinkBase * (0.3 + Math.random()); blinkT.start() }
+    Component.onCompleted: { blinkT.interval = blinkBase * (0.3 + Math.random()); if (alive) blinkT.start() }
+    onAliveChanged: {
+        if (alive) { blinkT.interval = blinkBase * (0.3 + Math.random()); blinkT.start(); }
+        else { blinkT.stop(); openT.stop(); shut = false; }
+    }
 
     SequentialAnimation {
         running: eyes.mood === "thinking"

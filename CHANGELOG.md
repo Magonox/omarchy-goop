@@ -6,6 +6,10 @@ Work is planned in [`docs/BACKLOG.md`](docs/BACKLOG.md).
 ## [Unreleased]
 
 ### Added
+- V2: drips. A bulge forms at the bottom of a goop, stretches on a thin neck, lets go and falls (`shell/Drip.qml`).
+- Animation levels `full` / `reduced` / `off`, switchable live (`goopctl animations ...`, `~/.config/goop/config.json`). Measured CPU for the
+  whole shell: about 7% / 1.7% / 1.0% of one core. `off` also stops the cursor-tracking process. `daemon/settings.py` and `goopctl config`
+  read and change settings safely (validated, atomic writes).
 - V1 (first pass): liquid goop bodies. A smooth closed curve whose rim moves with slow waves and a travelling slosh bump, a heavier bottom,
   jelly squash-and-stretch breathing, and livelier motion while speaking, thinking or startled. The peel blobs use the same shape.
 - Tracking: `docs/BACKLOG.md`, this changelog, `docs/PUBLISHING.md` (marketplace research).

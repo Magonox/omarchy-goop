@@ -16,6 +16,7 @@ DEFAULTS = {
     },
     "read_files": "folder",     # who may read files: "folder" = files inside the window's own folder, "ask" = a card per file, "off"
     "providers": {},            # extra OpenAI-compatible endpoints by name; see agent/registry.py
+    "animations": "full",       # "full" liquid wobble + jelly + drips, "reduced" plain round goops (blink + gaze), "off" static, no gaze process
     "provider": "claude",       # which agent the goops are
     "model": "haiku",           # provider-specific model name; quick replies suit a small, fast model
 }
