@@ -69,6 +69,13 @@ bubble, mood, voice. Sessions resume per goop (`--resume`), so "yes, keep going"
 
 ## Gotchas that cost time
 
+- **Never load Qt Quick 3D (or any heavy GPU toolkit) inside the Omarchy shell.** It crashed the whole shell once (assertion in Quick 3D's renderer).
+  Run it as its own process (`shell/explainer3d/`, started with `goopctl explain3d`). A plugin shares the shell's process: its bugs are the bar's bugs.
+- **Visual tests on an empty workspace,** or the screenshots capture the owner's live screen: `hyprctl dispatch 'hl.dsp.focus({ workspace = "9" })'`
+  and back. Run separate-process tests with `QS_DISABLE_CRASH_HANDLER=1 quickshell -n -p <dir>`.
+- Do not `pkill -f <pattern>` from a shell command whose own text contains the pattern: it kills itself (exit 144). Find pids with `pgrep -x quickshell`
+  and read `/proc/<pid>/cmdline`.
+
 - Hyprland 0.56 is Lua-configured: `hyprctl dispatch 'hl.dsp.focus({ window = "address:0x.." })'`; `hl.dsp.cursor.move({x=,y=})`.
   `hypr.focus_window` falls back to the classic dispatcher for older versions.
 - Never hide a drag source mid-drag (Qt cancels its mouse grab). Never resize a layer surface per keystroke (flicker): keep it

@@ -19,14 +19,14 @@ class Checks(unittest.TestCase):
         self.assertFalse(c["agent"]["ok"])
         self.assertIn("Claude Code", c["agent"]["hint"])
         self.assertIn("setup.sh", c["voice"]["hint"])
-        for k in ("hyprctl", "screenshots", "typing", "pdf", "audio"):
+        for k in ("hyprctl", "screenshots", "typing", "pdf", "audio", "quick3d"):
             self.assertFalse(c[k]["ok"])
             self.assertTrue(c[k]["hint"])
 
     def test_required_vs_optional(self):
         c = by_id(doctor.checks("claude", None, which=lambda t: "x", exists=lambda p: True))
         self.assertTrue(c["agent"]["required"] and c["screenshots"]["required"])
-        self.assertFalse(c["voice"]["required"] or c["typing"]["required"] or c["pdf"]["required"])
+        self.assertFalse(c["voice"]["required"] or c["typing"]["required"] or c["pdf"]["required"] or c["quick3d"]["required"])
 
     def test_other_provider_uses_its_own_problem(self):
         c = by_id(doctor.checks("grok", "no API key for 'grok'", which=lambda t: "x", exists=lambda p: True))

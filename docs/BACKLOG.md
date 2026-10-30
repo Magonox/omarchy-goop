@@ -67,8 +67,10 @@ of the screen: the model is built up, exploded into components and the flow foll
 
 | ID | Item | Status | Notes |
 |---|---|---|---|
-| E1 | Feasibility spike: transparent frameless Quick 3D overlay with an exploded dam of primitives; measure CPU/GPU/memory; confirm transparency and click-through on Hyprland | blocked | Needs `sudo pacman -S qt6-quick3d` (owner), or fall back to QtWebEngine + three.js. |
-| E2 | Storyboard JSON format, interpreter (reveal/explode/highlight/flow/rotate/label/camera) and narration sync with Piper | todo | Hand-written dam storyboard is the golden example. |
+| E1 | ~~Feasibility spike~~ | **done 2026-10-30** | Works. Qt Quick 3D in its own process: 11-24% of a core, about 260 MB while playing; the pure-JS canvas version needed 67-87%. It must run **outside** the shell (an in-shell test aborted the Omarchy shell). Details in the design doc. Try it: `bin/goopctl explain3d dam` (needs `qt6-quick3d`). |
+| E2 | Storyboard **JSON** format and interpreter (reveal/explode/highlight/flow/rotate/label/camera), narration sync with Piper | todo | Today the dam is hand-written JS (`shell/explainer3d/dam3d.js`); the data format comes next. Cutting that JS down to a parts library + a JSON storyboard is the real E2. |
+| E7 | Launch from goop: "Explain visually" in the ask box/bubble starts the explainer process with a storyboard path, goop narrates, a key or click dismisses | todo | The shell only spawns the separate process (see E1). Fall back to voice-only when `qt6-quick3d` is missing (the setup checklist already reports it). |
+| E8 | Soft edges so close-ups never show a window boundary | todo | `MultiEffect` mask and built-in vignette both failed (see design doc); the ground-sinks trick covers the dam. Other ideas: shader fade, smaller frame. |
 | E3 | Planner: article/screen -> plan -> storyboard with validation, a layout engine (semantics, not coordinates) and a repair loop | todo | LLMs are weak at 3D placement, so they never write coordinates. Uses the existing agent providers. |
 | E4 | Experience: "Explain visually" trigger, pause/skip/close/replay, captions, saved explainers in `~/.local/share/goop/explainers/` | todo | |
 | E5 | Parametric parts library, glTF models, vision critique of rendered frames | later | Blender only to author curated assets, never at runtime. |

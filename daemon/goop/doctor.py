@@ -3,6 +3,7 @@ import os, shutil
 
 VENV_PYTHON = os.path.expanduser("~/.local/share/goop/venv/bin/python")
 VOICE_MODEL = os.path.expanduser("~/.local/share/goop/voices/en_US-libritts_r-medium.onnx")
+QUICK3D_PLUGIN = "/usr/lib/qt6/qml/QtQuick3D/libqquick3dplugin.so"
 
 
 def checks(provider_name="claude", provider_problem=None, which=shutil.which, exists=os.path.exists):
@@ -24,6 +25,8 @@ def checks(provider_name="claude", provider_problem=None, which=shutil.which, ex
         tool("audio", "Audio playback (paplay)", "paplay", False, "Install pipewire-pulse so goops can speak"),
         tool("typing", "Typing into terminals (wtype)", "wtype", False, "Install wtype so goops can type commands"),
         tool("pdf", "Reading PDFs (pdftotext)", "pdftotext", False, "Install poppler so goops can read PDFs"),
+        {"id": "quick3d", "label": "3D explainers (qt6-quick3d)", "ok": exists(QUICK3D_PLUGIN), "required": False,
+         "hint": "Run: sudo pacman -S qt6-quick3d (about 10 MB)"},
     ]
 
 

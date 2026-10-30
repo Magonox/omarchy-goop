@@ -27,6 +27,8 @@ Scope {
     }
     function setSetting(key, value) { Quickshell.execDetached(["python3", root.daemon + "/settings.py", "set", key, String(value)]); }
 
+    Explainer { id: explainer }
+
     readonly property string venvPython: Quickshell.env("HOME") + "/.local/share/goop/venv/bin/python"   // created by setup.sh
 
 PanelWindow {
@@ -777,6 +779,10 @@ PanelWindow {
         function mute(on: bool): void { win.setMuted(on); root.setSetting("tts.muted", on ? "true" : "false"); }
         function hush(): void { win.stopSpeech(); }
         function drip(): void { win.dripNow(); }
+        function explain(name: string): void { explainer.play(); }
+        function explainStop(): void { explainer.stop(); }
+        // The 3D version runs as its own program: a failure inside Qt Quick 3D must never be able to take down the shell (it once did).
+        function explain3d(name: string): void { Quickshell.execDetached(["quickshell", "-n", "-p", root.here + "/explainer3d"]); }
         function reply(addr: string, text: string): void { win.injectReply(addr, text); }
         function answer(addr: string, yes: bool): void { win.offerAnswered(addr, yes); }
         function openAsk(addr: string): void { win.openAsk(addr); }
