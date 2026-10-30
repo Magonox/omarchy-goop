@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Play a 3D lesson in its own process (never inside the Omarchy shell).
 #   goop-explain jet_engine | wifi | spacecraft | dam | /path/to/storyboard.json
-# GOOP_SPEED=4 plays faster (testing). Needs the optional package qt6-quick3d.
+# The goop on the focused window narrates it (GOOP_QUIET=1 to skip). GOOP_SPEED=4 plays faster (testing). Needs the optional package qt6-quick3d.
 set -euo pipefail
 here="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 name="${1:?usage: goop-explain <lesson|storyboard.json>}"
@@ -10,4 +10,6 @@ if [ "$name" = dam ]; then exec quickshell -n -p "$here/shell/explainer3d"; fi
 mkdir -p "$HOME/.cache/goop/scenes"
 scene="$HOME/.cache/goop/scenes/$(basename "${name%.json}").scene.json"
 python3 "$here/daemon/build_scene.py" "$name" -o "$scene"
-GOOP_SCENE="$scene" exec quickshell -n -p "$here/shell/explainer3d"
+# narration: the running goop reads each step aloud (GOOP_QUIET=1 for silence)
+if [ -z "${GOOP_QUIET:-}" ]; then python3 "$here/daemon/narrate.py" "$scene" & narrator=$!; trap 'kill $narrator 2>/dev/null || true' EXIT; fi
+GOOP_SCENE="$scene" quickshell -n -p "$here/shell/explainer3d"

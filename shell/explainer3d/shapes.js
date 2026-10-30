@@ -46,6 +46,8 @@ function build(sh) {
                 { role: "dark", mesh: M.merge([-0.3, 0.3].map(function (x) { return M.T(M.cyl(0.028, 0.46, 8, 0), { pos: [x, -h / 2 + 0.14, -0.15], rz: x < 0 ? 12 : -12 }); })) },
                 { role: "led", mesh: M.merge([-0.2, -0.08, 0.04].map(function (x) { return M.box(0.06, 0.03, 0.04, -h / 2 + 0.14, x); })) }];
     }
+    case "tower":
+        return tower(sh);
     case "device":
         return device(sh);
     case "wall":
@@ -90,8 +92,33 @@ function build(sh) {
     return [{ role: "main", mesh: M.box(1, 1, 1, -0.5) }];
 }
 
+function tower(sh) {
+    var h = sh.h, y0 = -h / 2, tilt = 6.4, legs = [], rings = [];
+    [[1, 1], [1, -1], [-1, 1], [-1, -1]].forEach(function (s) {
+        legs.push(M.T(M.cyl(0.03, h, 6, -h / 2), { pos: [s[0] * 0.2, 0, s[1] * 0.2], rz: s[0] * tilt, rx: -s[1] * tilt }));
+    });
+    [0.08, 0.3, 0.52, 0.74].forEach(function (f) {
+        var off = 0.333 - 0.111 * (f * h);
+        rings.push(M.T(M.torus(Math.SQRT2 * off, 0.012, 20, 6), { pos: [0, y0 + f * h, 0] }));
+    });
+    return [{ role: "main", mesh: M.merge(legs) },
+            { role: "dark", mesh: M.merge(rings) },
+            { role: "accent", mesh: M.merge([M.T(M.cyl(0.02, h * 0.2, 6, 0), { pos: [0, h / 2, 0] }),
+                                               M.T(M.box(0.34, 0.05, 0.05, 0), { pos: [0, y0 + h * 0.86, 0] }),
+                                               M.T(M.box(0.05, 0.05, 0.34, 0), { pos: [0, y0 + h * 0.8, 0] })]) },
+            { role: "led", mesh: M.T(M.sphere(0.07, 12, 8), { pos: [0, h / 2 + h * 0.2, 0] }) }];
+}
+
 function device(sh) {
     var v = sh.variant, h = sh.h || 0.6, y0 = -h / 2;
+    if (v === "antenna") {                                  // a rooftop TV antenna: a mast, a boom, and rods that get shorter toward the front
+        var rods = [0.78, 0.7, 0.58, 0.5, 0.44, 0.4].map(function (len, i) {
+            return M.T(M.box(len, 0.025, 0.025, -0.0125), { pos: [0, y0 + 0.44, -0.3 + i * 0.12] });
+        });
+        return [{ role: "dark", mesh: M.cyl(0.03, 0.44, 8, y0) },
+                { role: "dark", mesh: M.T(M.box(0.03, 0.03, 0.8, -0.015), { pos: [0, y0 + 0.44, 0] }) },
+                { role: "main", mesh: M.merge(rods) }];
+    }
     if (v === "phone")
         return [{ role: "dark", mesh: M.box(0.3, 0.05, 0.54, y0 + 0.2) },
                 { role: "screen", mesh: M.box(0.26, 0.012, 0.48, y0 + 0.245) }];

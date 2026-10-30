@@ -69,8 +69,8 @@ def validate(story):
             else:
                 for r in sp:
                     known(r, f"part {pid!r} spans")
-        if p.get("kind") == "device" and p.get("variant", "laptop") not in ("laptop", "phone", "tv", "speaker"):
-            errs.append(f"part {pid!r}: device variant must be one of: laptop, phone, tv, speaker")
+        if p.get("kind") == "device" and p.get("variant", "laptop") not in ("laptop", "phone", "tv", "speaker", "antenna"):
+            errs.append(f"part {pid!r}: device variant must be one of: laptop, phone, tv, speaker, antenna")
         if template == "network":
             if p.get("kind") == "device" and p.get("distance", "medium") not in vocab.DISTANCES:
                 errs.append(f"part {pid!r}: distance must be one of: {_list(vocab.DISTANCES)}")
@@ -92,8 +92,8 @@ def validate(story):
                         errs.append(f"part {pid!r}: attach.count must be 1-8")
             if p.get("inside") is not None:
                 known(p.get("inside"), f"part {pid!r} inside")
-    if template == "network" and not any(p.get("kind") == "router" for p in ids.values()):
-        errs.append("a network lesson needs a part of kind router")
+    if template == "network" and not any(p.get("kind") in ("router", "tower") for p in ids.values()):
+        errs.append("a network lesson needs a part of kind router or tower (the thing that sends the signal)")
 
     steps = story.get("steps")
     slo, shi = vocab.LIMITS["steps"]

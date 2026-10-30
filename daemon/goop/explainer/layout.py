@@ -68,7 +68,7 @@ def network(story):
     placed, parts = {}, story["parts"]
     for p in parts:
         placed[p["id"]] = _place(p)
-    router = next(p for p in parts if p["kind"] == "router")
+    router = next(p for p in parts if p["kind"] in ("router", "tower"))
     rpos = [-4.6, placed[router["id"]]["shape"]["h"] / 2, 0.0]
     placed[router["id"]]["pos"] = _r3(rpos)
     devices = [p for p in parts if p["kind"] == "device"]

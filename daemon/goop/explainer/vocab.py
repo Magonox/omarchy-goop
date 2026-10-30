@@ -31,6 +31,7 @@ KINDS = {
     "shaft": {"type": "shaft", "r": 0.12, "axial": True, "spanning": True, "material": "white"},
     # signals in a room
     "router": {"type": "router", "r": 0.5, "h": 0.5, "material": "white"},
+    "tower": {"type": "tower", "r": 0.5, "h": 2.4, "material": "steel"},      # a transmitter: radio or TV mast
     "device": {"type": "device", "variant": "laptop", "r": 0.6, "h": 0.6, "material": "dark_steel"},
     "wall": {"type": "wall", "w": 3.6, "h": 2.4, "t": 0.25, "r": 1.8, "material": "concrete"},
     # a vehicle made of parts

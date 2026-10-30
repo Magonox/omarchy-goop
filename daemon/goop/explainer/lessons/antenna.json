@@ -1,0 +1,25 @@
+{
+  "version": 1,
+  "title": "How a digital TV antenna works",
+  "layout": {"template": "network"},
+  "parts": [
+    {"id": "tower", "kind": "tower", "label": "Broadcast tower"},
+    {"id": "antenna", "kind": "device", "variant": "antenna", "label": "Antenna", "distance": "medium"},
+    {"id": "tv", "kind": "device", "variant": "tv", "label": "Your TV", "distance": "medium"},
+    {"id": "wall", "kind": "wall", "label": "Tall building", "between": ["tower", "antenna"]}
+  ],
+  "steps": [
+    {"say": "Did you know TV shows can fly through the air, for free? A digital antenna catches them. Let's see how!",
+     "do": [{"reveal": ["tower"]}, {"label": ["tower"]}]},
+    {"say": "A TV station sends its show from a tall tower as invisible radio waves, spreading out in every direction like ripples in a pond.",
+     "do": [{"pulse": "tower"}, {"zoom": "all"}]},
+    {"say": "Your antenna is made of metal that is tuned to catch those waves, like a catcher's glove that fits the ball just right.",
+     "do": [{"reveal": ["antenna"]}, {"label": ["antenna"]}, {"highlight": ["antenna"]}]},
+    {"say": "Tall buildings can block the waves, which is why a higher spot with nothing in the way gives a stronger signal.",
+     "do": [{"reveal": ["wall"]}, {"label": ["wall"]}, {"highlight": ["wall"]}]},
+    {"say": "The antenna sends what it caught down a cable to your TV. The TV turns the signal into pictures and sound, and a channel scan saves the stations it found.",
+     "do": [{"reveal": ["tv"]}, {"label": ["tv"]}, {"highlight": ["tv"]}, {"flow": {"from": "antenna", "to": "tv", "medium": "signal"}}]}
+  ],
+  "recap": "Remember: a tower sends waves, the antenna catches them, and the TV turns them into a show. Higher and clearer is better.",
+  "question": "Where in your home would the antenna get the clearest view of the tower?"
+}
