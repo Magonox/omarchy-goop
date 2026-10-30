@@ -15,6 +15,7 @@ DEFAULTS = {
         "max_chars": 420,       # longer replies are cut at a sentence boundary
     },
     "read_files": "folder",     # who may read files: "folder" = files inside the window's own folder, "ask" = a card per file, "off"
+    "providers": {},            # extra OpenAI-compatible endpoints by name; see agent/registry.py
     "provider": "claude",       # which agent the goops are
     "model": "haiku",           # provider-specific model name; quick replies suit a small, fast model
 }

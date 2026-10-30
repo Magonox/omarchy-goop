@@ -62,16 +62,27 @@ bubble, mood, voice. Sessions resume per goop (`--resume`), so "yes, keep going"
 - A tool that raises an unexpected error must not kill the MCP server: `tools.call` converts it to a `ToolError`.
 - Paths: the QML finds its own directory with `Qt.resolvedUrl("Goop.qml")`; `Quickshell.shellDir` would be Omarchy's.
 
+## Done since the first handoff
+
+- **Real reboot verified** (2026-10-30): goop came up with the shell, voice running, plugin enabled.
+- **File-sort live test passed** (backend, approver simulated): card showed the full plan and nothing moved while pending; 12 files
+  sorted in one move; undo restored the exact original and removed the folders it created. Still worth a manual click-through of the card.
+- **Second provider**: `goop/agent/openai_compat.py` (stdlib only, tools run in-process through `goop/tools.py`, per-goop history
+  in `~/.cache/goop/sessions/`), `registry.py` (config-driven), `daemon/providers.py` (list/test). Tested against a fake local server
+  and end-to-end through `agent.py` with a real tool. **Not yet run against a real remote model**: there was no API key on the machine.
+  First real test: configure a provider, `python3 daemon/providers.py --test <name>`, then ask a goop something.
+
 ## Backlog, in the order I'd do it
 
-1. **File-sort live test** (only unit-tested so far): open Nautilus on a scratch folder, ask a goop to sort it, check the plan
-   card, Approve, then undo.
-2. **Second provider**: a generic OpenAI-compatible one (covers Grok, Gemini, Ollama, ...: base URL + model + key) to prove the
-   provider interface before more code assumes Claude. `goop/agent/base.py` is the contract, `claude.py` the example.
+1. **Real-model test of the OpenAI-compatible provider** (needs a key, e.g. xAI/Grok or OpenAI, or a local Ollama).
+2. **Per-goop provider**: peel a copy and make it a different LLM (color-code by provider). `agent.py --provider NAME` already exists;
+   the shell needs to remember a provider per goop and pass it.
 3. **Browser adapter**: launch Chromium with a debug port and read pages via CDP instead of only screenshots.
-4. Write actions for project windows (Claude Code's edit tools routed through the approval card via `--permission-prompt-tool`).
-5. Voice input (the quick-reply buttons send the same message a spoken "yes" would).
-6. A `goopctl speed` live control; per-goop provider (peel a copy and make it a different LLM).
+4. **Controlling other apps** (e.g. Kdenlive): start with project files + `melt`/`ffmpeg` through the terminal/file paths, then the
+   accessibility tree (AT-SPI bindings are installed) as the generic route; pixel clicking last (needs a virtual-pointer tool such as
+   `wlrctl`, not installed). All of it behind approval cards, confined to the window, with a screenshot check after each step.
+5. Write actions for project windows (Claude Code's edit tools routed through the approval card via `--permission-prompt-tool`).
+6. Voice input (the quick-reply buttons send the same message a spoken "yes" would); a `goopctl speed` live control.
 
 ## Before publishing to GitHub
 

@@ -53,6 +53,28 @@ Goop loads with the Omarchy shell, so it is running whenever you are logged in.
 - Every tool call is logged to `~/.cache/goop/audit.log`. Voice and tool logic run locally; the only thing sent out is the
   conversation with your chosen LLM.
 
+## Choosing the agent
+
+Goop talks to Claude Code by default. To use another LLM, add any **OpenAI-compatible** endpoint (OpenAI, xAI Grok, Gemini's
+compatible endpoint, Ollama, LM Studio, OpenRouter, Groq, Together...) to `~/.config/goop/config.json`:
+
+```json
+{
+  "provider": "grok",
+  "providers": {
+    "grok":   { "base_url": "https://api.x.ai/v1", "model": "<model id>", "api_key_file": "~/.config/goop/keys/xai", "vision": true },
+    "ollama": { "base_url": "http://localhost:11434/v1", "model": "<model id>" }
+  }
+}
+```
+
+- **Keys never go in the config.** Use `api_key_file` (a file containing only the key; `chmod 600` it; takes effect immediately) or
+  `api_key_env` (a variable in `~/.config/uwsm/env.d/*`; needs a re-login). A local server like Ollama needs neither.
+- `vision: true` only if the model can read images; otherwise the goop uses text context instead of screenshots.
+- The model must support **tool calling**. Tools, approval cards and every safety limit are the same for every provider.
+- Check setup: `python3 daemon/providers.py` (what is ready) and `python3 daemon/providers.py --test grok` (sends one tiny request).
+- A conversation is remembered per goop for a week (`~/.cache/goop/sessions/`), so "yes, keep going" works with any provider.
+
 ## Configuration
 
 `~/.config/goop/config.json` (all optional):
