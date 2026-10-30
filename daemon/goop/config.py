@@ -4,7 +4,7 @@ import json, os, re
 DEFAULTS = {
     "deny_classes": ["1password", "bitwarden", "keepassxc", "seahorse", "gnome-keyring"],
     "deny_title_regex": ["password", "bank", "paypal", "1password", "bitwarden"],
-    "auto_approve_safe": True,  # run plain read-only terminal commands (ls, pwd, cd, git status/log) without a card
+    "access": "ask",            # how much goop may do: "look" (never act), "ask" (cards for actions), "ask_all" (cards for everything); see access.py
     "tts": {                    # a goop's spoken voice; all on-device, nothing leaves the machine
         "enabled": True,
         "engine": "piper",
@@ -14,7 +14,6 @@ DEFAULTS = {
         "pause_ms": 220,        # silence between sentences
         "max_chars": 420,       # longer replies are cut at a sentence boundary
     },
-    "read_files": "folder",     # who may read files: "folder" = files inside the window's own folder, "ask" = a card per file, "off"
     "providers": {},            # extra OpenAI-compatible endpoints by name; see agent/registry.py
     "animations": "full",       # "full" liquid wobble + jelly + drips, "reduced" plain round goops (blink + gaze), "off" static, no gaze process
     "provider": "claude",       # which agent the goops are

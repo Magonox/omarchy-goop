@@ -43,6 +43,19 @@ Goop loads with the Omarchy shell, so it is running whenever you are logged in.
 
 `bin/goopctl` talks to the running goop: `goopctl list | say <addr> "..." | speak <addr> "..." | mute true | hush | reload`.
 
+## Access level
+
+One setting decides how much goop may do. Change it in the settings panel (ghost icon in the bar, ACCESS) or with
+`bin/goopctl config set access look|ask|ask_all`. It applies at once.
+
+| Level | Goop can | Goop asks first |
+|---|---|---|
+| **Look only** | see windows, read files in the folder a window shows | never acts: typing and moving files are refused (and not even offered to the agent) |
+| **Ask first** (default) | do the above, plus run plain read-only commands (`ls`, `cd`, `pwd`...) at once | every other action: an approval card shows the exact command or file moves |
+| **Ask for everything** | read what is already in the window's context | every screenshot, file read, command and move |
+
+The level is enforced in the tools themselves, not just suggested to the agent, and the agent is told its level so it can explain it.
+
 ## What it can and cannot do
 
 - Reads only what the window shows: its screenshot, its terminal's working directory, its folder. Secret-looking files
@@ -98,8 +111,7 @@ reduced about 1.7%, off about 1.0%**. Animations cost CPU, not memory: the shell
 
 ```json
 {
-  "auto_approve_safe": true,
-  "read_files": "folder",
+  "access": "ask",
   "model": "haiku",
   "tts": { "enabled": true, "speed": 0.94, "pause_ms": 220, "speakers": [0, 112, 233, 358, 471, 590, 702, 815] },
   "deny_classes": ["1password", "bitwarden", "keepassxc"],
@@ -107,7 +119,8 @@ reduced about 1.7%, off about 1.0%**. Animations cost CPU, not memory: the shell
 }
 ```
 
-`read_files`: `"folder"` (read inside the window's own folder), `"ask"` (a card per file), `"off"`.
+`access` is explained under *Access level*. `read_files` (`"folder"`, `"ask"`, `"off"`) and `auto_approve_safe` (`true`/`false`) are optional
+overrides of the level, for people who want one exception.
 Audition voices: `~/.local/share/goop/venv/bin/python daemon/voices.py --random 12`.
 
 ## Uninstall

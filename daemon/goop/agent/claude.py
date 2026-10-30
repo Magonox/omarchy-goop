@@ -1,6 +1,7 @@
 """Claude Code provider: runs `claude -p` headless and maps its stream-json output to goop events."""
 import json, shutil, subprocess
 
+from .. import access
 from . import events
 from .base import AgentRequest, Provider
 
@@ -57,10 +58,12 @@ class ClaudeProvider(Provider):
             cmd += ["--model", req.model]
         if req.mcp_config:
             cmd += ["--mcp-config", req.mcp_config, "--strict-mcp-config"]
-        allowed = GOOP_TOOLS + (READ_TOOLS if req.read_paths else [])
+        offered = set(access.allowed([t.removeprefix(TOOL_PREFIX) for t in GOOP_TOOLS]))
+        allowed = [t for t in GOOP_TOOLS if t.removeprefix(TOOL_PREFIX) in offered] + (READ_TOOLS if req.read_paths else [])
+        withheld = [t for t in GOOP_TOOLS if t.removeprefix(TOOL_PREFIX) not in offered]     # Look only: also deny them by name
         # Outside a project Claude's own Read/Glob/Grep are removed entirely, so it uses goop's read_file instead of
         # trying a tool that would be refused.
-        denied = DENIED + ([] if req.read_paths else READ_TOOLS)
+        denied = DENIED + withheld + ([] if req.read_paths else READ_TOOLS)
         cmd += ["--allowedTools", *allowed, "--disallowedTools", *denied]
         if req.session:
             cmd += ["--resume", req.session]

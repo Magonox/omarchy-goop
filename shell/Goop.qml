@@ -16,7 +16,7 @@ Scope {
     // shell facades), so the live state is published to a small file that the panel watches.
     // A string, so it only "changes" when the state really does (an object would re-fire on every dependency re-evaluation).
     readonly property string statusJson: JSON.stringify({ goops: win.perched.length, voiceReady: win.ttsReady, muted: win.muted,
-                                                          animations: win.animations, provider: win.provider })
+                                                          animations: win.animations, provider: win.provider, access: win.access })
     readonly property string statusPath: Quickshell.env("HOME") + "/.cache/goop/status.json"
     onStatusJsonChanged: statusWrite.restart()
     Timer {
@@ -67,6 +67,7 @@ PanelWindow {
     readonly property bool animEyes: animations !== "off"
     property bool cfgMissing: false
     property string provider: "claude"
+    property string access: "ask"          // look | ask | ask_all (enforced in the daemon; shown in the settings panel)
     function setMuted(on) {
         muted = on;
         if (ttsReady) tts.write(JSON.stringify({ cmd: "mute", on: on }) + "\n");
@@ -76,6 +77,7 @@ PanelWindow {
             var c = JSON.parse(t), a = c.animations;
             animations = (a === "reduced" || a === "off") ? a : "full";
             provider = c.provider || "claude";
+            access = (c.access === "look" || c.access === "ask_all") ? c.access : "ask";
             setMuted(!!(c.tts && c.tts.muted));      // muting from the panel (or goopctl) is saved, so it survives a restart
         } catch (e) { animations = "full"; }
     }

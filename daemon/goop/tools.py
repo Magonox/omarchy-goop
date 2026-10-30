@@ -3,7 +3,7 @@ Looking tools are free. Acting tools show the user the exact action on a card an
 All are scoped to the window the goop is attached to, privacy-checked, and audit-logged."""
 import json, os, subprocess, time
 
-from . import actions, approvals, classify, config, hypr, packet, proc, screenshot
+from . import access, actions, approvals, classify, config, hypr, packet, proc, screenshot
 from .adapters import folder as folder_adapter, terminal as terminal_adapter
 
 AUDIT = os.path.expanduser("~/.cache/goop/audit.log")
@@ -57,6 +57,8 @@ def read_context(address, args=None):
 
 def take_screenshot(address, args=None):
     w = _visible_window(address)
+    if access.policy()["screenshot"] == "ask":
+        _approve(address, "screenshot", f"Take a screenshot of {w.get('title') or w.get('class')}?", "")
     path = screenshot.capture(w)
     if not path:
         raise ToolError("the screenshot failed")
@@ -81,7 +83,7 @@ def type_in_terminal(address, args):
         raise ToolError(str(e))
     enter = bool((args or {}).get("enter", True))
     where = os.path.basename(ctx["project"]["cwd"]) or "/"
-    if config.load().get("auto_approve_safe", True) and actions.is_safe_command(line):
+    if access.policy()["auto_safe"] and actions.is_safe_command(line):
         _audit("type_in_terminal", address, True, f"auto-approved safe command: {line}")
     else:
         _approve(address, "type", f"Type in the terminal ({where}):", line + ("   [Enter]" if enter else ""))
@@ -130,7 +132,7 @@ def _scope(address):
 
 
 def _read_mode():
-    return config.load().get("read_files", "folder")     # "folder": inside this window's folder | "ask": card per file | "off"
+    return access.policy()["read"]     # "folder": inside this window's folder | "ask": card per file | "off"
 
 
 def read_file(address, args):
@@ -267,6 +269,9 @@ def call(name, address, args=None):
     """Run a tool; returns {"text": ...} or {"image": path}. Raises ToolError for anything the agent should be told about."""
     if name not in TOOLS:
         raise ToolError(f"unknown tool {name!r}")
+    if name in access.ACTING and not access.policy()["act"]:        # hard enforcement, whatever the model was told
+        _audit(name, address, False, "refused: access level is Look only")
+        raise ToolError(access.LOOK_ONLY_MESSAGE)
     try:
         result = TOOLS[name][0](address, args or {})
     except ToolError as e:

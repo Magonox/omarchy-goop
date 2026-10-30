@@ -55,7 +55,8 @@ class Base(unittest.TestCase):
     def setUp(self):
         self.srv = FakeServer()
         self.tmp = tempfile.TemporaryDirectory()
-        self.patches = [mock.patch.object(oc, "SESSION_DIR", self.tmp.name), mock.patch.dict(os.environ, {"TEST_KEY": KEY})]
+        self.patches = [mock.patch.object(oc, "SESSION_DIR", self.tmp.name), mock.patch.dict(os.environ, {"TEST_KEY": KEY}),
+                        mock.patch("goop.config.load", return_value={})]
         for p in self.patches:
             p.start()
 

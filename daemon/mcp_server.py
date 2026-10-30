@@ -6,7 +6,7 @@ The window is fixed by the GOOP_WINDOW env var, so an agent can only ever look a
 import base64, json, mimetypes, os, sys
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-from goop import tools  # noqa: E402
+from goop import access, tools  # noqa: E402
 
 ADDRESS = os.environ.get("GOOP_WINDOW", "")
 
@@ -30,7 +30,7 @@ def handle(msg):
     elif method == "tools/list":
         reply(id_, {"tools": [
             {"name": n, "description": d, "inputSchema": schema}
-            for n, (_, d, schema) in tools.TOOLS.items()]})
+            for n, (_, d, schema) in tools.TOOLS.items() if n in access.allowed(list(tools.TOOLS))]})
     elif method == "tools/call":
         try:
             r = tools.call(params.get("name", ""), ADDRESS, params.get("arguments"))

@@ -55,6 +55,9 @@ bubble, mood, voice. Sessions resume per goop (`--resume`), so "yes, keep going"
 
 ## Decisions worth remembering
 
+- **Access level is the one "may I?" switch** (`goop/access.py`); tools, tool lists and the prompt all consult it. Add new acting tools to
+  `access.ACTING`. Tests must stay hermetic: patch `goop.config.load` instead of reading the developer's real config.
+
 - **Tools live behind MCP**, with one safety model for every provider. Claude's own Bash/Edit/Write stay disabled; Read/Glob/Grep
   are only on for real project windows. Outside projects it uses `read_file`/`list_files` (scoped to the window's folder).
 - **TTS: Piper `en_US-libritts_r-medium`**, chosen by benchmark on this CPU (`docs/tts-benchmark/`): first audio ~70 ms, ~25x

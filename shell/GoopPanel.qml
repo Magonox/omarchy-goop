@@ -21,7 +21,7 @@ Panel {
   readonly property string pluginDir: Qt.resolvedUrl("GoopPanel.qml").toString().replace("file://", "").replace(/\/[^\/]*$/, "") + "/.."
 
   // live state, published by the overlay (see Goop.qml) to a file the panel watches
-  property var st: ({ goops: 0, voiceReady: false, muted: false, animations: "full", provider: "claude" })
+  property var st: ({ goops: 0, voiceReady: false, muted: false, animations: "full", provider: "claude", access: "ask" })
   FileView {
     path: Quickshell.env("HOME") + "/.cache/goop/status.json"
     watchChanges: true
@@ -85,7 +85,7 @@ Panel {
     open: root.opened
     focusTarget: keyCatcher
     contentWidth: panel.fittedContentWidth(Style.space(360))
-    contentHeight: panel.fittedContentHeight(column.implicitHeight, Style.space(640))
+    contentHeight: panel.fittedContentHeight(column.implicitHeight, Style.space(780))
 
     PanelKeyCatcher {
       id: keyCatcher
@@ -170,6 +170,41 @@ Panel {
             foreground: root.fg
             fontFamily: root.fontFamily
             onClicked: root.change("tts.muted", root.st.muted ? "false" : "true")
+          }
+        }
+
+        // ---------- access ----------
+        PanelSeparator { foreground: root.fg }
+        Column {
+          width: parent.width
+          spacing: Style.space(10)
+          PanelSectionHeader { text: "ACCESS"; foreground: root.fg; fontFamily: root.fontFamily }
+          Repeater {
+            model: [{ k: "look", t: "Look only" }, { k: "ask", t: "Ask first" }, { k: "ask_all", t: "Ask for everything" }]
+            Button {
+              required property var modelData
+              width: parent.width
+              text: modelData.t
+              leftAlign: true
+              fontSize: Style.font.bodySmall
+              foreground: root.fg
+              fontFamily: root.fontFamily
+              horizontalPadding: Style.spacing.controlPaddingX
+              verticalPadding: Style.spacing.controlPaddingY
+              bordered: true
+              active: root.st.access === modelData.k
+              onClicked: root.change("access", modelData.k)
+            }
+          }
+          Text {
+            width: parent.width
+            wrapMode: Text.Wrap
+            color: root.dim
+            font.family: root.fontFamily
+            font.pixelSize: Style.font.caption
+            text: root.st.access === "look" ? "Goop can see and read, but never change anything."
+                : root.st.access === "ask_all" ? "Goop asks before every action, file read and screenshot."
+                : "Goop asks before it acts. Plain read-only commands (ls, cd, pwd) run at once."
           }
         }
 

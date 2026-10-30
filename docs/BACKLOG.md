@@ -36,10 +36,9 @@ file. Goal: install, see goop, and be talking to it within two minutes, with not
 
 | ID | Item | Status | Notes |
 |---|---|---|---|
-| S2 | **Setup wizard**: runs by itself on first start, re-runnable from the settings panel ("Run setup again") | decision | Steps: 1 What goop can do + privacy, 2 Checks (doctor), 3 Agent, 4 Voice, 5 Access level, 6 Animations, 7 Test it end to end. Form factor, level names and key handling need the owner's call. |
+| S2 | **Setup wizard**: runs by itself on first start, re-runnable from the settings panel ("Run setup again") | decision | Steps: 1 What goop can do + privacy, 2 Checks (doctor), 3 Agent, 4 Voice, 5 Access level, 6 Animations, 7 Test it end to end. **Decided 2026-10-30:** a centered card with Back/Next (like Omarchy's own setup flows), *Ask first* is the default access level, API keys go in a `chmod 600` key file. S2c (access level) is done. |
 | S2a | Agent step: **presets** (Claude Code, OpenAI, xAI Grok, Gemini, OpenRouter, Ollama, custom URL), key entry (saved to a `chmod 600` file, never the config), **model list fetched from the endpoint** (`GET /models`) or Claude aliases with plain-language notes (fast/cheap vs smart), and a **Test connection** button | todo | Replaces hand-editing `providers`. The panel's AGENT section grows an "Add agent" flow too (today it only lists configured agents). |
 | S2b | Voice step: install with a size warning and progress (~275 MB), **audition voices** with a Hear-it button, speed slider, skip option | todo | Reuses `setup.sh`, `voices.py`. Quiet fallback when skipped. |
-| S2c | **Access level** setting enforced in `tools.py`: *Look only* (see and read, never act) / *Ask first* (default: cards for actions, safe commands automatic) / *Ask for everything* (also every read and command) | todo | Today `read_files` and `auto_approve_safe` exist but there is no single, understandable switch and nothing disables acting tools. |
 | S2d | Animations step: recommend a level from the hardware (core count, laptop/battery) | todo | Pairs with V6 (`auto`). |
 | S2e | Final step: a real test (ask the agent, speak the answer) and a 3-line tour (peel, click, approve) | todo | |
 | Q3 | **Multi-monitor support** | todo | Overlay and perch math assume one display at 0,0. Must work before publishing: other users have several. |

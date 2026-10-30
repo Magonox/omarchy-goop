@@ -8,7 +8,7 @@ Context is built fresh from the window at ask time. A window on the privacy deny
 import argparse, json, os, sys
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-from goop import config, hypr, packet  # noqa: E402
+from goop import access, config, hypr, packet  # noqa: E402
 from goop.agent import events, prompt, registry  # noqa: E402
 from goop.agent.base import AgentRequest  # noqa: E402
 
@@ -54,7 +54,7 @@ def main():
 
     req = AgentRequest(
         command=a.command, packet=pkt, window_address=a.address,
-        system=prompt.SYSTEM, prompt=prompt.user_prompt(pkt, a.command),
+        system=prompt.system_for(access.level(cfg)), prompt=prompt.user_prompt(pkt, a.command),
         session=a.session, cwd=project_cwd or RUN_DIR, mcp_config=mcp,
         model=cfg.get("model"), read_paths=bool(project_cwd),
     )

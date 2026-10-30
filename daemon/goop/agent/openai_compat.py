@@ -5,7 +5,7 @@ Tools run in this process through goop.tools, so the approval cards and every sa
 provider uses. The API is stateless, so each goop's conversation is kept in a small history file (the "session")."""
 import base64, json, mimetypes, os, re, socket, time, urllib.error, urllib.request, uuid
 
-from .. import tools
+from .. import access, tools
 from . import events
 from .base import AgentRequest, Provider
 
@@ -22,8 +22,9 @@ class ProviderError(Exception):
 
 
 def tool_definitions():
+    offered = access.allowed(list(tools.TOOLS))
     return [{"type": "function", "function": {"name": n, "description": d, "parameters": schema}}
-            for n, (_, d, schema) in tools.TOOLS.items()]
+            for n, (_, d, schema) in tools.TOOLS.items() if n in offered]
 
 
 # ---- sessions: the conversation so far, so "yes, keep going" has context ----

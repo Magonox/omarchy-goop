@@ -1,4 +1,5 @@
 import json, os, subprocess, sys, unittest
+from unittest import mock
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.dirname(HERE)
@@ -39,6 +40,11 @@ class ParseStream(unittest.TestCase):
 
 
 class Command(unittest.TestCase):
+    def setUp(self):
+        p = mock.patch("goop.config.load", return_value={})     # not the developer's own config
+        p.start()
+        self.addCleanup(p.stop)
+
     def req(self, **kw):
         return AgentRequest(command="c", packet={}, window_address="0x1", system="SYS", prompt="SECRET WINDOW TEXT", **kw)
 
@@ -76,9 +82,14 @@ class Registry(unittest.TestCase):
 
 
 class McpServer(unittest.TestCase):
+    def setUp(self):
+        import tempfile
+        self.home = tempfile.TemporaryDirectory()         # an empty HOME: the default access level, not the developer's config
+        self.addCleanup(self.home.cleanup)
+
     def rpc(self, *msgs):
         p = subprocess.run([sys.executable, "-I", os.path.join(ROOT, "mcp_server.py")], input="\n".join(map(json.dumps, msgs)) + "\n",
-                           capture_output=True, text=True, env={**os.environ, "GOOP_WINDOW": "0xdead"}, timeout=10)
+                           capture_output=True, text=True, env={**os.environ, "GOOP_WINDOW": "0xdead", "HOME": self.home.name}, timeout=10)
         return [json.loads(l) for l in p.stdout.splitlines()]
 
     def test_protocol(self):

@@ -25,6 +25,21 @@ Rules:
   When the user says yes (or continue), carry on from where you left off, again in short parts.
 - Never paste long output. Summarize it, and offer to go through the details piece by piece."""
 
+ACCESS_NOTES = {
+    "look": "- Access level: LOOK ONLY. You can see and read but you cannot change anything: no typing into terminals, no moving files. "
+            "If asked to act, say you are in Look only mode, that the user can change it in the Goop settings (the ghost icon in the bar), "
+            "and describe what you would do instead.",
+    "ask": "",
+    "ask_all": "- Access level: ASK FOR EVERYTHING. Every screenshot, file read and action shows the user an approval card first, "
+               "so make each request count and avoid unnecessary reads.",
+}
+
+
+def system_for(level):
+    note = ACCESS_NOTES.get(level, "")
+    return SYSTEM + ("\n" + note if note else "")
+
+
 PACKET_CAP = 24000
 
 

@@ -6,6 +6,11 @@ Work is planned in [`docs/BACKLOG.md`](docs/BACKLOG.md).
 ## [Unreleased]
 
 ### Added
+- S2c: **access level** (`goop/access.py`): Look only / Ask first (default) / Ask for everything, one switch in the settings panel (ACCESS) and
+  `goopctl config set access ...`. Enforced in `tools.call` (acting tools refused at Look only), withheld from the tool lists the models see
+  (Claude's allowed/denied lists, the MCP `tools/list`, the OpenAI-compatible provider), and stated in the system prompt so the agent explains its
+  limits. At Ask for everything, screenshots and file reads also show a card. `read_files` and `auto_approve_safe` remain as explicit overrides.
+  Tests no longer depend on the developer's own config. 14 new tests.
 - S1: **settings button in the bar** (`shell/GoopPanel.qml`, manifest kind `bar-widget`): animations, voice mute (now saved in config), agent picker,
   and a setup checklist from `daemon/doctor.py` (`goop/doctor.py`, 6 tests). Changing the agent is validated against the configured providers.
 - V2: drips. A bulge forms at the bottom of a goop, stretches on a thin neck, lets go and falls (`shell/Drip.qml`).
