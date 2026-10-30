@@ -189,3 +189,86 @@ function tube(r, h, seg) {
     }
     return m;
 }
+
+// ---- free-form shapes from plain numbers (custom parts) ----
+// Both are double-sided: a model-written profile or outline may be wound either way, and the right side still lights correctly.
+
+// one triangle, drawn from both sides; a, b, c are [x, y, z], na/nb/nc their outward normals
+function dbl(m, a, b, c, na, nb, nc) {
+    var g = cross(sub(b, a), sub(c, a)), avg = [na[0] + nb[0] + nc[0], na[1] + nb[1] + nc[1], na[2] + nb[2] + nc[2]];
+    var front = g[0] * avg[0] + g[1] * avg[1] + g[2] * avg[2] >= 0;
+    var i0 = vert(m, a, na), i1 = vert(m, b, nb), i2 = vert(m, c, nc);
+    var j0 = vert(m, a, [-na[0], -na[1], -na[2]]), j1 = vert(m, b, [-nb[0], -nb[1], -nb[2]]), j2 = vert(m, c, [-nc[0], -nc[1], -nc[2]]);
+    if (front) { m.i.push(i0, i1, i2, j0, j2, j1); } else { m.i.push(i0, i2, i1, j0, j1, j2); }
+}
+
+// a profile [[radius, height], ...] revolved around the y axis; sharp corners stay sharp, gentle bends are smoothed
+function lathe(profile, seg) {
+    var m = mesh(), n = profile.length, norms = [];
+    for (var i = 0; i < n - 1; i++) {
+        var dr = profile[i + 1][0] - profile[i][0], dy = profile[i + 1][1] - profile[i][1], l = Math.hypot(dr, dy) || 1;
+        norms.push([dy / l, -dr / l]);
+    }
+    function at(i, k) {       // the normal at profile point i for segment k: blended with the neighbouring segment when the bend is gentle
+        var own = norms[k], other = norms[i === k ? k - 1 : k + 1];
+        if (!other || own[0] * other[0] + own[1] * other[1] < 0.77) return own;
+        var x = own[0] + other[0], y = own[1] + other[1], q = Math.hypot(x, y) || 1;
+        return [x / q, y / q];
+    }
+    for (var s = 0; s < n - 1; s++) {
+        for (var j = 0; j < seg; j++) {
+            var a0 = j / seg * 2 * Math.PI, a1 = (j + 1) / seg * 2 * Math.PI;
+            function pt(i, a) { return [profile[i][0] * Math.cos(a), profile[i][1], profile[i][0] * Math.sin(a)]; }
+            function nm(i, a) { var q = at(i, s); return [q[0] * Math.cos(a), q[1], q[0] * Math.sin(a)]; }
+            var A = pt(s, a0), B = pt(s, a1), C = pt(s + 1, a1), D = pt(s + 1, a0);
+            var nA = nm(s, a0), nB = nm(s, a1), nC = nm(s + 1, a1), nD = nm(s + 1, a0);
+            dbl(m, A, B, C, nA, nB, nC);
+            dbl(m, A, C, D, nA, nC, nD);
+        }
+    }
+    return m;
+}
+
+// triangles that fill a flat polygon [[x, z], ...] (ear clipping; falls back to a fan for a degenerate outline)
+function triangulate(poly) {
+    var idx = poly.map(function (_, i) { return i; }), out = [], area = 0;
+    for (var i = 0; i < poly.length; i++) { var p = poly[i], q = poly[(i + 1) % poly.length]; area += p[0] * q[1] - q[0] * p[1]; }
+    var sign = area >= 0 ? 1 : -1, guard = 0;
+    function cr(a, b, c) { return ((b[0] - a[0]) * (c[1] - a[1]) - (b[1] - a[1]) * (c[0] - a[0])) * sign; }
+    function inside(p, a, b, c) { return cr(a, b, p) >= 0 && cr(b, c, p) >= 0 && cr(c, a, p) >= 0; }
+    while (idx.length > 3 && guard++ < 500) {
+        var clipped = false;
+        for (var k = 0; k < idx.length; k++) {
+            var ia = idx[(k + idx.length - 1) % idx.length], ib = idx[k], ic = idx[(k + 1) % idx.length];
+            var A = poly[ia], B = poly[ib], C = poly[ic];
+            if (cr(A, B, C) <= 1e-9) continue;
+            var ear = true;
+            for (var t = 0; t < idx.length && ear; t++) {
+                var it = idx[t];
+                if (it !== ia && it !== ib && it !== ic && inside(poly[it], A, B, C)) ear = false;
+            }
+            if (!ear) continue;
+            out.push([ia, ib, ic]); idx.splice(k, 1); clipped = true; break;
+        }
+        if (!clipped) break;
+    }
+    if (idx.length === 3) out.push([idx[0], idx[1], idx[2]]);
+    else for (var f = 1; f + 1 < idx.length; f++) out.push([idx[0], idx[f], idx[f + 1]]);
+    return out;
+}
+
+// an outline [[x, z], ...] standing on the xz plane, pushed up by h and centred on y = 0
+function extrude(outline, h) {
+    var m = mesh(), n = outline.length, y0 = -h / 2, y1 = h / 2;
+    for (var i = 0; i < n; i++) {
+        var p = outline[i], q = outline[(i + 1) % n], dx = q[0] - p[0], dz = q[1] - p[1], l = Math.hypot(dx, dz) || 1, nn = [dz / l, 0, -dx / l];
+        dbl(m, [p[0], y0, p[1]], [q[0], y0, q[1]], [q[0], y1, q[1]], nn, nn, nn);
+        dbl(m, [p[0], y0, p[1]], [q[0], y1, q[1]], [p[0], y1, p[1]], nn, nn, nn);
+    }
+    triangulate(outline).forEach(function (t) {
+        var a = outline[t[0]], b = outline[t[1]], c = outline[t[2]];
+        dbl(m, [a[0], y1, a[1]], [b[0], y1, b[1]], [c[0], y1, c[1]], [0, 1, 0], [0, 1, 0], [0, 1, 0]);
+        dbl(m, [a[0], y0, a[1]], [b[0], y0, b[1]], [c[0], y0, c[1]], [0, -1, 0], [0, -1, 0], [0, -1, 0]);
+    });
+    return m;
+}

@@ -29,6 +29,15 @@ function prepare(scene) {
 
 function material(part, role, dyn) {
     var m = part.material, c = m.color.slice(), a = 1, em = [0, 0, 0], metal = m.metal, rough = m.rough, lit = role === "main" || role === "accent";
+    var kind = role.charAt(1) === ":" ? role.charAt(0) : "";                  // custom parts: m: solid, g: glass, w: glow, then the material's name
+    if (kind) {
+        var pm = (part.palette && part.palette[role.slice(2)]) || m;
+        c = pm.color.slice(); metal = pm.metal; rough = pm.rough;
+        if (kind === "w") { em = [c[0] / 255 * 0.9, c[1] / 255 * 0.9, c[2] / 255 * 0.9]; a = 0.9; metal = 0; }
+        else if (kind === "m") lit = true;
+        role = kind === "m" ? "main" : kind === "g" ? "glass" : "glow";
+        if (kind === "w") { return { r: c[0] / 255, g: c[1] / 255, b: c[2] / 255, metal: metal, rough: rough, alpha: a, er: em[0], eg: em[1], eb: em[2] }; }
+    }
     switch (role) {
     case "accent": c = c.map(function (x) { return x * 0.62; }); break;
     case "dark": c = [90, 98, 116]; metal = 0.25; rough = 0.45; break;

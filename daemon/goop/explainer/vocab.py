@@ -42,6 +42,8 @@ KINDS = {
     "panel": {"type": "panel", "w": 3.4, "d": 1.3, "r": 1.7, "h": 0.1, "material": "solar"},
     "dish": {"type": "dish", "r": 0.7, "h": 0.6, "material": "white"},
     "thruster": {"type": "thruster", "r": 0.18, "h": 0.35, "material": "dark_steel"},
+    # anything else: the model describes the part as a recipe of basic pieces (see custom.py)
+    "custom": {"type": "custom", "r": 1.0, "h": 1.0, "material": "steel"},
     # plain shapes for anything else
     "box": {"type": "box", "w": 1.2, "h": 1.0, "d": 1.2, "r": 0.9, "material": "steel"},
     "cylinder": {"type": "cylinder", "r": 0.6, "h": 1.2, "material": "steel"},

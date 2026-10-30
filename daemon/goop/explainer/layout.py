@@ -3,7 +3,7 @@ Every template returns {placed, instances, bounds}: `placed` maps an id to its p
 it became (a part attached "at sides" or in a "ring" becomes several)."""
 import math
 
-from . import vocab
+from . import custom, vocab
 
 
 def _shape(part):
@@ -12,6 +12,8 @@ def _shape(part):
     shape = {k: (round(v * f, 3) if k in ("r", "h", "w", "d", "t", "r0", "r1") else v) for k, v in kind.items() if k != "material"}
     if part["kind"] == "device":
         shape["variant"] = part.get("variant", "laptop")
+    if part["kind"] == "custom":            # measured from its pieces, so every template can place it like any other part
+        shape |= custom.measure(part["pieces"], f) | {"pieces": part["pieces"], "scale": f}
     return shape
 
 
@@ -30,17 +32,25 @@ def _r3(v):
     return [round(x, 3) for x in v]
 
 
+def _along(pl):
+    """How much room a part takes along the row: its length when it lies on the axis, its width when it is a custom shape (a flat disc is wide, not long)."""
+    shape = pl["shape"]
+    if pl["kind"] == "custom":
+        return round(2 * shape["r"], 3)
+    return shape["h"]
+
+
 def axis(story):
     placed, parts = {}, story["parts"]
     for p in parts:
         placed[p["id"]] = _place(p)
     order = [p for p in parts if not placed[p["id"]]["spanning"]]
     gap = 0.3
-    total = sum(placed[p["id"]]["shape"]["h"] for p in order) + gap * (len(order) - 1)
+    total = sum(_along(placed[p["id"]]) for p in order) + gap * (len(order) - 1)
     x, n = -total / 2, len(order)
     for i, p in enumerate(order):
         pl = placed[p["id"]]
-        ln = pl["shape"]["h"]
+        ln = _along(pl)
         pl["pos"] = _r3([x + ln / 2, 0, 0])
         x += ln + gap
         axial = vocab.KINDS[p["kind"]].get("axial")
@@ -51,8 +61,8 @@ def axis(story):
         if not pl["spanning"]:
             continue
         a, b = (placed[r] for r in p["spans"])
-        lo = min(a["pos"][0] - a["shape"]["h"] / 2, b["pos"][0] - b["shape"]["h"] / 2)
-        hi = max(a["pos"][0] + a["shape"]["h"] / 2, b["pos"][0] + b["shape"]["h"] / 2)
+        lo = min(a["pos"][0] - _along(a) / 2, b["pos"][0] - _along(b) / 2)
+        hi = max(a["pos"][0] + _along(a) / 2, b["pos"][0] + _along(b) / 2)
         inside = [q for q in order if lo - 1e-6 <= placed[q["id"]]["pos"][0] <= hi + 1e-6]
         widest = max((placed[q["id"]]["radius"] for q in inside), default=1.0)
         pl["rot"] = [0, 0, -90]

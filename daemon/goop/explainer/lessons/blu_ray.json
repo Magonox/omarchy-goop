@@ -1,0 +1,37 @@
+{
+  "version": 1,
+  "title": "How a Blu-ray disc is read",
+  "layout": {"template": "assembly"},
+  "parts": [
+    {"id": "motor", "kind": "custom", "label": "Spindle motor", "size": "medium", "pieces": [
+      {"form": "cylinder", "r": 0.45, "h": 0.5, "material": "dark_steel"},
+      {"form": "cylinder", "r": 0.16, "h": 0.25, "at": [0, 0.37, 0], "material": "steel"}]},
+    {"id": "disc", "kind": "custom", "label": "Blu-ray disc", "size": "large", "pieces": [
+      {"form": "disc", "r": 1.6, "h": 0.07, "hole": 0.22, "look": "glass", "material": "blue"},
+      {"form": "disc", "r": 1.55, "h": 0.012, "hole": 0.3, "at": [0, 0.045, 0], "material": "steel"},
+      {"form": "ring", "r": 0.6, "t": 0.012, "at": [0, 0.06, 0], "material": "gold"},
+      {"form": "ring", "r": 0.95, "t": 0.012, "at": [0, 0.06, 0], "material": "gold"},
+      {"form": "ring", "r": 1.3, "t": 0.012, "at": [0, 0.06, 0], "material": "gold"},
+      {"form": "box", "w": 0.09, "h": 0.02, "d": 0.03, "at": [1.1, 0.065, 0], "material": "white", "repeat": {"count": 20, "around": "y"}}]},
+    {"id": "laser", "kind": "custom", "label": "Blue laser head", "size": "small", "pieces": [
+      {"form": "box", "w": 0.9, "h": 0.4, "d": 0.6, "material": "dark_steel"},
+      {"form": "cone", "r": 0.22, "top": 0.06, "h": 0.4, "at": [0, 0.4, 0], "material": "steel"},
+      {"form": "sphere", "r": 0.08, "at": [0, 0.62, 0], "look": "glow", "material": "blue"}]},
+    {"id": "gear", "kind": "custom", "label": "Sled motor gear", "size": "small", "pieces": [
+      {"form": "extrude", "h": 0.18, "material": "gold", "outline": [[0.5,0],[0.38,0.12],[0.35,0.35],[0.12,0.38],[0,0.5],[-0.12,0.38],[-0.35,0.35],[-0.38,0.12],[-0.5,0],[-0.38,-0.12],[-0.35,-0.35],[-0.12,-0.38],[0,-0.5],[0.12,-0.38],[0.35,-0.35],[0.38,-0.12]]}]}
+  ],
+  "steps": [
+    {"say": "A Blu-ray disc looks like a shiny mirror, but it hides millions of tiny bumps and flat spots. Let's see how a player reads them!",
+     "do": [{"reveal": ["motor", "disc"]}, {"label": ["disc"]}, {"zoom": "all"}]},
+    {"say": "The disc sits on a spindle motor that spins it round and round, faster than a spinning top.",
+     "do": [{"label": ["motor"]}, {"spin": ["disc"]}, {"highlight": ["motor"]}]},
+    {"say": "Underneath, a laser head shines a thin blue light at the disc. Blue light has a very short wave, so it can read really tiny bumps.",
+     "do": [{"reveal": ["laser"]}, {"label": ["laser"]}, {"highlight": ["laser"]}, {"zoom": "laser"}]},
+    {"say": "The light bounces back differently from a bump than from a flat spot. The player turns those bounces into ones and zeros, and that becomes your movie.",
+     "do": [{"zoom": "disc"}, {"highlight": ["disc"]}]},
+    {"say": "A little gear and motor slide the laser along, from the middle of the disc to the edge, like a record player's arm.",
+     "do": [{"reveal": ["gear"]}, {"label": ["gear"]}, {"highlight": ["gear"]}]}
+  ],
+  "recap": "Remember: a spinning disc, a blue laser, and bumps that turn into ones and zeros.",
+  "question": "Why do you think a blue laser can read smaller bumps than a red one?"
+}

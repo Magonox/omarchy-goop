@@ -2,7 +2,7 @@
 straight back to a model for a repair pass."""
 import re
 
-from . import vocab
+from . import custom, vocab
 
 _ID = re.compile(r"^[a-z][a-z0-9_]{0,23}$")
 
@@ -49,6 +49,8 @@ def validate(story):
         label = p.get("label")
         if not isinstance(label, str) or not label.strip() or len(label) > vocab.LIMITS["label"]:
             errs.append(f"part {pid!r}: label must be 1-{vocab.LIMITS['label']} characters")
+        if p.get("kind") == "custom":
+            errs += custom.validate(p.get("pieces"), f"part {pid!r}")
         if p.get("size", "medium") not in vocab.SIZES:
             errs.append(f"part {pid!r}: size must be one of: {_list(vocab.SIZES)}")
         if p.get("material", "steel") not in vocab.MATERIALS:

@@ -5,7 +5,7 @@ and sends the exact errors back for a repair pass when it is wrong. The model on
 `run(system, prompt) -> str` is the model call; claude_runner() is the default, tests pass a fake."""
 import json, os, re, shutil, subprocess
 
-from . import build, vocab
+from . import build, custom, vocab
 
 REPAIRS = 2
 TIMEOUT = 150
@@ -39,6 +39,17 @@ TEMPLATES (pick the one that fits the idea):
 PART KINDS (use only these): {kinds}.
 A part is {{"id":"lowercase_id","kind":K,"label":"up to {vocab.LIMITS['label']} chars, shown on screen","size":optional one of {list(vocab.SIZES)}}}. Use the closest kind and say what it really is in the label;
 a plain "box", "cylinder", "sphere" or "cone" is fine for anything without a better match. {vocab.LIMITS['parts'][0]}-{vocab.LIMITS['parts'][1]} parts.
+
+READY-MADE KINDS are for things that really are that thing: "panel" is a solar panel, "engine" a rocket engine, "capsule" a spacecraft cabin. Never borrow one for something
+else (a data layer is not a solar panel). When nothing fits, describe the part yourself with kind "custom".
+
+CUSTOM PARTS: {{"id":..,"kind":"custom","label":..,"pieces":[...]}} with {custom.LIMITS['pieces'][0]}-{custom.LIMITS['pieces'][1]} pieces. Each piece is {{"form":F,<sizes>,"at":[x,y,z],"turn":[rx,ry,rz],"material":M,"look":L,"repeat":R}}.
+Units are relative to the part (about 1.0 = a hand-sized object, y is up, keep numbers within +-{custom.LIMITS['at']:g}); the engine places and measures the whole part, so you only describe its own shape.
+Forms: box (w,h,d); cylinder (r,h); cone (r,h, optional top radius); sphere (r); ring (r major, t tube); disc (r,h, optional hole radius: a CD, washer or coin);
+lathe (profile: [[radius,height],...] revolved around the vertical axis: bottles, bowls, bulbs, vases, cups); extrude (outline: [[x,z],...] pushed up by h: gears, brackets, wings, logos).
+"look" is one of {list(custom.LOOKS)} (default solid; glass is see-through, glow shines). "material" is one of {list(vocab.MATERIALS)}.
+"repeat": {{"count":2-24,"around":"x"|"y"|"z"}} copies the piece in a circle around the part's centre (spokes, bolts, teeth, pits), or {{"count":..,"along":[dx,dy,dz]}} steps copies along a line.
+Build a part from its largest piece outward and use several pieces (4-10) so it reads as the real thing: a disc is a flat disc with a hole, thin layers on top and a ring of small bumps.
 
 STEPS ({vocab.LIMITS['steps'][0]}-{vocab.LIMITS['steps'][1]}): {{"say":"narration","do":[actions]}}. Narration is spoken aloud, so write it like a friendly teacher talking to kids: plain words,
 one idea per step, a vivid everyday comparison for the hard parts. {vocab.LIMITS['say'][0]}-{vocab.LIMITS['say'][1]} characters each; about 20-45 words is ideal. Whole lesson under {vocab.LIMITS['duration']} seconds (about 6-8 steps).

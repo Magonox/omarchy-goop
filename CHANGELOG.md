@@ -6,6 +6,11 @@ Work is planned in [`docs/BACKLOG.md`](docs/BACKLOG.md).
 ## [Unreleased]
 
 ### Added
+- E5: **custom parts**: the model can now describe a part it has no ready-made shape for as a recipe of up to 24 basic pieces (box, cylinder, cone, sphere,
+  ring, disc with a hole, `lathe` = a profile revolved into a bottle/bowl/disc, `extrude` = an outline pushed into a gear/bracket), with material, look (glass,
+  glow...), turn and repeat (a circle of bolts or pits). Data only, validated with repairable errors (`goop/explainer/custom.py`); the engine measures and places the
+  part like any other. The planner is told never to borrow a ready-made kind for something else. Test: a hand-written Blu-ray lesson and one planned by opus.
+- E4: a **Close lesson** pill in the lesson window (the only part that takes clicks) and `goopctl explain3d stop`.
 - E3/E7: **Goop can build a 3D lesson itself.** New agent tool `explain_in_3d(topic, notes)`: a card asks first (the offer), then a strong model
   (`explain_model`, default opus, a bare `claude` call of a fraction of a cent of input) writes the storyboard (`goop/explainer/planner.py`), the validator's exact
   errors go back for up to two repairs, and the lesson plays narrated by the goop that was asked (`goop/explainer/play.py`, `bin/goop-explain --stop`).

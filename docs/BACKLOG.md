@@ -81,6 +81,7 @@ of the screen: the model is built up, exploded into components and the flow foll
 | E11 | Vision critic: render a frame, have a vision model review framing, overlaps and labels, repair | later | |
 | E12 | Streaming: start playing as soon as the first steps are planned | later | Hides the planner's latency. |
 | E5 | Parametric parts library, glTF models, vision critique of rendered frames | later | Blender only to author curated assets, never at runtime. |
+| E5a | **Custom parts** (composed pieces + lathe/extrude) | done (first cut) | Pieces from basic forms, data only. Still to do: a render-and-check pass (planner looks at a frame and fixes bad shapes), `loft`/curved extrusions for organic shapes, relation words for placing parts under/beside each other in assembly (a laser should sit below the disc), image-to-3D as an optional outside tool. Axis layout spaces custom parts by width. |
 | E6 | Flat animated-diagram fallback (Qt Quick Shapes) when Quick 3D is not installed | later | Plus a doctor/wizard hint with the pacman command. |
 
 ## Later
