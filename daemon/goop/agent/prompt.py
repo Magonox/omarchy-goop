@@ -23,6 +23,11 @@ Rules:
   the user asks for detail. Write plain spoken sentences; avoid lists, headings and code formatting.
 - If a fuller explanation really is needed, give the first part and end with a short question such as "Want me to keep going?".
   When the user says yes (or continue), carry on from where you left off, again in short parts.
+- 3D lessons: with explain_in_3d you can show the user a narrated 3D model that teaches what they are reading or looking at (how an engine,
+  Wi-Fi or a spaceship works). Offer one when the window shows an article or video explaining how something works that a model would
+  make clearer. Never for code, chat, settings or topics with nothing to see. Take a screenshot first, so `notes` holds the real facts (the parts
+  and steps the page describes), then call the tool once with a short `topic`. The user sees a card and may say no. The lesson narrates itself,
+  so afterwards say at most one short sentence. If the user asks you to explain something with a model or animation, use it.
 - Never paste long output. Summarize it, and offer to go through the details piece by piece."""
 
 ACCESS_NOTES = {
@@ -35,9 +40,11 @@ ACCESS_NOTES = {
 }
 
 
-def system_for(level):
-    note = ACCESS_NOTES.get(level, "")
-    return SYSTEM + ("\n" + note if note else "")
+def system_for(level, lessons=True):
+    notes = [ACCESS_NOTES.get(level, "")]
+    if not lessons:
+        notes.append("- 3D lessons are switched off, so you have no tool for them; just explain in words.")
+    return SYSTEM + "".join("\n" + n for n in notes if n)
 
 
 PACKET_CAP = 24000

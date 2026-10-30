@@ -71,7 +71,7 @@ def network(story):
     router = next(p for p in parts if p["kind"] in ("router", "tower"))
     rpos = [-4.6, placed[router["id"]]["shape"]["h"] / 2, 0.0]
     placed[router["id"]]["pos"] = _r3(rpos)
-    devices = [p for p in parts if p["kind"] == "device"]
+    devices = [p for p in parts if p["kind"] not in ("router", "tower", "wall")]       # any other part sits around the sender at its distance
     n = len(devices)
     angles = [0.0] if n == 1 else [-38 + 76 * i / (n - 1) for i in range(n)]
     walls = [p for p in parts if p["kind"] == "wall"]
@@ -83,7 +83,8 @@ def network(story):
         pl["rot"] = [0, round(-(a + 180) + 0, 3), 0]            # face the router
         crossing = sum(1 for w in walls if router["id"] in w["between"] and d["id"] in w["between"])
         steps = {"near": 0, "medium": 1, "far": 2}[d.get("distance", "medium")]
-        pl["signal"] = max(1, 4 - steps - crossing)
+        if d["kind"] == "device":                                    # only real devices show signal bars
+            pl["signal"] = max(1, 4 - steps - crossing)
         pl["distance"] = dist
     for w in walls:
         a, b = (placed[r] for r in w["between"])

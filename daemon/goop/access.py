@@ -19,6 +19,9 @@ DESCRIPTIONS = {
 }
 ACTING = frozenset({"type_in_terminal", "move_files", "undo_last_move"})
 
+EXPLAIN_MODES = ("offer", "auto", "never")      # 3D lessons: a card asks first / just build it / never
+EXPLAIN_TOOL = "explain_in_3d"
+
 
 def level(cfg=None):
     cfg = config.load() if cfg is None else cfg
@@ -43,10 +46,16 @@ def policy(cfg=None):
     return p
 
 
+def explainers(cfg=None):
+    cfg = config.load() if cfg is None else cfg
+    return cfg.get("explainers") if cfg.get("explainers") in EXPLAIN_MODES else "offer"
+
+
 def allowed(names, cfg=None):
     """The tool names a model may be offered at the current level."""
     act = policy(cfg)["act"]
-    return [n for n in names if act or n not in ACTING]
+    lessons = explainers(cfg) != "never"
+    return [n for n in names if (act or n not in ACTING) and (lessons or n != EXPLAIN_TOOL)]
 
 
 LOOK_ONLY_MESSAGE = ("Goop is set to Look only, so it cannot change anything. "

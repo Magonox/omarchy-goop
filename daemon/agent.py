@@ -54,7 +54,7 @@ def main():
 
     req = AgentRequest(
         command=a.command, packet=pkt, window_address=a.address,
-        system=prompt.system_for(access.level(cfg)), prompt=prompt.user_prompt(pkt, a.command),
+        system=prompt.system_for(access.level(cfg), lessons=access.explainers(cfg) != "never"), prompt=prompt.user_prompt(pkt, a.command),
         session=a.session, cwd=project_cwd or RUN_DIR, mcp_config=mcp,
         model=cfg.get("model"), read_paths=bool(project_cwd),
     )

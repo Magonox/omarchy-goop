@@ -5,6 +5,7 @@ import json, os, subprocess, time
 
 from . import access, actions, approvals, classify, config, hypr, packet, proc, screenshot
 from .adapters import folder as folder_adapter, terminal as terminal_adapter
+from .explainer import planner, play
 
 AUDIT = os.path.expanduser("~/.cache/goop/audit.log")
 PREVIEW_LINES = 14
@@ -63,6 +64,35 @@ def take_screenshot(address, args=None):
     if not path:
         raise ToolError("the screenshot failed")
     return {"image": path}
+
+
+# ---- lessons ----
+
+def _lesson_runner():
+    return planner.claude_runner(config.load().get("explain_model") or "opus")
+
+
+def explain_in_3d(address, args):
+    """Plan a narrated 3D lesson about what the window shows and play it. Unless the user chose Auto, a card asks first (the offer)."""
+    w, _ = _window(address)
+    mode = access.explainers()
+    if mode == "never":
+        raise ToolError("the user has switched 3D lessons off in the Goop settings")
+    topic = str(args.get("topic") or "").strip()
+    notes = str(args.get("notes") or "").strip()
+    if not 3 <= len(topic) <= 120:
+        raise ToolError("topic must be a short phrase (3-120 characters), e.g. \"how a digital TV antenna works\"")
+    if mode == "offer" or access.level() == "ask_all":
+        _approve(address, "lesson", f"Build a 3D lesson about \"{topic}\"?",
+                 "Goop plans it with a strong model (a minute or so), then shows a narrated 3D model on screen. "
+                 "Your topic and these notes are sent to the model.\n" + notes[:300])
+    try:
+        story, scene = planner.plan(topic, notes, _lesson_runner(), title=w.get("title") or "")
+    except planner.PlanError as e:
+        raise ToolError(f"the lesson could not be built: {e}")
+    play.stop()
+    play.launch(play.save(story), address)
+    return {"text": f"Playing a {scene['duration']:.0f}-second narrated lesson called \"{story['title']}\". It narrates itself; say at most one short sentence."}
 
 
 # ---- acting ----
@@ -249,6 +279,12 @@ TOOLS = {
         list_files,
         "List the files in a folder inside the one this goop's window shows (`path` relative to it, default the folder itself).",
         _schema({"path": {"type": "string"}})),
+    "explain_in_3d": (
+        explain_in_3d,
+        "Show the user a narrated 3D model that explains what they are reading or watching, like a teacher with a model on the desk. "
+        "`topic` is a short phrase; `notes` holds the key facts and parts the page describes (from what you saw), at most a few paragraphs. "
+        "The user sees a card and may decline. Takes about a minute; the lesson plays and narrates itself.",
+        _schema({"topic": {"type": "string"}, "notes": {"type": "string"}}, ["topic"])),
     "type_in_terminal": (
         type_in_terminal,
         "Type ONE line into the shell prompt of the terminal this goop is attached to. The user sees the exact text on a card "

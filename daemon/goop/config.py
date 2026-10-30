@@ -14,6 +14,8 @@ DEFAULTS = {
         "pause_ms": 220,        # silence between sentences
         "max_chars": 420,       # longer replies are cut at a sentence boundary
     },
+    "explainers": "offer",      # 3D lessons: "offer" (a card asks first), "auto" (just build it), "never"; see access.py
+    "explain_model": "opus",    # the model that plans a lesson; a strong one writes better lessons than the quick-reply model
     "providers": {},            # extra OpenAI-compatible endpoints by name; see agent/registry.py
     "animations": "full",       # "full" liquid wobble + jelly + drips, "reduced" plain round goops (blink + gaze), "off" static, no gaze process
     "provider": "claude",       # which agent the goops are

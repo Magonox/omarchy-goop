@@ -99,7 +99,7 @@ class McpServer(unittest.TestCase):
                      {"jsonrpc": "2.0", "id": 3, "method": "tools/call", "params": {"name": "nope"}},
                      {"jsonrpc": "2.0", "id": 4, "method": "bogus"})
         self.assertEqual([m["id"] for m in r], [1, 2, 3, 4])  # the notification got no reply
-        self.assertEqual({t["name"] for t in r[1]["result"]["tools"]}, {"screenshot", "window_info", "read_context", "read_file", "list_files", "type_in_terminal", "move_files", "undo_last_move"})
+        self.assertEqual({t["name"] for t in r[1]["result"]["tools"]}, {"screenshot", "window_info", "read_context", "read_file", "list_files", "type_in_terminal", "move_files", "undo_last_move", "explain_in_3d"})
         schemas = {t["name"]: t["inputSchema"] for t in r[1]["result"]["tools"]}
         self.assertEqual(schemas["move_files"]["required"], ["moves"])
         self.assertEqual(schemas["type_in_terminal"]["required"], ["text"])

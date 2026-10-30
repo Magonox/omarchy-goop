@@ -4,7 +4,8 @@ import json, os
 
 from . import config
 
-CHOICES = {"animations": ("full", "reduced", "off"), "access": ("look", "ask", "ask_all"), "read_files": ("folder", "ask", "off")}
+CHOICES = {"animations": ("full", "reduced", "off"), "access": ("look", "ask", "ask_all"), "read_files": ("folder", "ask", "off"),
+           "explainers": ("offer", "auto", "never")}
 
 
 def _read(path):

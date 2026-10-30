@@ -72,7 +72,7 @@ def validate(story):
         if p.get("kind") == "device" and p.get("variant", "laptop") not in ("laptop", "phone", "tv", "speaker", "antenna"):
             errs.append(f"part {pid!r}: device variant must be one of: laptop, phone, tv, speaker, antenna")
         if template == "network":
-            if p.get("kind") == "device" and p.get("distance", "medium") not in vocab.DISTANCES:
+            if p.get("kind") not in ("router", "tower", "wall") and p.get("distance", "medium") not in vocab.DISTANCES:
                 errs.append(f"part {pid!r}: distance must be one of: {_list(vocab.DISTANCES)}")
             if p.get("kind") == "wall":
                 bt = p.get("between")

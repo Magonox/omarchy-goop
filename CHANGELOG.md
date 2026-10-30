@@ -6,6 +6,11 @@ Work is planned in [`docs/BACKLOG.md`](docs/BACKLOG.md).
 ## [Unreleased]
 
 ### Added
+- E3/E7: **Goop can build a 3D lesson itself.** New agent tool `explain_in_3d(topic, notes)`: a card asks first (the offer), then a strong model
+  (`explain_model`, default opus, a bare `claude` call of a fraction of a cent of input) writes the storyboard (`goop/explainer/planner.py`), the validator's exact
+  errors go back for up to two repairs, and the lesson plays narrated by the goop that was asked (`goop/explainer/play.py`, `bin/goop-explain --stop`).
+  New setting `explainers`: Offer first (default) / Build automatically / Never (panel section 3D LESSONS, `goopctl config set explainers ...`); Never also
+  withholds the tool. Network lessons now place every non-wall part around the sender. 17 new tests.
 - E2: **explainer vocabulary**: storyboard JSON schema with repair-friendly errors (`goop/explainer/`), a parts library (fans, compressors, chambers, routers, capsules, tanks...),
   three layout templates (axis, network, assembly), a timeline/camera director, and a generic Quick 3D renderer (`shell/explainer3d/Lesson3D.qml`).
   Proven by three hand-written kid-level lessons (`bin/goop-explain jet_engine|wifi|spacecraft`, about 90-120 s each, 11-24% CPU). 21 new tests.

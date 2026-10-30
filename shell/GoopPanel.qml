@@ -21,7 +21,7 @@ Panel {
   readonly property string pluginDir: Qt.resolvedUrl("GoopPanel.qml").toString().replace("file://", "").replace(/\/[^\/]*$/, "") + "/.."
 
   // live state, published by the overlay (see Goop.qml) to a file the panel watches
-  property var st: ({ goops: 0, voiceReady: false, muted: false, animations: "full", provider: "claude", access: "ask" })
+  property var st: ({ goops: 0, voiceReady: false, muted: false, animations: "full", provider: "claude", access: "ask", explainers: "offer" })
   FileView {
     path: Quickshell.env("HOME") + "/.cache/goop/status.json"
     watchChanges: true
@@ -205,6 +205,41 @@ Panel {
             text: root.st.access === "look" ? "Goop can see and read, but never change anything."
                 : root.st.access === "ask_all" ? "Goop asks before every action, file read and screenshot."
                 : "Goop asks before it acts. Plain read-only commands (ls, cd, pwd) run at once."
+          }
+        }
+
+        // ---------- 3D lessons ----------
+        PanelSeparator { foreground: root.fg }
+        Column {
+          width: parent.width
+          spacing: Style.space(10)
+          PanelSectionHeader { text: "3D LESSONS"; foreground: root.fg; fontFamily: root.fontFamily }
+          Repeater {
+            model: [{ k: "offer", t: "Offer first" }, { k: "auto", t: "Build automatically" }, { k: "never", t: "Never" }]
+            Button {
+              required property var modelData
+              width: parent.width
+              text: modelData.t
+              leftAlign: true
+              fontSize: Style.font.bodySmall
+              foreground: root.fg
+              fontFamily: root.fontFamily
+              horizontalPadding: Style.spacing.controlPaddingX
+              verticalPadding: Style.spacing.controlPaddingY
+              bordered: true
+              active: root.st.explainers === modelData.k
+              onClicked: root.change("explainers", modelData.k)
+            }
+          }
+          Text {
+            width: parent.width
+            wrapMode: Text.Wrap
+            color: root.dim
+            font.family: root.fontFamily
+            font.pixelSize: Style.font.caption
+            text: root.st.explainers === "auto" ? "Goop builds a narrated 3D model whenever it thinks one would help."
+                : root.st.explainers === "never" ? "Goop never builds 3D models."
+                : "Goop asks first, then builds a narrated 3D model of what you are reading."
           }
         }
 
