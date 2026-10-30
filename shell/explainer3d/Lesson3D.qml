@@ -32,7 +32,7 @@ PanelWindow {
     WlrLayershell.layer: WlrLayer.Overlay
     WlrLayershell.keyboardFocus: WlrKeyboardFocus.None
     WlrLayershell.namespace: "goop-explainer"
-    mask: Region {}                       // no input region: every click goes through to the window underneath
+    mask: Region { item: closeBtn }       // only the close button takes clicks: everything else goes through to the window underneath
 
     View3D {
         id: v3
@@ -164,6 +164,18 @@ PanelWindow {
             Rectangle { x: lab.p.x - 0.5; y: lab.p.y - 38; width: 1; height: 38; color: "#99ffffff" }
             Rectangle { x: lab.p.x - 4; y: lab.p.y - 4; width: 8; height: 8; radius: 4; color: "white"; border.color: "#88000000"; border.width: 1 }
         }
+    }
+
+    Rectangle {     // the only way to end a lesson early (also: goopctl explain3d stop)
+        id: closeBtn
+        anchors.right: parent.right; anchors.top: parent.top
+        anchors.rightMargin: 14; anchors.topMargin: 10
+        width: closeTxt.implicitWidth + 24; height: 28; radius: 14
+        color: closeMa.containsMouse ? "#f0303844" : "#b0141822"
+        border.color: "#55ffffff"; border.width: 1
+        opacity: closeMa.containsMouse ? 1 : 0.7
+        Text { id: closeTxt; anchors.centerIn: parent; text: "✕  Close lesson"; color: "white"; font.pixelSize: 13 }
+        MouseArea { id: closeMa; anchors.fill: parent; hoverEnabled: true; cursorShape: Qt.PointingHandCursor; onClicked: ex.stop() }
     }
 
     Timer {

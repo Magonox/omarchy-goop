@@ -4,7 +4,7 @@
 # The goop on the focused window narrates it (GOOP_QUIET=1 to skip). GOOP_SPEED=4 plays faster (testing). Needs the optional package qt6-quick3d.
 set -euo pipefail
 here="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-if [ "${1:-}" = "--stop" ]; then exec python3 -c "import sys; sys.path.insert(0, '$here/daemon'); from goop.explainer import play; play.stop()"; fi
+if [ "${1:-}" = "--stop" ] || [ "${1:-}" = stop ]; then exec python3 -c "import sys; sys.path.insert(0, '$here/daemon'); from goop.explainer import play; play.stop()"; fi
 name="${1:?usage: goop-explain <lesson|storyboard.json> | --stop}"
 if [ ! -e /usr/lib/qt6/qml/QtQuick3D/libqquick3dplugin.so ]; then echo "3D lessons need qt6-quick3d: sudo pacman -S qt6-quick3d" >&2; exit 1; fi
 if [ "$name" = dam ]; then exec quickshell -n -p "$here/shell/explainer3d"; fi
