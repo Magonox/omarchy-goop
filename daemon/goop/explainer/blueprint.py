@@ -18,6 +18,22 @@ def is_box(p):
     return isinstance(p.get("size"), list)
 
 
+AXES = {"x": [1, 0, 0], "y": [0, 1, 0], "z": [0, 0, 1]}
+
+
+def spin_axis(p):
+    """The axis a part turns about, in the machine frame: the part's own `spin_axis` if the outline named one, else guessed from its box. A disc or a rod has two equal sides and one odd one,
+    and it turns about the odd one (a wheel 2.4 x 2.4 x 1.2 about z, its axle; a rotor 3 x 0.3 x 3 about y); anything else turns about the vertical."""
+    if p.get("spin_axis") in AXES:
+        return AXES[p["spin_axis"]]
+    dims = p["size"]
+    for i in range(3):
+        a, b = (dims[j] for j in range(3) if j != i)
+        if abs(a - b) <= 0.15 * max(a, b) and abs(dims[i] - a) > 0.15 * max(a, b):
+            return [1 if k == i else 0 for k in range(3)]
+    return AXES["y"]
+
+
 def validate_part(p, pid):
     errs, lo, hi = [], *LIMITS["size"]
     size, at = p.get("size"), p.get("at")
@@ -27,6 +43,8 @@ def validate_part(p, pid):
     ok = isinstance(at, list) and clo <= len(at) <= chi and all(isinstance(c, list) and len(c) == 3 and all(_num(v) and abs(v) <= LIMITS["coord"] for v in c) for c in at)
     if not ok:
         errs.append(f"part {pid!r}: at must be a list of {clo}-{chi} centres like [[x, y, z]], one per copy of the part, each coordinate within +-{LIMITS['coord']:g}")
+    if p.get("spin_axis") is not None and p["spin_axis"] not in AXES:
+        errs.append(f"part {pid!r}: spin_axis must be one of: x, y, z (the axis it turns about: a wheel turns about its axle)")
     return errs
 
 

@@ -186,6 +186,7 @@ def bp(story):
     for p, pid, c, s in items:
         pl = _place(p, pid)
         pl["pos"] = _r3(c)
+        pl["spin_axis"] = blueprint.spin_axis(p)
         d = [c[i] - mid[i] for i in range(3)]
         n = math.sqrt(sum(x * x for x in d))
         d = [x / n for x in d] if n > 0.25 else [0.0, 1.0, 0.0]

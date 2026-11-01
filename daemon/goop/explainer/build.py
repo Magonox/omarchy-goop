@@ -34,7 +34,7 @@ def build(story, parts_dir=None):
     for pid, p in lay["placed"].items():
         mat = vocab.MATERIALS[p["material"]]
         palette = dict(vocab.MATERIALS) if p["kind"] == "code" else {}
-        parts.append({k: p[k] for k in ("id", "group", "kind", "label", "shape", "pos", "rot", "explode", "radius") if k in p}
+        parts.append({k: p[k] for k in ("id", "group", "kind", "label", "shape", "pos", "rot", "explode", "radius", "spin_axis") if k in p}
                      | {"material": {"name": p["material"], **mat}, "context": bool(p.get("context")), "spanning": p["spanning"]}
                      | ({"palette": palette} if palette else {})
                      | ({"signal": p["signal"], "distance": p["distance"]} if "signal" in p else {}))

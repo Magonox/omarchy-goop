@@ -174,3 +174,40 @@ class Fitting(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class Spinning(unittest.TestCase):
+    def test_a_wheel_turns_about_its_axle_and_a_rod_about_its_length(self):
+        by = {"tire": [2.4, 2.4, 1.2], "axle": [0.3, 0.3, 2.0], "shock": [0.3, 1.0, 0.3], "gear": [2.0, 0.4, 2.0], "rocket": [1.0, 5.0, 1.0],
+              "body": [6.2, 1.8, 2.6], "cube": [1, 1, 1]}
+        axis = {k: blueprint.spin_axis({"size": v}) for k, v in by.items()}
+        self.assertEqual(axis["tire"], [0, 0, 1])
+        self.assertEqual(axis["axle"], [0, 0, 1])
+        self.assertEqual(axis["shock"], [0, 1, 0])
+        self.assertEqual(axis["gear"], [0, 1, 0])
+        self.assertEqual(axis["rocket"], [0, 1, 0])
+        self.assertEqual(axis["body"], [0, 1, 0])
+        self.assertEqual(axis["cube"], [0, 1, 0])
+
+    def test_the_outline_can_name_the_axis(self):
+        self.assertEqual(blueprint.spin_axis({"size": [1, 1, 1], "spin_axis": "x"}), [1, 0, 0])
+        s = truck()
+        s["parts"][0]["spin_axis"] = "w"
+        self.assertTrue(any("spin_axis must be one of" in e for e in schema.validate(s, outline=True)))
+
+    def test_every_copy_of_a_wheel_carries_the_axis_into_the_scene(self):
+        sc = scene()
+        for p in sc["parts"]:
+            if p["id"].startswith("tires"):
+                self.assertEqual(p["spin_axis"], [0, 0, 1], p["id"])
+        self.assertEqual(next(p for p in sc["parts"] if p["id"] == "engine")["spin_axis"], [0, 1, 0])
+
+    def test_a_driving_finale_rolls_the_wheels(self):
+        fin = scene()["finale"]
+        self.assertEqual(sorted(fin["rollers"]), ["tires", "tires#2", "tires#3", "tires#4"])
+        self.assertAlmostEqual(fin["roll_radius"], 0.8, places=2)
+
+    def test_other_motions_roll_nothing(self):
+        s = truck()
+        s["finale"]["motion"] = "launch"
+        self.assertNotIn("rollers", scene(s)["finale"])

@@ -20,6 +20,11 @@ Work is planned in [`docs/BACKLOG.md`](docs/BACKLOG.md).
   are any part with `"between"`. The hand-written jet engine, Wi-Fi, spacecraft and antenna lessons stay as demos and tests (they use the old library).
   Measured: a code-built lesson plays at about 10% of one core and 257 MB, the same as the library lessons.
 
+### Fixed
+- Wheels turned about the vertical axis (the `spin` verb always did). Blueprint parts now carry a spin axis taken from their box (a disc or rod turns about its odd side: a
+  wheel about its axle) or from an optional `spin_axis`; the driving finale rolls the wheels one circumference per circumference travelled; a demonstration spin stops when
+  the finale begins. A node-based test runs the renderer's own `state()` to check this.
+
 ### Added
 - E9: **the finale, and machines that really fit together.** A lesson can end with `finale: {say, motion, emitter}`: the machine is put together and does its job, then
   everything vanishes. `launch` (rocket: ignition shake, flame and smoke on a pad, climbs away), `drive` (truck: dust, road, drives off), `sink` (submarine: water surface,

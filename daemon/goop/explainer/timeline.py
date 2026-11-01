@@ -74,6 +74,11 @@ def build(story, lay):
                       "effects": fin_cfg["effects"], "center": [round(x, 3) for x in bounds["center"]], "radius": round(bounds["radius"], 3),
                       "emitter": placed[instances[fin["emitter"]][0]]["pos"] if fin.get("emitter") else None}
             vert = [p["radius"] if p["rot"][2] else p["shape"]["h"] / 2 for p in (placed[i] for i in movable)]
+            if fin["motion"] == "drive":      # the wheels (and the axles that carry them) turn about their own axle as it rolls away
+                rollers = [i for i in movable if placed[i].get("spin_axis") == [0, 0, 1]]
+                if rollers:
+                    finale["rollers"] = rollers
+                    finale["roll_radius"] = round(max(placed[i]["shape"]["r"] for i in rollers), 3)
             finale["bottom"] = round(min(placed[i]["pos"][1] - v for i, v in zip(movable, vert)), 3)
             finale["top"] = round(max(placed[i]["pos"][1] + v for i, v in zip(movable, vert)), 3)
         for a in actions:

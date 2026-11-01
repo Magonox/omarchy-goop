@@ -68,7 +68,7 @@ function state(C, t) {
         }
         ev.spin.forEach(function (e) {
             if (!e.set[i]) return;
-            var age = t - e.t0;
+            var age = Math.min(t, C.finale ? C.finale.t0 : t) - e.t0;      // a demonstration spin stops when the finale begins, so rolling is the only turning left
             if (age > 0) s.spin += e.rate * (age < 1.5 ? age * age / 3 : age - 0.75);
         });
         ev.explode.forEach(function (e) {
@@ -95,6 +95,10 @@ function state(C, t) {
         var g = finaleMotion(fin, t);
         root = { pivot: fin.center, pos: [fin.center[0] + g.d[0], fin.center[1] + g.d[1], fin.center[2] + g.d[2]], rot: g.rot };
         parts.forEach(function (s) { s.alpha = Math.min(s.alpha, g.alpha); if (g.gone) s.vis = false; });
+        if (fin.rollers) {          // rolling: one turn of the wheel for every circumference travelled; forward along +x is clockwise seen from the side (-z)
+            var roll = -(g.d[0] / fin.roll_radius) * 57.2958;
+            fin.rollers.forEach(function (id) { parts[C.idx[id]].spin += roll; });
+        }
         fx = finaleParticles(fin, t);
         env = finaleEnv(fin, t);
     }
