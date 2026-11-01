@@ -8,11 +8,12 @@ from goop import approvals, hypr  # noqa: E402
 clients, ws = hypr.snapshot()
 wins = [
     {"address": c["address"], "x": c["at"][0], "y": c["at"][1], "w": c["size"][0], "h": c["size"][1],
-     "visible": c["workspace"]["id"] in ws}
+     "visible": c["workspace"]["id"] in ws, "monitor": c.get("monitor", 0)}
     for c in clients if c["mapped"] and not c["hidden"]
 ]
+monitors = [hypr.monitor_summary(m) for m in hypr.hypr("monitors")]
 try:
     active = hypr.hypr("activewindow").get("address")
 except Exception:
     active = None
-print(json.dumps({"active": active, "windows": wins, "approvals": approvals.pending()}))
+print(json.dumps({"active": active, "windows": wins, "monitors": monitors, "approvals": approvals.pending()}))

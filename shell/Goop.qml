@@ -25,6 +25,11 @@ Scope {
         onTriggered: Quickshell.execDetached(["bash", "-c", "mkdir -p \"$(dirname \"$2\")\" && printf '%s' \"$1\" > \"$2.tmp\" && mv \"$2.tmp\" \"$2\"",
                                               "_", root.statusJson, root.statusPath])
     }
+    function screenFor(name) {          // the Quickshell screen with this name (the first one when unknown)
+        var ss = Quickshell.screens;
+        for (var i = 0; i < ss.length; i++) if (ss[i].name === name) return ss[i];
+        return ss.length ? ss[0] : null;
+    }
     function setSetting(key, value) { Quickshell.execDetached(["python3", root.daemon + "/settings.py", "set", key, String(value)]); }
 
     Explainer { id: explainer }
@@ -33,6 +38,7 @@ Scope {
 
 PanelWindow {
     id: win
+    screen: root.screenFor(win.monName)
     anchors { top: true; bottom: true; left: true; right: true }
     color: "transparent"
     exclusionMode: ExclusionMode.Ignore
@@ -48,7 +54,13 @@ PanelWindow {
     property var colors: ({})               // address -> color
     property var seeds: ({})                // address -> personality seed (eyes, blink rhythm, squish)
     property var moods: ({})                // address -> {m, until}; "_drag" is the dragged blob
-    property var geo: ({})                  // address -> {x, y, w, h, visible}
+    property var geo: ({})                  // address -> {x, y, w, h, visible}, in this overlay's own pixels
+    // Several monitors: the overlay covers the monitor you are using (the focused one) and follows you when you move to another. Positions are shifted by that
+    // monitor's origin, and only windows on it show a goop (a goop stays with its window, it is just hidden while you are on the other screen).
+    property string monName: ""
+    property real monX: 0
+    property real monY: 0
+    property int monId: 0
     property var spots: computeSpots()      // [{addr, x, y, vis}] top-center of each goop window
     property real cx: width / 2             // cursor position, for gaze
     property real cy: height / 2
@@ -339,10 +351,16 @@ PanelWindow {
         stdout: StdioCollector {
             onStreamFinished: {
                 try {
-                    var s = JSON.parse(text), g = {}, first = null;
+                    var s = JSON.parse(text), g = {}, first = null, mons = s.monitors || [], cur = null;
+                    for (var m = 0; m < mons.length; m++) if (mons[m].focused) cur = mons[m];
+                    if (!cur && mons.length) cur = mons[0];
+                    if (cur) { win.monName = cur.name; win.monX = cur.x; win.monY = cur.y; win.monId = cur.id; }
                     for (var i = 0; i < s.windows.length; i++) {
-                        g[s.windows[i].address] = s.windows[i];
-                        if (!first && s.windows[i].visible) first = s.windows[i].address;
+                        var w = s.windows[i];
+                        w.visible = w.visible && (!cur || w.monitor === cur.id);                 // only windows on this monitor show a goop now
+                        w.x -= win.monX; w.y -= win.monY;
+                        g[w.address] = w;
+                        if (!first && w.visible) first = w.address;
                     }
                     win.geo = g;
                     win.approvals = s.approvals || [];
@@ -398,7 +416,7 @@ PanelWindow {
         stdout: SplitParser {
             onRead: line => {
                 var p = line.split(" ");
-                if (p.length === 2) { win.cx = parseFloat(p[0]); win.cy = parseFloat(p[1]); }
+                if (p.length === 2) { win.cx = parseFloat(p[0]) - win.monX; win.cy = parseFloat(p[1]) - win.monY; }
             }
         }
     }
@@ -869,7 +887,15 @@ PanelWindow {
         function chooseAsk(addr: string): void { win.clickGoop(addr); }             // what a click does: the Talk / Type buttons
         function closeAsk(): void { win.askAddr = ""; win.chooseAddr = ""; }
         function wizardStep(n: int): void { wizardWin.step = n; if (n === 1) wizardWin.refresh(); }     // jump to a step (for testing)
-        function wizard(open: bool): void { win.wizardOpen = open; }                    // show or hide the first-run setup card
+        function wizard(open: bool): void { win.wizardOpen = open; }
+        function perch(addr: string): void {                                          // put a goop on a window (testing, and `goopctl perch`)
+            if (win.perched.indexOf(addr) >= 0) return;
+            var c = {}, sd = {};
+            for (var k in win.colors) c[k] = win.colors[k];
+            for (var j in win.seeds) sd[j] = win.seeds[j];
+            c[addr] = win.nextColor(); sd[addr] = Math.floor(Math.random() * 100000);
+            win.colors = c; win.seeds = sd; win.perched = win.perched.concat([addr]);
+        }                    // show or hide the first-run setup card
         function askOpen(): string { return win.askAddr; }
         function mood(m: string, ms: int): void {
             for (var i = 0; i < win.perched.length; i++) win.setMood(win.perched[i], m, ms);
@@ -879,6 +905,7 @@ PanelWindow {
 
 PanelWindow {
     id: askWin
+    screen: win.screen
     visible: win.askAddr !== "" || win.chooseAddr !== ""
     // Full-screen and transparent. With exclusive keyboard focus Hyprland treats this surface as a modal and sends it every
     // click, so a press anywhere outside the box (the MouseArea below) is how "click away" is detected. The surface never

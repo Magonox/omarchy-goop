@@ -10,6 +10,7 @@ PanelWindow {
     id: wz
     required property var app                 // the Goop overlay window (settings state and helpers)
     required property var paths               // the Goop scope (where the plugin lives)
+    screen: app.screen                        // on the monitor the overlay is on
     property int step: 0
     readonly property int steps: 5
     property var checks: []

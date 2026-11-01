@@ -23,6 +23,15 @@ def cursor():
     return c["x"], c["y"]
 
 
+def monitor_summary(m):
+    """A monitor in the layout's own (logical) pixels: Hyprland reports the panel's size, so divide by the scale and swap the sides when it is rotated."""
+    scale = m.get("scale") or 1
+    w, h = m["width"] / scale, m["height"] / scale
+    if m.get("transform", 0) % 2:
+        w, h = h, w
+    return {"id": m["id"], "name": m["name"], "x": m["x"], "y": m["y"], "w": round(w), "h": round(h), "focused": bool(m.get("focused"))}
+
+
 def snapshot():
     """(clients, active workspace ids) in one go."""
     clients = hypr("clients")
