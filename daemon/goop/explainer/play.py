@@ -28,6 +28,13 @@ def stop():
             pass
 
 
+def launch_scene(scene_path, address=""):
+    """Play a scene file that is already built (its parts may still be arriving). Returns right away."""
+    env = dict(os.environ, GOOP_ADDR=address or "")
+    subprocess.Popen([BIN, "--scene", scene_path], env=env, stdin=subprocess.DEVNULL, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
+                     start_new_session=True)
+
+
 def save(story):
     os.makedirs(LESSON_DIR, exist_ok=True)
     slug = re.sub(r"[^a-z0-9]+", "_", story.get("title", "lesson").lower()).strip("_")[:40] or "lesson"

@@ -2,6 +2,7 @@ import QtQuick
 import QtQuick3D
 import QtQuick3D.Helpers
 import Quickshell
+import Quickshell.Io
 import Quickshell.Wayland
 import "lesson.js" as L
 import "shapes.js" as S
@@ -71,14 +72,26 @@ PanelWindow {
                 eulerRotation: Qt.vector3d(part.rot[0], part.rot[1], part.rot[2])
                 scale: Qt.vector3d(s.k, s.k, s.k)
                 visible: s.vis
+                property var subs: ex.subs[index] || []      // the part's drawable pieces; a code part's file replaces them when it fills in
+                FileView {      // a part whose geometry is still being written: it appears the moment its file has meshes in it
+                    path: pn.part.shape.file || ""
+                    watchChanges: true
+                    onFileChanged: reload()
+                    onLoaded: {
+                        try {
+                            var d = JSON.parse(text());
+                            if (d.meshes && d.meshes.length) pn.subs = S.meshSubs(d.meshes, d.scale);
+                        } catch (e) { console.log("GOOP-EXPLAINER: bad part file:", e); }
+                    }
+                }
                 Node {
                     eulerRotation: Qt.vector3d(0, pn.s.spin, 0)         // spinning turns the part about its own axis
                     Repeater3D {
-                        model: (ex.subs[pn.index] || []).length
+                        model: pn.subs.length
                         delegate: Model {
                             id: md
                             required property int index
-                            readonly property var sub: ex.subs[pn.index][index]
+                            readonly property var sub: pn.subs[index]
                             readonly property var mat: L.material(pn.part, sub.role, pn.s)
                             geometry: ProceduralMesh { positions: M.vecs(md.sub.mesh.p); normals: M.vecs(md.sub.mesh.n); indexes: md.sub.mesh.i }
                             castsShadows: md.mat.alpha > 0.9

@@ -12,8 +12,15 @@ def _shape(part):
     shape = {k: (round(v * f, 3) if k in ("r", "h", "w", "d", "t", "r0", "r1") else v) for k, v in kind.items() if k != "material"}
     if part["kind"] == "device":
         shape["variant"] = part.get("variant", "laptop")
-    if part["kind"] == "code":              # geometry came out of the sandbox, already centred; only its size is needed
-        shape |= {"type": "mesh", "meshes": part["_meshes"], "scale": f, "r": round(part["_dims"]["r"] * f, 3), "h": round(part["_dims"]["h"] * f, 3)}
+    if part["kind"] == "code":
+        if "width" in part:                 # the outline gave a target box, so placement never waits for the code; the mesh is scaled to fit inside it
+            shape |= {"type": "mesh", "r": round(part["width"] / 2, 3), "h": round(part["height"], 3), "scale": part.get("_scale", 1.0)}
+        else:                               # geometry came out of the sandbox, already centred; only its size is needed
+            shape |= {"type": "mesh", "scale": f, "r": round(part["_dims"]["r"] * f, 3), "h": round(part["_dims"]["h"] * f, 3)}
+        if "_meshes" in part:
+            shape["meshes"] = part["_meshes"]
+        if "_file" in part:                 # the geometry arrives later, in its own file, and the renderer loads it when it appears
+            shape["file"] = part["_file"]
     return shape
 
 

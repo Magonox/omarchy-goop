@@ -11,7 +11,8 @@ def _list(items):
     return ", ".join(sorted(items))
 
 
-def validate(story):
+def validate(story, outline=False):
+    """`outline=True` checks a storyboard whose code parts have no code yet (the planner's first answer): each needs a brief and a target size instead."""
     errs = []
     if not isinstance(story, dict):
         return ["the storyboard must be a JSON object"]
@@ -51,8 +52,15 @@ def validate(story):
             errs.append(f"part {pid!r}: label must be 1-{vocab.LIMITS['label']} characters")
         if p.get("kind") == "code":
             lo_c, hi_c = codegen.LIMITS["code"]
-            if not isinstance(p.get("code"), str) or not lo_c <= len(p["code"]) <= hi_c:
+            if not outline and (not isinstance(p.get("code"), str) or not lo_c <= len(p["code"]) <= hi_c):
                 errs.append(f"part {pid!r}: a code part needs code: a string of {lo_c}-{hi_c} characters defining function build(M) that returns [{{material, look, mesh}}]")
+            if outline or "width" in p or "height" in p:
+                for key in ("width", "height"):
+                    v = p.get(key)
+                    if not (isinstance(v, (int, float)) and not isinstance(v, bool) and 0.2 <= v <= 8):
+                        errs.append(f"part {pid!r}: {key} must be a number between 0.2 and 8 (the size of the part in the scene; 1 is about a hand-sized object)")
+            if outline and not (isinstance(p.get("brief"), str) and 20 <= len(p["brief"]) <= 600):
+                errs.append(f"part {pid!r}: a brief of 20-600 characters is needed: what the part looks like, its shapes, details and colours")
         if p.get("size", "medium") not in vocab.SIZES:
             errs.append(f"part {pid!r}: size must be one of: {_list(vocab.SIZES)}")
         if p.get("material", "steel") not in vocab.MATERIALS:

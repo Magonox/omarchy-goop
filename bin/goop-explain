@@ -5,7 +5,14 @@
 set -euo pipefail
 here="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 if [ "${1:-}" = "--stop" ] || [ "${1:-}" = stop ]; then exec python3 -c "import sys; sys.path.insert(0, '$here/daemon'); from goop.explainer import play; play.stop()"; fi
-name="${1:?usage: goop-explain <lesson|storyboard.json> | --stop}"
+# --scene <scene.json>: play a scene that is already built (the planner builds it while the parts are still being drawn)
+if [ "${1:-}" = "--scene" ]; then
+  scene="${2:?usage: goop-explain --scene <scene.json>}"
+  if [ -z "${GOOP_QUIET:-}" ]; then python3 "$here/daemon/narrate.py" "$scene" ${GOOP_ADDR:+--addr "$GOOP_ADDR"} & narrator=$!; trap 'kill $narrator 2>/dev/null || true' EXIT; fi
+  GOOP_SCENE="$scene" quickshell -n -p "$here/shell/explainer3d"
+  exit
+fi
+name="${1:?usage: goop-explain <lesson|storyboard.json> | --scene <scene.json> | --stop}"
 if [ ! -e /usr/lib/qt6/qml/QtQuick3D/libqquick3dplugin.so ]; then echo "3D lessons need qt6-quick3d: sudo pacman -S qt6-quick3d" >&2; exit 1; fi
 if [ "$name" = dam ]; then exec quickshell -n -p "$here/shell/explainer3d"; fi
 mkdir -p "$HOME/.cache/goop/scenes"

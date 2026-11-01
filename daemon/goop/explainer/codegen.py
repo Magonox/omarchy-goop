@@ -96,6 +96,22 @@ def _clean(out, where):
     return meshes, {"r": r, "h": hi[1] - lo[1]}
 
 
+def compile_part(code, where):
+    """Run one part's code and return its checked meshes and size: ([mesh...], {"r", "h"}). Raises CodeError with a message a model can repair from."""
+    lo, hi = LIMITS["code"]
+    if not isinstance(code, str) or not lo <= len(code) <= hi:
+        raise CodeError(f"{where}: the code must be {lo}-{hi} characters defining function build(M)")
+    res = _run(code)
+    if "error" in res:
+        raise CodeError(f"{where}: your code threw an error: {res['error']}")
+    return _clean(res.get("result"), where)
+
+
+def fit_scale(dims, width, height):
+    """How much to scale a part's mesh so it fits inside the box the outline gave it (width across, height tall)."""
+    return min((width / 2) / max(dims["r"], 1e-6), height / max(dims["h"], 1e-6))
+
+
 _cache = {}
 
 
@@ -107,9 +123,7 @@ def resolve(story):
         code = p["code"]
         key = hashlib.sha1(code.encode()).hexdigest()
         if key not in _cache:
-            where = f"part {p['id']!r}"
-            res = _run(code)
-            if "error" in res:
-                raise CodeError(f"{where}: your code threw an error: {res['error']}")
-            _cache[key] = _clean(res.get("result"), where)
+            _cache[key] = compile_part(code, f"part {p['id']!r}")
         p["_meshes"], p["_dims"] = _cache[key]
+        if "width" in p:
+            p["_scale"] = fit_scale(p["_dims"], p["width"], p["height"])

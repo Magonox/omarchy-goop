@@ -82,7 +82,8 @@ of the screen: the model is built up, exploded into components and the flow foll
 | E12 | Streaming: start playing as soon as the first steps are planned | later | Hides the planner's latency. |
 | E5 | Parametric parts library, glTF models, vision critique of rendered frames | later | Blender only to author curated assets, never at runtime. |
 | E5a | ~~Custom parts (composed pieces + lathe/extrude)~~ | removed | Replaced by code parts (E5b); `lathe` and `extrude` live on as helpers the model's code can call. |
-| E5b | **Code parts: the only way lessons make shapes** (model-written geometry, Deno sandbox) | done | Open: trim the 3.6 MB scene size, faster planning (about 90-100 s: progress line, parts in parallel), cache generated parts by topic, a vision check of rendered frames, relation words for placement (a laser below a disc), curved/organic helpers (loft, skin). Wizard step S2f must check for deno. |
+| E5b | **Code parts: the only way lessons make shapes** (model-written geometry, Deno sandbox) | done | Open: trim the 3.6 MB scene size, cache generated parts by topic, a vision check of rendered frames, relation words for placement (a laser below a disc), curved/organic helpers (loft, skin). Wizard step S2f must check for deno. |
+| E8 | **Parallel parts + early start** | done | Outline about 27-40 s (medium effort), parts 8-29 s each in parallel, window opens after about 50 s. Open: outline is now the long pole (try low effort or a short first pass that names the first parts), progress line in the goop bubble, cache generated parts by label, a vision check of the first frames, speak a short intro while waiting. |
 | E6 | Flat animated-diagram fallback (Qt Quick Shapes) when Quick 3D is not installed | later | Plus a doctor/wizard hint with the pacman command. |
 
 ## Later

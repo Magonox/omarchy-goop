@@ -49,7 +49,7 @@ function build(sh) {
     case "tower":
         return tower(sh);
     case "mesh":
-        return sh.meshes.map(function (m) { return { role: roleOf(m.look, m.material), mesh: M.T({ p: m.p, n: m.n, i: m.i }, { s: sh.scale || 1 }) }; });
+        return meshSubs(sh.meshes || [], sh.scale);
     case "device":
         return device(sh);
     case "wall":
@@ -92,6 +92,11 @@ function build(sh) {
     case "cone": return [{ role: "main", mesh: M.frustum(r, 0.02, h, 28, -h / 2) }];
     }
     return [{ role: "main", mesh: M.box(1, 1, 1, -0.5) }];
+}
+
+// a code part's meshes (from the scene file, or from its own file as it arrives) -> the sub-meshes the renderer draws
+function meshSubs(meshes, scale) {
+    return meshes.map(function (m) { return { role: roleOf(m.look, m.material), mesh: M.T({ p: m.p, n: m.n, i: m.i }, { s: scale || 1 }) }; });
 }
 
 function roleOf(look, name) {

@@ -15,6 +15,8 @@ DEFAULTS = {
         "max_chars": 420,       # longer replies are cut at a sentence boundary
     },
     "explainers": "offer",      # 3D lessons: "offer" (a card asks first), "auto" (just build it), "never"; see access.py
+    "explain_outline_effort": "medium",   # how hard the model thinks while planning a lesson (low|medium|high); thinking is most of the waiting
+    "explain_part_effort": "low",         # ... and while drawing each part
     "explain_model": "opus",    # the model that plans a lesson; a strong one writes better lessons than the quick-reply model
     "providers": {},            # extra OpenAI-compatible endpoints by name; see agent/registry.py
     "animations": "full",       # "full" liquid wobble + jelly + drips, "reduced" plain round goops (blink + gaze), "off" static, no gaze process

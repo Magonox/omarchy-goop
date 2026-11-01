@@ -1,11 +1,11 @@
 """The tools an agent may use on one window, shared by every provider through the MCP server (mcp_server.py).
 Looking tools are free. Acting tools show the user the exact action on a card and wait for Approve/Deny.
 All are scoped to the window the goop is attached to, privacy-checked, and audit-logged."""
-import json, os, subprocess, time
+import json, os, shutil, subprocess, sys, time
 
 from . import access, actions, approvals, classify, config, hypr, packet, proc, screenshot
 from .adapters import folder as folder_adapter, terminal as terminal_adapter
-from .explainer import codegen, planner, play
+from .explainer import codegen
 
 AUDIT = os.path.expanduser("~/.cache/goop/audit.log")
 PREVIEW_LINES = 14
@@ -68,8 +68,29 @@ def take_screenshot(address, args=None):
 
 # ---- lessons ----
 
-def _lesson_runner():
-    return planner.claude_runner(config.load().get("explain_model") or "opus")
+BUILDER = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "explain_run.py")
+RUN_DIR = os.path.expanduser("~/.cache/goop/run")
+
+
+def _builder_running():
+    """Is a lesson builder (explain_run.py) already working? Looks for its command line, so a stale pid cannot fool it."""
+    for pid in filter(str.isdigit, os.listdir("/proc")):
+        try:
+            with open(f"/proc/{pid}/cmdline", "rb") as f:
+                if b"explain_run.py" in f.read():
+                    return int(pid) != os.getpid()
+        except OSError:
+            continue
+    return False
+
+
+def _spawn_builder(job):
+    """Start the lesson builder detached: it must outlive this tool call and the agent that made it."""
+    os.makedirs(RUN_DIR, exist_ok=True)
+    path = os.path.join(RUN_DIR, f"explain-{int(time.time())}.json")
+    with open(path, "w") as f:
+        json.dump(job, f)
+    subprocess.Popen([sys.executable, BUILDER, path], stdin=subprocess.DEVNULL, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, start_new_session=True)
 
 
 def explain_in_3d(address, args):
@@ -88,13 +109,15 @@ def explain_in_3d(address, args):
                  "Your topic and these notes are sent to the model.\n" + notes[:300])
     if not codegen.available():
         raise ToolError("3D lessons need the deno runtime to run the model's shape code safely; the user can install it with: sudo pacman -S deno")
-    try:
-        story, scene = planner.plan(topic, notes, _lesson_runner(), title=w.get("title") or "")
-    except planner.PlanError as e:
-        raise ToolError(f"the lesson could not be built: {e}")
-    play.stop()
-    play.launch(play.save(story), address)
-    return {"text": f"Playing a {scene['duration']:.0f}-second narrated lesson called \"{story['title']}\". It narrates itself; say at most one short sentence."}
+    if not shutil.which("claude"):
+        raise ToolError("3D lessons are planned with the claude CLI for now, and it was not found")
+    if _builder_running():
+        raise ToolError("a 3D lesson is already being built; wait for it to start")
+    _spawn_builder({"topic": topic, "notes": notes, "title": w.get("title") or "", "address": address,
+                    "model": config.load().get("explain_model") or "opus",
+                    "outline_effort": config.load().get("explain_outline_effort"), "part_effort": config.load().get("explain_part_effort")})
+    return {"text": "The lesson is being built and will start playing by itself in about half a minute, narrated by this goop. "
+                    "Say at most one short sentence, for example that you are building it now."}
 
 
 # ---- acting ----

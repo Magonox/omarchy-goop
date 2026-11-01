@@ -6,6 +6,14 @@ Work is planned in [`docs/BACKLOG.md`](docs/BACKLOG.md).
 ## [Unreleased]
 
 ### Changed
+- E8: **lessons build in parallel and start early.** The agent tool now starts a detached builder (`daemon/explain_run.py`) and returns at once. Stage 1: one model call writes
+  the outline (steps, narration, and for each part a brief and a target size, so the layout is final before any code exists). Stage 2: one call per part, all at the same
+  time, each writing only that part's code; every part's geometry goes to its own file the moment it passes the sandbox, and a part that cannot be made to work becomes a
+  glass stand-in. The lesson window opens as soon as the first step's parts exist and the renderer loads the others as their files appear. New `--scene` mode in
+  `goop-explain`; the finished lesson is saved with all its code for replay. Settings `explain_outline_effort` (medium) and `explain_part_effort` (low): thinking was
+  most of the waiting, and `--effort low` writes a part in about 10 s instead of 27-35 s. Measured on the Blu-ray topic: window open after 50 s (was 100+), all parts after
+  67 s. A first parallel version without effort settings took 112 s (bigger parts, thinking on). A bug found by the tests: the last repair's error message was lost.
+
 - E5c: **lessons are made entirely from model-written code.** The planner no longer offers ready-made shapes or the basic-pieces recipe (both removed: `custom`
   kind, `custom.py`, the `explain_parts` setting); every part is `kind: "code"` and a plan that uses anything else is sent back for repair. 3D lessons now need
   `deno` (the sandbox); without it the tool says how to install it. The network layout works with code parts: one part with `"sender": true`, blockers
