@@ -31,6 +31,11 @@ Panel {
   }
 
   property var checks: []
+  property string version: ""
+  FileView {      // the version, for the footer
+    path: root.pluginDir + "/manifest.json"
+    onLoaded: { try { root.version = JSON.parse(text()).version; } catch (e) {} }
+  }
   property var providers: []
   readonly property var problems: checks.filter(function(c) { return !c.ok })
   readonly property bool voiceMissing: checks.some(function(c) { return c.id === "voice" && !c.ok })
@@ -372,6 +377,15 @@ Panel {
             }
           }
           Button {
+            text: "Run setup again"
+            fontSize: Style.font.bodySmall
+            foreground: root.fg
+            fontFamily: root.fontFamily
+            horizontalPadding: Style.spacing.controlPaddingX
+            verticalPadding: Style.spacing.controlPaddingY
+            onClicked: { root.change("setup_version", 0); root.close() }      // the overlay watches the config and opens the setup card
+          }
+          Button {
             text: "Docs"
             fontSize: Style.font.bodySmall
             foreground: root.fg
@@ -380,6 +394,13 @@ Panel {
             verticalPadding: Style.spacing.controlPaddingY
             onClicked: { Quickshell.execDetached(["xdg-open", root.pluginDir + "/README.md"]); root.close() }
           }
+        }
+        Text {
+          visible: root.version !== ""
+          text: "Goop " + root.version
+          color: root.dim
+          font.family: root.fontFamily
+          font.pixelSize: Style.font.caption
         }
       }
     }

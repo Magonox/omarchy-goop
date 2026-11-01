@@ -38,4 +38,4 @@ say "Checking what goop uses"
 for tool in claude wtype grim paplay parecord pdftotext hyprctl; do
   command -v "$tool" >/dev/null || warn "$tool not found${tool/claude/ (the agent needs the Claude Code CLI)}"
 done
-say "Done. Restart the shell (omarchy restart shell) or run: omarchy plugin enable <goop-id>"
+say "Done. If goops are already running, restart the shell (omarchy-restart-shell) so the voice starts; the setup card in Goop does this for you."

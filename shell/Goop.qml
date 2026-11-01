@@ -68,6 +68,18 @@ PanelWindow {
     readonly property bool animLive: animations === "full"
     readonly property bool animEyes: animations !== "off"
     property bool cfgMissing: false
+    // the first-run setup card (Wizard.qml): opens by itself once, as soon as a goop exists and the config says setup has not been done
+    property int setupVersion: 0
+    property bool configLoaded: false
+    property bool wizardOpen: false
+    property bool wizardShown: false
+    readonly property bool wantWizard: configLoaded && setupVersion < 1 && perched.length > 0
+    onWantWizardChanged: if (wantWizard && !wizardShown) { wizardShown = true; wizardOpen = true; }
+    function reloadVoice() {          // after setup installed the voice: start the voice and microphone processes again so they find it
+        ttsReady = false; tts.running = false; voiceRestart.start();
+        sttWanted = false; sttReady = false; sttWantListen = false;
+    }
+    Timer { id: voiceRestart; interval: 500; onTriggered: tts.running = true }
     property string provider: "claude"
     property string explainers: "offer"    // 3D lessons: offer (a card asks first) | auto | never (enforced in the daemon)
     property string access: "ask"          // look | ask | ask_all (enforced in the daemon; shown in the settings panel)
@@ -80,6 +92,9 @@ PanelWindow {
             var c = JSON.parse(t), a = c.animations;
             animations = (a === "reduced" || a === "off") ? a : "full";
             provider = c.provider || "claude";
+            setupVersion = c.setup_version || 0;
+            configLoaded = true;
+            if (setupVersion >= 1) { wizardOpen = false; wizardShown = false; }         // finished: it may open again when the panel resets setup_version to 0
             access = (c.access === "look" || c.access === "ask_all") ? c.access : "ask";
             explainers = (c.explainers === "auto" || c.explainers === "never") ? c.explainers : "offer";
             sttEnabled = !(c.stt && c.stt.enabled === false);
@@ -94,7 +109,7 @@ PanelWindow {
         printErrors: false                      // a missing file is normal until the user changes a setting
         onFileChanged: reload()
         onLoaded: { win.cfgMissing = false; win.applyConfig(text()); }
-        onLoadFailed: { win.cfgMissing = true; win.animations = "full"; }     // no config file yet: defaults
+        onLoadFailed: { win.cfgMissing = true; win.animations = "full"; win.configLoaded = true; }     // no config file yet: defaults
     }
     Timer { interval: 3000; repeat: true; running: win.cfgMissing; onTriggered: userCfg.reload() }
     signal dripNow()
@@ -853,6 +868,8 @@ PanelWindow {
         function listenAsk(addr: string): void { win.openAsk(addr, true); }         // the typing box, already listening
         function chooseAsk(addr: string): void { win.clickGoop(addr); }             // what a click does: the Talk / Type buttons
         function closeAsk(): void { win.askAddr = ""; win.chooseAddr = ""; }
+        function wizardStep(n: int): void { wizardWin.step = n; if (n === 1) wizardWin.refresh(); }     // jump to a step (for testing)
+        function wizard(open: bool): void { win.wizardOpen = open; }                    // show or hide the first-run setup card
         function askOpen(): string { return win.askAddr; }
         function mood(m: string, ms: int): void {
             for (var i = 0; i < win.perched.length; i++) win.setMood(win.perched[i], m, ms);
@@ -1043,4 +1060,6 @@ PanelWindow {
         }
     }
 }
+
+    Wizard { id: wizardWin; app: win; paths: root }      // the first-run setup card
 }

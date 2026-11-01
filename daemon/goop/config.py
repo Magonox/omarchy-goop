@@ -29,6 +29,7 @@ DEFAULTS = {
         "max_seconds": 30,
     },
     "providers": {},            # extra OpenAI-compatible endpoints by name; see agent/registry.py
+    "setup_version": 0,         # 0 until the first-run setup card has been finished or skipped; set back to 0 to run it again (panel: Run setup again)
     "animations": "full",       # "full" liquid wobble + jelly + drips, "reduced" plain round goops (blink + gaze), "off" static, no gaze process
     "provider": "claude",       # which agent the goops are
     "model": "haiku",           # provider-specific model name; quick replies suit a small, fast model
