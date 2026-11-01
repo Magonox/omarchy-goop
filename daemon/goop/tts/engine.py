@@ -3,6 +3,8 @@ sentence. Add an engine by subclassing Engine and listing it in ENGINES (the sam
 import os
 from typing import Iterator, List
 
+from . import pace
+
 VOICE_DIR = os.path.expanduser("~/.local/share/goop/voices")
 
 
@@ -32,9 +34,10 @@ class Engine:
 class PiperEngine(Engine):
     name = "piper"
 
-    def __init__(self, model="en_US-libritts_r-medium", voice_dir=VOICE_DIR, speed=1.0, pause_ms=0):
+    def __init__(self, model="en_US-libritts_r-medium", voice_dir=VOICE_DIR, speed=1.0, pause_ms=0, even_pace=True):
         self.path = os.path.join(voice_dir, model + ".onnx")
-        self.speed, self.pause_ms = speed, pause_ms
+        self.speed, self.pause_ms, self.model = speed, pause_ms, model
+        self.pace = pace.Pace(model) if even_pace else None       # per-speaker factors that even out how fast the characters talk
         self._voice = None
 
     def available(self):
@@ -54,10 +57,18 @@ class PiperEngine(Engine):
     def voices(self):
         return list(range(self._load().config.num_speakers))
 
+    def natural_pace(self, voice):
+        """Characters per second this speaker talks at with no stretching (what daemon/calibrate_voices.py records)."""
+        plain = PiperEngine(self.model, os.path.dirname(self.path), speed=1.0, pause_ms=0, even_pace=False)
+        plain._voice = self._load()
+        plain.sample_rate = self.sample_rate
+        return pace.measure(plain, voice)
+
     def stream(self, text, voice):
         from piper.config import SynthesisConfig
         v = self._load()
-        cfg = SynthesisConfig(speaker_id=voice, length_scale=length_scale(self.speed))
+        factor = self.pace.factor(voice, self.natural_pace) if self.pace else 1.0
+        cfg = SynthesisConfig(speaker_id=voice, length_scale=length_scale(self.speed) * factor)
         gap = silence(self.pause_ms, v.config.sample_rate) if self.pause_ms else b""
         for chunk in v.synthesize(text, syn_config=cfg):
             yield chunk.audio_int16_bytes + gap          # the pause rides on the sentence, so streaming order is unchanged

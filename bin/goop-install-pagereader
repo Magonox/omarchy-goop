@@ -1,0 +1,4 @@
+#!/usr/bin/env bash
+# Install (or --uninstall) the Goop page reader for Chromium: lets goops read the text of the page you are on, only when you ask.
+# Edits ~/.config/chromium-flags.conf (with a backup) and adds a native-messaging host file. Restart Chromium afterwards.
+exec python3 "$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)/daemon/pagereader_install.py" "$@"

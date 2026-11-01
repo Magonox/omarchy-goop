@@ -32,6 +32,8 @@ import moonshine_voice as mv
 mv.get_model_for_language("en", mv.ModelArch.SMALL_STREAMING)
 PY
 
+say "Page reader (optional): run  $(cd "$(dirname "$0")" && pwd)/bin/goop-install-pagereader  so goops can read web pages in Chromium"
+
 say "Checking what goop uses"
 for tool in claude wtype grim paplay parecord pdftotext hyprctl; do
   command -v "$tool" >/dev/null || warn "$tool not found${tool/claude/ (the agent needs the Claude Code CLI)}"

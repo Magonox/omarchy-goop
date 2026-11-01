@@ -68,13 +68,18 @@ class Server:
         self._emit(ev)
 
     # ---- one spoken question ----
-    def _run(self, context, req):
+    def _run(self, context, address, req):
         cfg = self.settings
         ep = Endpointer(cfg.get("silence_ms", 1000) / 1000, cfg.get("no_speech_seconds", 8), cfg.get("max_seconds", 30))
         try:
             mic = self.mic_factory()
         except OSError as e:
             return self.emit({"type": "error", "why": f"the microphone could not be opened: {e}"})
+        if not context and address and self.context_for:       # the microphone is already open, so nothing is lost while the words on screen are looked up
+            try:
+                context = (self.context_for(address) or "")[:4000]
+            except Exception:
+                context = ""
         session = self.engine.open(context)
         self.emit({"type": "listening"})
         last_text, last_level, reason = "", 0.0, None
@@ -112,11 +117,11 @@ class Server:
             session.close()
             self.emit({"type": "idle"})
 
-    def listen(self, context=""):
+    def listen(self, context="", address=""):
         self.cancel()
         req = {"cancel": False, "finish": False}
         self.req = req
-        self.thread = threading.Thread(target=self._run, args=(context, req), daemon=True)
+        self.thread = threading.Thread(target=self._run, args=(context, address, req), daemon=True)
         self.thread.start()
 
     def finish(self):
@@ -136,13 +141,7 @@ class Server:
                 continue
             cmd = msg.get("cmd")
             if cmd == "listen":
-                context = str(msg.get("context") or "")
-                if not context and msg.get("address") and self.context_for:          # the words on screen help it get names right
-                    try:
-                        context = self.context_for(msg["address"]) or ""
-                    except Exception:
-                        context = ""
-                self.listen(context[:4000])
+                self.listen(str(msg.get("context") or "")[:4000], str(msg.get("address") or ""))
             elif cmd == "stop":
                 self.finish()
             elif cmd == "cancel":

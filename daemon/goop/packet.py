@@ -2,7 +2,7 @@
 import time
 
 from . import classify, config, proc, screenshot
-from .adapters import folder, terminal
+from .adapters import browser, folder, terminal
 
 VERSION = 1
 
@@ -22,8 +22,12 @@ def build(window, snap=None, shots=True):
         ctx, conf = terminal.collect(window, snap or proc.snapshot())
     elif kind == "file_manager":
         ctx, conf = folder.collect(window)
+    elif kind == "browser":
+        ctx, conf = browser.collect(window)          # the page text from the Goop page reader, when it is installed
+        if conf == "low" and shots:
+            pkt["screenshot"] = screenshot.capture(window)
     else:
-        # browsers/editors/others: no text adapter yet, so a screenshot is the context
+        # editors and others: no text adapter yet, so a screenshot is the context
         ctx, conf = {"notes": ["no text adapter for this app yet; screenshot only"]}, "low"
         if shots:
             pkt["screenshot"] = screenshot.capture(window)

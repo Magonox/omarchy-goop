@@ -11,11 +11,11 @@ def by_id(items):
 
 class Checks(unittest.TestCase):
     def test_everything_present(self):
-        c = by_id(doctor.checks("claude", None, which=lambda t: "/usr/bin/" + t, exists=lambda p: True))
+        c = by_id(doctor.checks("claude", None, which=lambda t: "/usr/bin/" + t, exists=lambda p: True, has_module=lambda n: True, browser_up=True))
         self.assertTrue(all(x["ok"] for x in c.values()))
 
     def test_missing_pieces_come_with_hints(self):
-        c = by_id(doctor.checks("claude", None, which=lambda t: None, exists=lambda p: False))
+        c = by_id(doctor.checks("claude", None, which=lambda t: None, exists=lambda p: False, has_module=lambda n: False, browser_up=False))
         self.assertFalse(c["agent"]["ok"])
         self.assertIn("Claude Code", c["agent"]["hint"])
         self.assertIn("setup.sh", c["voice"]["hint"])

@@ -6,7 +6,7 @@ from . import events
 from .base import AgentRequest, Provider
 
 TOOL_PREFIX = "mcp__goop__"
-GOOP_TOOLS = [TOOL_PREFIX + t for t in ("screenshot", "window_info", "read_context", "read_file", "list_files", "type_in_terminal", "move_files", "undo_last_move", "explain_in_3d")]
+GOOP_TOOLS = [TOOL_PREFIX + t for t in ("screenshot", "window_info", "read_context", "read_file", "list_files", "type_in_terminal", "move_files", "undo_last_move", "explain_in_3d", "read_page")]
 READ_TOOLS = ["Read", "Glob", "Grep"]
 # Claude's own file and shell tools stay off: everything the goop does goes through the approval-gated goop tools.
 DENIED = ["Bash", "Edit", "Write", "NotebookEdit", "WebFetch", "WebSearch", "Task"]

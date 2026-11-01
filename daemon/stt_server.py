@@ -23,10 +23,19 @@ def main():
         return print(json.dumps({"type": "unavailable", "why": f"the speech model could not be loaded: {str(e)[:120]}"}), flush=True)
     print(json.dumps({"type": "ready", "engine": eng.name, "model": cfg["model"], "load_s": round(time.monotonic() - t0, 2)}), flush=True)
     def title_of(address):
-        from goop import hypr
+        """The words on screen: the window's title and, in a browser, the page's own text (when the page reader is installed)."""
+        from goop import classify, hypr
+        from goop.adapters import browser
         clients, _ = hypr.snapshot()
         w = next((c for c in clients if c["address"] == address), None)
-        return f"{w.get('title', '')} {w.get('class', '')}".strip() if w else ""
+        if not w:
+            return ""
+        words = f"{w.get('title', '')} {w.get('class', '')}".strip()
+        if classify.app_type(w.get("class")) == "browser":
+            r = browser.read(w.get("title") or "", 3000, timeout=0.8)
+            if r.get("ok"):
+                words += " " + " ".join([r.get("title", ""), " ".join(r.get("headings", [])), r.get("text", "")])
+        return words
     Server(eng, cfg, context_for=title_of).serve()
 
 

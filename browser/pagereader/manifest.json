@@ -1,0 +1,26 @@
+{
+  "manifest_version": 3,
+  "name": "Goop page reader",
+  "version": "1.0",
+  "description": "Lets Goop read the text of the page you are looking at, only when you ask it a question. Nothing is stored or sent anywhere except to Goop on this computer.",
+  "key": "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA1YxKoPl4YgbA+6DxNxIKpHU+4yvSgJi242l/s0vUNPhbj28ul9tCDqiIEqn4meuDwtkV0O+aeV1W3J7JFir42l7AH8smRh3ZuXCebk685X46RgnmzpS0O9ggGRBIR/Pzeyjp6MfUcU8WZ6WH/OkunK7FERiP9kC28ejiXdjBYc6orUIdQuh6CiYhMvqJhsJJ8HEblEHtKFJKnCJJAEHNk+AKOe4aXUg6E+vnx3kiaRaUI+2mKlPGWtUoazKJOFhEDainveeLtVo9ivDcA5oRjpX0kiB0coB/vsPBaOfDABwokNYjeVDHPigY20BVyKyK0Mq5MRMZEe6OVSbc0n0YRQIDAQAB",
+  "permissions": [
+    "tabs",
+    "scripting",
+    "nativeMessaging"
+  ],
+  "host_permissions": [
+    "http://*/*",
+    "https://*/*",
+    "file:///*"
+  ],
+  "icons": {
+    "16": "icon.png",
+    "48": "icon.png",
+    "128": "icon.png"
+  },
+  "background": {
+    "service_worker": "background.js"
+  },
+  "incognito": "not_allowed"
+}

@@ -7,7 +7,16 @@ VOICE_MODEL = os.path.expanduser("~/.local/share/goop/voices/en_US-libritts_r-me
 QUICK3D_PLUGIN = "/usr/lib/qt6/qml/QtQuick3D/libqquick3dplugin.so"
 
 
-def checks(provider_name="claude", provider_problem=None, which=shutil.which, exists=os.path.exists, has_module=None):
+def browser_ready():
+    """Is the Goop page reader answering right now? (False when the browser is closed, even if it is installed.)"""
+    try:
+        from .adapters import browser
+        return browser.available()
+    except Exception:
+        return False
+
+
+def checks(provider_name="claude", provider_problem=None, which=shutil.which, exists=os.path.exists, has_module=None, browser_up=None):
     """[{id, label, ok, required, hint}]. `provider_problem` is None when the active agent is ready, else why not."""
     def tool(id_, label, cmd, required, hint):
         return {"id": id_, "label": label, "ok": bool(which(cmd)), "required": required, "hint": hint}
@@ -29,6 +38,8 @@ def checks(provider_name="claude", provider_problem=None, which=shutil.which, ex
          "hint": "Run setup.sh to install the voice (about 275 MB)"},
         {"id": "listen", "label": "Talk to goops (microphone input)", "ok": has_module(STT_PACKAGE) and bool(which("parecord")), "required": False,
          "hint": "Run setup.sh to install voice input (about 160 MB, on-device)"},
+        {"id": "pagereader", "label": "Read web pages (Goop page reader)", "ok": browser_ready() if browser_up is None else browser_up, "required": False,
+         "hint": "Run bin/goop-install-pagereader, then restart Chromium (without it goops use screenshots of pages)"},
         tool("audio", "Audio playback (paplay)", "paplay", False, "Install pipewire-pulse so goops can speak"),
         tool("typing", "Typing into terminals (wtype)", "wtype", False, "Install wtype so goops can type commands"),
         tool("pdf", "Reading PDFs (pdftotext)", "pdftotext", False, "Install poppler so goops can read PDFs"),
