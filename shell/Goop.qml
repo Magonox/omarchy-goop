@@ -16,7 +16,7 @@ Scope {
     // shell facades), so the live state is published to a small file that the panel watches.
     // A string, so it only "changes" when the state really does (an object would re-fire on every dependency re-evaluation).
     readonly property string statusJson: JSON.stringify({ goops: win.perched.length, voiceReady: win.ttsReady, muted: win.muted,
-                                                          animations: win.animations, provider: win.provider, access: win.access, explainers: win.explainers })
+                                                          animations: win.animations, provider: win.provider, access: win.access, explainers: win.explainers, voiceInput: win.sttEnabled })
     readonly property string statusPath: Quickshell.env("HOME") + "/.cache/goop/status.json"
     onStatusJsonChanged: statusWrite.restart()
     Timer {
@@ -82,6 +82,8 @@ PanelWindow {
             provider = c.provider || "claude";
             access = (c.access === "look" || c.access === "ask_all") ? c.access : "ask";
             explainers = (c.explainers === "auto" || c.explainers === "never") ? c.explainers : "offer";
+            sttEnabled = !(c.stt && c.stt.enabled === false);
+            sttAutoSend = (c.stt && c.stt.auto_send_ms !== undefined) ? c.stt.auto_send_ms : 1500;
             setMuted(!!(c.tts && c.tts.muted));      // muting from the panel (or goopctl) is saved, so it survives a restart
         } catch (e) { animations = "full"; }
     }
@@ -110,6 +112,45 @@ PanelWindow {
     property real levelS: level             // smoothed, drives the mouth bar
     Behavior on levelS { NumberAnimation { duration: 60 } }
     property string askAddr: ""             // goop whose ask box is open
+    // voice input (daemon/stt_server.py): the speech model loads when the first ask box opens, then stays warm; the microphone itself is only open while listening
+    property bool sttEnabled: true
+    property bool sttWanted: false
+    property bool sttReady: false
+    property bool sttWantListen: false      // asked to listen before the model finished loading
+    property string sttState: "idle"        // idle | listening | off (the speech process said it is not available)
+    property string chooseAddr: ""          // goop whose Talk / Type buttons are showing
+    property real sttLevel: 0
+    property int sttAutoSend: 1500          // ms the heard text stays on screen before it is sent (0 = wait for Enter)
+    signal sttPartial(string text)
+    signal sttFinal(string text)
+    // the speech model is big (about 400 MB while loaded), so it is let go a few minutes after the last ask box; the next one reloads it in a second or two
+    Timer { id: sttIdle; interval: 180000; onTriggered: { win.sttWanted = false; win.sttReady = false; win.sttWantListen = false; } }
+    onAskAddrChanged: if (askAddr === "" && chooseAddr === "") sttIdle.restart()
+    onChooseAddrChanged: if (askAddr === "" && chooseAddr === "") sttIdle.restart()
+    function sttWrite(o) { if (sttReady) stt.write(JSON.stringify(o) + "\n"); }
+    function startListening() {
+        sttIdle.stop();
+        if (!sttEnabled) return;
+        sttWanted = true;
+        if (sttReady) { sttWantListen = false; sttWrite({ cmd: "listen", address: askAddr }); } else sttWantListen = true;
+    }
+    function stopListening() { sttWantListen = false; sttWrite({ cmd: "stop" }); }       // finish now: whatever was heard becomes the question
+    function cancelListening() { sttWantListen = false; sttWrite({ cmd: "cancel" }); }
+    function sttEvent(line) {
+        var e;
+        try { e = JSON.parse(line); } catch (x) { return; }
+        if (e.type === "ready") { sttReady = true; sttState = "idle"; if (sttWantListen) startListening(); }
+        else if (e.type === "unavailable" || e.type === "disabled") {
+            sttReady = false; sttState = "off"; sttWantListen = false; console.log("GOOP stt:", e.type, e.why || "");
+            if (chooseAddr !== "") { var a = chooseAddr; chooseAddr = ""; askAddr = a; }      // no microphone: go straight to typing
+        }
+        else if (e.type === "listening") sttState = "listening";
+        else if (e.type === "level") sttLevel = e.v;
+        else if (e.type === "partial") sttPartial(e.text);
+        else if (e.type === "final") sttFinal(e.text);
+        else if (e.type === "idle") { sttState = "idle"; sttLevel = 0; }
+        else if (e.type === "error") { sttState = "idle"; sttLevel = 0; console.log("GOOP stt error:", e.why); }
+    }
     property var approvals: []              // actions waiting for the user's Approve/Deny (from the daemon)
     property var answered: ({})             // ids already answered, so a stale poll cannot bring a card back
     readonly property var approval: firstApproval()
@@ -129,7 +170,17 @@ PanelWindow {
         answerProc.running = true;
     }
     signal ask(string addr, string text)    // delegates listen and run the agent
-    function openAsk(addr) { stopSpeech(); askAddr = addr; }
+    // clicking a goop offers Talk and Type, one on each side of it; with no microphone it goes straight to the typing box
+    function clickGoop(addr) {
+        stopSpeech();
+        if (chooseAddr === addr) { chooseAddr = ""; return; }
+        if (sttEnabled && sttState !== "off") { chooseAddr = addr; askAddr = ""; sttWanted = true; sttIdle.stop(); }    // the speech model loads while they decide
+        else openAsk(addr, false);
+    }
+    function openAsk(addr, voice) {
+        chooseAddr = ""; stopSpeech(); askAddr = addr;
+        if (voice) startListening();
+    }
     function speak(addr, text) {
         if (!ttsReady || muted || !text) return;
         tts.write(JSON.stringify({ cmd: "speak", id: addr, text: text, seed: seedOf(addr) }) + "\n");
@@ -146,6 +197,7 @@ PanelWindow {
     function submitAsk(t) {
         var a = askAddr, q = t.trim();
         askAddr = "";
+        cancelListening();
         if (q !== "") ask(a, q);
     }
     property string landAddr: ""
@@ -312,6 +364,16 @@ PanelWindow {
         command: [root.venvPython, root.daemon + "/tts_server.py"]
         stdout: SplitParser { onRead: line => win.ttsEvent(line) }
         stderr: StdioCollector { onStreamFinished: if (text) console.log("TTS-ERR:", text) }
+    }
+
+    // --- the goops' ears: Moonshine, on-device. Loads on the first ask box; missing venv/model just means no microphone button. ---
+    Process {
+        id: stt
+        running: win.sttEnabled && win.sttWanted
+        stdinEnabled: true
+        command: [root.venvPython, root.daemon + "/stt_server.py"]
+        stdout: SplitParser { onRead: line => win.sttEvent(line) }
+        stderr: StdioCollector { onStreamFinished: if (text) console.log("STT-ERR:", text) }
     }
 
     // --- cursor feed for gaze (only while a goop exists) ---
@@ -635,7 +697,7 @@ PanelWindow {
                         win.dragging = false;
                         win.settling = false;
                         win.srcAddr = "";
-                        win.openAsk(modelData);
+                        win.clickGoop(modelData);
                         return;
                     }
                     win.dragging = false;
@@ -787,8 +849,10 @@ PanelWindow {
         function explain3d(name: string): void { Quickshell.execDetached([root.here + "/../bin/goop-explain", name]); }
         function reply(addr: string, text: string): void { win.injectReply(addr, text); }
         function answer(addr: string, yes: bool): void { win.offerAnswered(addr, yes); }
-        function openAsk(addr: string): void { win.openAsk(addr); }
-        function closeAsk(): void { win.askAddr = ""; }
+        function openAsk(addr: string): void { win.openAsk(addr, false); }          // the typing box
+        function listenAsk(addr: string): void { win.openAsk(addr, true); }         // the typing box, already listening
+        function chooseAsk(addr: string): void { win.clickGoop(addr); }             // what a click does: the Talk / Type buttons
+        function closeAsk(): void { win.askAddr = ""; win.chooseAddr = ""; }
         function askOpen(): string { return win.askAddr; }
         function mood(m: string, ms: int): void {
             for (var i = 0; i < win.perched.length; i++) win.setMood(win.perched[i], m, ms);
@@ -798,7 +862,7 @@ PanelWindow {
 
 PanelWindow {
     id: askWin
-    visible: win.askAddr !== ""
+    visible: win.askAddr !== "" || win.chooseAddr !== ""
     // Full-screen and transparent. With exclusive keyboard focus Hyprland treats this surface as a modal and sends it every
     // click, so a press anywhere outside the box (the MouseArea below) is how "click away" is detected. The surface never
     // changes size, so typing does not make the compositor reconfigure it (that caused the old flicker).
@@ -808,32 +872,93 @@ PanelWindow {
     WlrLayershell.layer: WlrLayer.Overlay
     WlrLayershell.keyboardFocus: WlrKeyboardFocus.Exclusive
     WlrLayershell.namespace: "goop-ask"
-    readonly property var spot: win.spotOf(win.askAddr)
-    onVisibleChanged: if (visible) { input.text = ""; input.forceActiveFocus(); idle.restart(); } else idle.stop()
+    readonly property var spot: win.spotOf(win.askAddr !== "" ? win.askAddr : win.chooseAddr)
+    onVisibleChanged: {
+        if (visible && win.askAddr !== "") { input.text = ""; input.partial = false; autoSend.stop(); input.forceActiveFocus(); idle.restart(); }
+        else if (visible) choiceKeys.forceActiveFocus();
+        else { idle.stop(); autoSend.stop(); win.cancelListening(); }         // closing the box always closes the microphone
+    }
     Timer { id: idle; interval: 20000; onTriggered: win.askAddr = "" }
-    Text { id: measure; visible: false; font.pixelSize: 14; wrapMode: Text.NoWrap; text: input.text !== "" ? input.text : "Ask this goop..." }
+    Timer { id: choiceTimer; interval: 8000; running: win.chooseAddr !== ""; onTriggered: win.chooseAddr = "" }
+    Connections { target: win; function onChooseAddrChanged() { if (win.chooseAddr !== "") { choiceTimer.restart(); choiceKeys.forceActiveFocus(); } } }
+    Connections { target: win; function onAskAddrChanged() { if (win.askAddr !== "") { input.forceActiveFocus(); } } }
+    // what was heard stays on screen for a moment, with a bar running down, so a mistake can be fixed before it is sent
+    Timer { id: autoSend; interval: Math.max(1, win.sttAutoSend); onTriggered: win.submitAsk(input.text) }
+    Connections {
+        target: win
+        function onSttPartial(t) { input.partial = true; input.text = t; idle.restart(); }
+        function onSttFinal(t) {
+            idle.restart();
+            input.partial = false;
+            if (t.trim() === "") return;
+            input.text = t;
+            if (win.sttAutoSend > 0) autoSend.restart();
+        }
+    }
+    Text { id: measure; visible: false; font.pixelSize: 14; wrapMode: Text.NoWrap; text: input.text !== "" ? input.text : box.hint }
 
-    MouseArea { anchors.fill: parent; onPressed: win.askAddr = "" }   // click away
+    MouseArea { anchors.fill: parent; onPressed: { win.askAddr = ""; win.chooseAddr = ""; } }   // click away
 
     Rectangle {
         id: box
+        visible: win.askAddr !== ""
+        readonly property bool voice: win.sttEnabled && win.sttState !== "off"
+        readonly property bool listening: win.sttState === "listening"
+        readonly property color accent: win.colorOf(win.askAddr)
+        readonly property real pad: voice ? 42 : 12
+        readonly property string hint: !voice ? "Ask this goop..."
+                                     : listening ? "Listening... just talk"
+                                     : !win.sttReady ? "Starting the microphone..."
+                                     : "Type, or click the mic to talk"
         // shrink-wrapped, centred under the goop: compact for a few words, wider as you type, then wraps
-        readonly property real maxW: 360
-        width: Math.max(150, Math.min(maxW, measure.implicitWidth + 28))
-        height: Math.max(36, Math.min(150, input.contentHeight + 20))
+        readonly property real maxW: 380
+        width: Math.max(voice ? 250 : 150, Math.min(maxW, measure.implicitWidth + pad + 18))
+        height: Math.max(36, Math.min(170, input.contentHeight + 20)) + (autoSend.running ? 20 : 0)
         x: askWin.spot ? Math.max(8, Math.min(askWin.width - width - 8, askWin.spot.x - width / 2)) : 8
         y: askWin.spot ? askWin.spot.y + 26 : 40
         radius: 12
         color: "#f2161619"
         border.width: 1
-        border.color: Qt.alpha(win.colorOf(win.askAddr), 0.8)
+        border.color: Qt.alpha(accent, 0.8)
         Behavior on height { NumberAnimation { duration: 90 } }
         MouseArea { anchors.fill: parent }       // clicks on the box itself must not count as click-away
+        TapHandler { onTapped: autoSend.stop() } // touching the box means "wait, let me edit": the countdown stops
+
+        Item {      // the microphone button: pulses with your voice while it listens; click it to finish early, or to talk again
+            id: mic
+            visible: box.voice
+            x: 8; y: 5; width: 28; height: 28
+            Rectangle {
+                anchors.centerIn: parent
+                width: 24 + win.sttLevel * 12; height: width; radius: width / 2
+                color: Qt.alpha(box.accent, 0.28)
+                visible: box.listening
+                Behavior on width { NumberAnimation { duration: 70 } }
+            }
+            Rectangle {
+                anchors.centerIn: parent
+                width: 24; height: 24; radius: 12
+                color: box.listening ? box.accent : (micMa.containsMouse ? "#3a3a44" : "#2c2c33")
+                MicGlyph { anchors.centerIn: parent; scale: 0.9 }
+            }
+            MouseArea {
+                id: micMa
+                anchors.fill: parent
+                hoverEnabled: true
+                cursorShape: Qt.PointingHandCursor
+                onClicked: {
+                    autoSend.stop();
+                    if (box.listening) win.stopListening();
+                    else { input.partial = false; win.startListening(); }
+                }
+            }
+        }
         TextEdit {
             id: input
-            x: 12; y: 10
-            width: parent.width - 24
-            color: "white"; font.pixelSize: 14
+            property bool partial: false
+            x: box.pad; y: 10
+            width: parent.width - box.pad - 12
+            color: partial ? "#c9caff" : "white"; font.pixelSize: 14
             wrapMode: TextEdit.Wrap
             selectByMouse: true
             onTextChanged: idle.restart()
@@ -842,12 +967,78 @@ PanelWindow {
                     win.submitAsk(text); e.accepted = true;      // Shift+Enter inserts a new line
                 } else if (e.key === Qt.Key_Escape) {
                     win.askAddr = ""; e.accepted = true;
+                } else if (e.text.length > 0 || e.key === Qt.Key_Backspace || e.key === Qt.Key_Delete) {
+                    autoSend.stop();                              // typing means "I will do this one by hand": no countdown, no more listening
+                    input.partial = false;
+                    if (win.sttState === "listening") win.cancelListening();
                 }
             }
             Text {
                 visible: !input.text
-                text: "Ask this goop..."
-                color: "#77777f"; font: input.font
+                text: box.hint
+                color: box.listening ? "#b9b9ff" : "#77777f"; font: input.font
+            }
+        }
+        Item {      // the countdown: a bar running down under the words, with the way out spelled out
+            visible: autoSend.running
+            x: 12; y: parent.height - 22; width: parent.width - 24; height: 18
+            property real remain: 1
+            NumberAnimation on remain { running: autoSend.running; from: 1; to: 0; duration: Math.max(1, win.sttAutoSend) }
+            Rectangle { y: 0; width: parent.width * parent.remain; height: 3; radius: 1.5; color: box.accent }
+            Text { y: 5; text: "Sending...  click or type to edit"; color: "#8d8d96"; font.pixelSize: 11 }
+        }
+    }
+
+    // clicking a goop shows two round buttons, one on each side of it: Talk (microphone) and Type (pencil). The microphone stays closed until Talk is chosen.
+    Item {
+        id: choice
+        visible: win.chooseAddr !== ""
+        readonly property color accent: win.colorOf(win.chooseAddr)
+        readonly property real cx: askWin.spot ? askWin.spot.x : 0
+        readonly property real cy: askWin.spot ? askWin.spot.y : 0
+        Item { id: choiceKeys; focus: true; Keys.onPressed: (e) => {
+            if (e.key === Qt.Key_Escape) win.chooseAddr = "";
+            else if (e.key === Qt.Key_M || e.key === Qt.Key_V) win.openAsk(win.chooseAddr, true);
+            else if (e.key === Qt.Key_T || e.key === Qt.Key_Return) win.openAsk(win.chooseAddr, false);
+            e.accepted = true;
+        } }
+        Repeater {
+            model: [{ k: "talk", dx: -1, label: "Talk" }, { k: "type", dx: 1, label: "Type" }]
+            delegate: Item {
+                id: btn
+                required property var modelData
+                width: 44; height: 58
+                x: choice.cx + modelData.dx * 46 - width / 2
+                y: choice.cy - 14
+                opacity: choice.visible ? 1 : 0
+                scale: choice.visible ? 1 : 0.5
+                Behavior on opacity { NumberAnimation { duration: 140 } }
+                Behavior on scale { NumberAnimation { duration: 160; easing.type: Easing.OutBack } }
+                Rectangle {
+                    id: disc
+                    anchors.horizontalCenter: parent.horizontalCenter
+                    width: 38; height: 38; radius: 19
+                    color: ma.containsMouse ? "#f23a3a44" : "#f2161619"
+                    border.width: 1.5
+                    border.color: Qt.alpha(choice.accent, ma.containsMouse ? 1 : 0.8)
+                    Behavior on color { ColorAnimation { duration: 90 } }
+                    MicGlyph { visible: btn.modelData.k === "talk"; anchors.centerIn: parent; scale: 1.1 }
+                    PencilGlyph { visible: btn.modelData.k === "type"; anchors.centerIn: parent; scale: 1.1 }
+                }
+                Text {
+                    anchors.horizontalCenter: parent.horizontalCenter
+                    y: 42
+                    text: btn.modelData.label
+                    color: "#e6e6ee"; font.pixelSize: 12; font.weight: Font.DemiBold
+                    style: Text.Outline; styleColor: "#cc000000"
+                }
+                MouseArea {
+                    id: ma
+                    anchors.fill: parent
+                    hoverEnabled: true
+                    cursorShape: Qt.PointingHandCursor
+                    onClicked: win.openAsk(win.chooseAddr, btn.modelData.k === "talk")
+                }
             }
         }
     }

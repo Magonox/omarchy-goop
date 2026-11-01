@@ -21,6 +21,13 @@ Work is planned in [`docs/BACKLOG.md`](docs/BACKLOG.md).
   Measured: a code-built lesson plays at about 10% of one core and 257 MB, the same as the library lessons.
 
 ### Added
+- T4: **talk to goops.** Clicking a goop shows two round buttons beside it, **Talk** (microphone) and **Type** (pencil); the microphone stays closed until Talk is
+  chosen. Talk opens the ask box already listening: a pulsing mic button, your words appearing live, a pause of about a second ends the question, the text stays
+  on screen for 1.5 s with a bar running down (type or click to edit, Enter sends at once), then it is asked. Speech-to-text is Moonshine small streaming (142 MB,
+  on-device, 5.5x real time on this laptop; tiny/medium selectable as `stt.model`), run by `daemon/stt_server.py` with the microphone read through `parecord`
+  (PipeWire), nothing recorded or sent anywhere. The window title is passed as context so names come out right. The model unloads 3 minutes after the last use
+  (it holds about 400 MB). Settings: panel toggle "Talk to goops", config `stt`; setup.sh installs it; the checklist has a "Talk to goops" line. 17 tests (fake mic and
+  engine, plus one with the real model). A noise estimate that only learned during quiet would have let a humming fan keep a question open forever; found by the tests.
 - E5b: **model-written code parts** (`kind: "code"`, `goop/explainer/codegen.py`): the model writes each part's geometry as a small JavaScript function using the renderer's
   own mesh helpers (box, lathe, extrude, torus, raw triangles, loops). It runs in **Deno with no permissions** (no files, network, environment or subprocesses), a 256 MB
   memory cap, a 6 s limit and output checks; errors go back to the model for repair. Lessons use it by default when `deno` is installed (setting `explain_parts`:

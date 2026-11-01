@@ -21,7 +21,7 @@ Panel {
   readonly property string pluginDir: Qt.resolvedUrl("GoopPanel.qml").toString().replace("file://", "").replace(/\/[^\/]*$/, "") + "/.."
 
   // live state, published by the overlay (see Goop.qml) to a file the panel watches
-  property var st: ({ goops: 0, voiceReady: false, muted: false, animations: "full", provider: "claude", access: "ask", explainers: "offer" })
+  property var st: ({ goops: 0, voiceReady: false, muted: false, animations: "full", provider: "claude", access: "ask", explainers: "offer", voiceInput: true })
   FileView {
     path: Quickshell.env("HOME") + "/.cache/goop/status.json"
     watchChanges: true
@@ -170,6 +170,15 @@ Panel {
             foreground: root.fg
             fontFamily: root.fontFamily
             onClicked: root.change("tts.muted", root.st.muted ? "false" : "true")
+          }
+          Toggle {
+            width: parent.width
+            label: "Talk to goops"
+            description: "Click a goop, then Talk. On-device; the microphone is only open while you talk"
+            checked: root.st.voiceInput
+            foreground: root.fg
+            fontFamily: root.fontFamily
+            onClicked: root.change("stt.enabled", root.st.voiceInput ? "false" : "true")
           }
         }
 

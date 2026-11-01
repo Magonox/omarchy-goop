@@ -18,6 +18,16 @@ DEFAULTS = {
     "explain_outline_effort": "medium",   # how hard the model thinks while planning a lesson (low|medium|high); thinking is most of the waiting
     "explain_part_effort": "low",         # ... and while drawing each part
     "explain_model": "opus",    # the model that plans a lesson; a strong one writes better lessons than the quick-reply model
+    "stt": {                    # voice input; all on-device, the microphone is only open while the ask box is listening
+        "enabled": True,
+        "engine": "moonshine",
+        "model": "small",       # tiny (45 MB, fastest) | small (142 MB, recommended) | medium (269 MB, most accurate)
+        "language": "en",
+        "silence_ms": 1000,     # this much quiet after you speak ends the question
+        "auto_send_ms": 1500,   # the heard text shows for this long, then is sent (0 = wait for Enter); typing or clicking cancels it
+        "no_speech_seconds": 8, # nothing said for this long: stop listening
+        "max_seconds": 30,
+    },
     "providers": {},            # extra OpenAI-compatible endpoints by name; see agent/registry.py
     "animations": "full",       # "full" liquid wobble + jelly + drips, "reduced" plain round goops (blink + gaze), "off" static, no gaze process
     "provider": "claude",       # which agent the goops are
@@ -48,3 +58,8 @@ def is_denied(window, cfg=None):
 def tts():
     """TTS settings with defaults filled in (a user config may override only some keys)."""
     return {**DEFAULTS["tts"], **load().get("tts", {})}
+
+
+def stt():
+    """Voice-input settings with defaults filled in (a user config may override only some keys)."""
+    return {**DEFAULTS["stt"], **load().get("stt", {})}
