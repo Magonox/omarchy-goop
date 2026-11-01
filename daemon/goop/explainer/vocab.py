@@ -62,7 +62,18 @@ def is_blocker(part):
     return part.get("kind") == "wall" or "between" in part
 
 
-TEMPLATES = ("axis", "network", "assembly")
+# The finale: everything works together. The parts come apart, snap together, and the whole thing does what it is for, then vanishes.
+# heading = which way it goes; seconds = how long the motion lasts; env = the prop that sets the scene; effects = what streams from the emitter part.
+FINALES = {
+    "launch": {"heading": [0, 1, 0], "seconds": 6.5, "env": "pad", "effects": ["flame", "smoke"]},
+    "drive": {"heading": [1, 0, 0], "seconds": 6.0, "env": "road", "effects": ["dust"]},
+    "sink": {"heading": [0, -1, 0], "seconds": 6.5, "env": "water", "effects": ["bubbles"]},
+    "fly": {"heading": [1, 0.45, 0], "seconds": 6.0, "env": "none", "effects": ["contrail"]},
+}
+FINALE_TEMPLATES = ("axis", "assembly", "blueprint")        # a signal-in-a-room lesson has no "thing" to send off
+
+
+TEMPLATES = ("axis", "network", "assembly", "blueprint")
 VERBS = ("reveal", "label", "highlight", "flow", "spin", "explode", "pulse", "zoom", "cutaway")
 MEDIA = {"air": [200, 230, 255], "fuel": [255, 190, 90], "exhaust": [255, 140, 60], "water": [120, 190, 255], "power": [255, 236, 130], "signal": [150, 220, 255]}
 ATTACH_AT = ("top", "bottom", "left", "right", "sides", "front", "back", "ring")

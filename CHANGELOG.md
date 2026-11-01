@@ -21,6 +21,14 @@ Work is planned in [`docs/BACKLOG.md`](docs/BACKLOG.md).
   Measured: a code-built lesson plays at about 10% of one core and 257 MB, the same as the library lessons.
 
 ### Added
+- E9: **the finale, and machines that really fit together.** A lesson can end with `finale: {say, motion, emitter}`: the machine is put together and does its job, then
+  everything vanishes. `launch` (rocket: ignition shake, flame and smoke on a pad, climbs away), `drive` (truck: dust, road, drives off), `sink` (submarine: water surface,
+  sways down with bubbles, fades), `fly` (contrail). The whole assembled body moves as one group; effects stream from the `emitter` part. New **blueprint** layout: the
+  outline draws every part as a box (`size` [w,h,d], `at` one centre per copy) in one shared machine frame (front at +x, ground at y=0), the part's code is scaled to fill
+  its box, so the assembled machine is right by construction (four wheels are one part with four centres). Boxes that pass through each other or float loose are rejected
+  with numbers so the model fixes them (an idea taken from Teardown: real dimensions in one frame, collisions fixed with numbers). Blueprint lessons play as a teardown:
+  step 1 shows the finished machine, then it hangs apart while each part is explained (the camera aims where the part hangs), and it snaps back together for the finale.
+  The window opens once most of the machine's parts exist. `GOOP_START=<seconds>` starts playback partway in (for testing endings). 24 new tests.
 - T4: **talk to goops.** Clicking a goop shows two round buttons beside it, **Talk** (microphone) and **Type** (pencil); the microphone stays closed until Talk is
   chosen. Talk opens the ask box already listening: a pulsing mic button, your words appearing live, a pause of about a second ends the question, the text stays
   on screen for 1.5 s with a bar running down (type or click to edit, Enter sends at once), then it is asked. Speech-to-text is Moonshine small streaming (142 MB,

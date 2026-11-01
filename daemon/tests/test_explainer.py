@@ -175,3 +175,48 @@ class Timeline(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class Finale(unittest.TestCase):
+    def story(self, **fin):
+        s = lesson("spacecraft")
+        s["finale"] = {"say": "Now watch all the parts join up into one spaceship, and three, two, one, lift off!", "motion": "launch", "emitter": "engine", **fin}
+        return s
+
+    def test_a_finale_adds_a_step_the_explode_and_the_scene_data(self):
+        base = lesson("spacecraft")
+        base.pop("finale", None)
+        plain = build.build(base)
+        scene = build.build(self.story())
+        self.assertEqual(len(scene["steps"]), len(plain["steps"]) + 1)
+        fin = scene["finale"]
+        self.assertEqual((fin["motion"], fin["env"], fin["effects"], fin["heading"]), ("launch", "pad", ["flame", "smoke"], [0, 1, 0]))
+        self.assertGreater(fin["t_go"], fin["t0"] + 5)
+        step = next(s for s in scene["steps"] if abs(s["t0"] - fin["t0"]) < 0.01)
+        self.assertGreaterEqual(step["t1"] - step["t0"], 5.4 + fin["dur"])                 # long enough for the assembly and the whole motion
+        settle = [e for e in scene["events"] if e["type"] == "explode" and e.get("settle")]
+        self.assertEqual(len(settle), 1)                                                   # the parts come apart and snap back together
+        self.assertEqual(sorted(settle[0]["parts"]), sorted(p["id"] for p in scene["parts"] if not p["spanning"] and not p["context"]))
+        self.assertLess(fin["bottom"], fin["top"])
+        self.assertEqual(fin["emitter"], next(p["pos"] for p in scene["parts"] if p["id"] == "engine"))
+
+    def test_no_finale_means_no_finale_data(self):
+        base = lesson("spacecraft")
+        base.pop("finale", None)
+        self.assertIsNone(build.build(base)["finale"])
+
+    def test_every_motion_has_its_prop_and_effects(self):
+        for motion, env in (("launch", "pad"), ("drive", "road"), ("sink", "water"), ("fly", "none")):
+            fin = build.build(self.story(motion=motion))["finale"]
+            self.assertEqual(fin["env"], env)
+            self.assertTrue(fin["effects"])
+
+    def test_bad_finales_name_the_valid_choices(self):
+        for bad, expect in (({"motion": "teleport"}, "motion must be one of"), ({"say": "short"}, "say must be"), ({"emitter": "warp_core"}, "unknown part")):
+            errs = schema.validate(self.story(**bad))
+            self.assertTrue(any(expect in e for e in errs), (bad, errs))
+
+    def test_a_network_lesson_cannot_have_a_finale(self):
+        s = lesson("wifi")
+        s["finale"] = {"say": "Now watch everything work together and the signal goes out to every room.", "motion": "fly"}
+        self.assertTrue(any("finale needs the template" in e for e in schema.validate(s)))

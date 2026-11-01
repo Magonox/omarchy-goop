@@ -2,7 +2,7 @@
 straight back to a model for a repair pass."""
 import re
 
-from . import codegen, vocab
+from . import blueprint, codegen, vocab
 
 _ID = re.compile(r"^[a-z][a-z0-9_]{0,23}$")
 
@@ -54,14 +54,16 @@ def validate(story, outline=False):
             lo_c, hi_c = codegen.LIMITS["code"]
             if not outline and (not isinstance(p.get("code"), str) or not lo_c <= len(p["code"]) <= hi_c):
                 errs.append(f"part {pid!r}: a code part needs code: a string of {lo_c}-{hi_c} characters defining function build(M) that returns [{{material, look, mesh}}]")
-            if outline or "width" in p or "height" in p:
+            if template == "blueprint":
+                errs += blueprint.validate_part(p, pid)
+            elif outline or "width" in p or "height" in p:
                 for key in ("width", "height"):
                     v = p.get(key)
                     if not (isinstance(v, (int, float)) and not isinstance(v, bool) and 0.2 <= v <= 8):
                         errs.append(f"part {pid!r}: {key} must be a number between 0.2 and 8 (the size of the part in the scene; 1 is about a hand-sized object)")
             if outline and not (isinstance(p.get("brief"), str) and 20 <= len(p["brief"]) <= 600):
                 errs.append(f"part {pid!r}: a brief of 20-600 characters is needed: what the part looks like, its shapes, details and colours")
-        if p.get("size", "medium") not in vocab.SIZES:
+        if template != "blueprint" and p.get("size", "medium") not in vocab.SIZES:
             errs.append(f"part {pid!r}: size must be one of: {_list(vocab.SIZES)}")
         if p.get("material", "steel") not in vocab.MATERIALS:
             errs.append(f"part {pid!r}: material must be one of: {_list(vocab.MATERIALS)}")
@@ -93,6 +95,8 @@ def validate(story, outline=False):
                 else:
                     for r in bt:
                         known(r, f"wall {pid!r} between")
+        if template == "blueprint" and p.get("inside") is not None:
+            known(p.get("inside"), f"part {pid!r} inside")
         if template == "assembly":
             att = p.get("attach")
             if att is not None:
@@ -104,6 +108,8 @@ def validate(story, outline=False):
                         errs.append(f"part {pid!r}: attach.count must be 1-8")
             if p.get("inside") is not None:
                 known(p.get("inside"), f"part {pid!r} inside")
+    if template == "blueprint" and not errs and parts:
+        errs += blueprint.check(parts)
     if template == "network" and not any(vocab.is_sender(p) for p in ids.values()):
         errs.append("a network lesson needs a sender: one part with \"sender\": true (the thing the signal spreads from)")
 
@@ -157,6 +163,20 @@ def validate(story, outline=False):
             elif name == "zoom":
                 if arg != "all":
                     known(arg, f"{where} zoom")
+    fin = story.get("finale")
+    if fin is not None:
+        if template not in vocab.FINALE_TEMPLATES:
+            errs.append(f"finale needs the template {_list(vocab.FINALE_TEMPLATES)} (a finale sends the whole assembled thing off)")
+        if not isinstance(fin, dict):
+            errs.append("finale must be an object like {\"say\": narration, \"motion\": one of " + _list(vocab.FINALES) + ", \"emitter\": part id}")
+        else:
+            say = fin.get("say")
+            if not isinstance(say, str) or not vocab.LIMITS["say"][0] <= len(say) <= vocab.LIMITS["say"][1]:
+                errs.append(f"finale: say must be {vocab.LIMITS['say'][0]}-{vocab.LIMITS['say'][1]} characters of narration for the parts coming together and the thing doing its job")
+            if fin.get("motion") not in vocab.FINALES:
+                errs.append(f"finale: motion must be one of: {_list(vocab.FINALES)}")
+            if fin.get("emitter") is not None:
+                known(fin["emitter"], "finale emitter")
     for key in ("recap", "question"):
         if key in story and not isinstance(story[key], str):
             errs.append(f"{key} must be text")

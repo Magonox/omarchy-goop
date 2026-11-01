@@ -1,36 +1,234 @@
 {
   "version": 1,
   "title": "How a spaceship works",
-  "layout": {"template": "assembly"},
+  "layout": {
+    "template": "assembly"
+  },
   "parts": [
-    {"id": "engine", "kind": "engine", "label": "Main engine"},
-    {"id": "module", "kind": "module", "label": "Service module"},
-    {"id": "capsule", "kind": "capsule", "label": "Crew capsule"},
-    {"id": "tank", "kind": "tank", "label": "Fuel tank", "inside": "module"},
-    {"id": "panels", "kind": "panel", "label": "Solar panels", "attach": {"to": "module", "at": "sides"}},
-    {"id": "dish", "kind": "dish", "label": "Antenna dish", "attach": {"to": "module", "at": "front"}},
-    {"id": "thrusters", "kind": "thruster", "label": "Thrusters", "attach": {"to": "module", "at": "ring", "count": 4}}
+    {
+      "id": "engine",
+      "kind": "engine",
+      "label": "Main engine"
+    },
+    {
+      "id": "module",
+      "kind": "module",
+      "label": "Service module"
+    },
+    {
+      "id": "capsule",
+      "kind": "capsule",
+      "label": "Crew capsule"
+    },
+    {
+      "id": "tank",
+      "kind": "tank",
+      "label": "Fuel tank",
+      "inside": "module"
+    },
+    {
+      "id": "panels",
+      "kind": "panel",
+      "label": "Solar panels",
+      "attach": {
+        "to": "module",
+        "at": "sides"
+      }
+    },
+    {
+      "id": "dish",
+      "kind": "dish",
+      "label": "Antenna dish",
+      "attach": {
+        "to": "module",
+        "at": "front"
+      }
+    },
+    {
+      "id": "thrusters",
+      "kind": "thruster",
+      "label": "Thrusters",
+      "attach": {
+        "to": "module",
+        "at": "ring",
+        "count": 4
+      }
+    }
   ],
   "steps": [
-    {"say": "A spaceship is like a team, and every part has its own job. Let's build one and see who does what!",
-     "do": [{"reveal": ["engine", "module", "capsule"]}, {"zoom": "all"}]},
-    {"say": "At the top is the crew capsule. It is the cozy room where the astronauts live and ride.",
-     "do": [{"label": ["capsule"]}, {"highlight": ["capsule"]}, {"zoom": "capsule"}]},
-    {"say": "Below it is the service module, like the backpack of the ship. It carries the air, water and power for the whole trip.",
-     "do": [{"label": ["module"]}, {"zoom": "module"}]},
-    {"say": "Inside the module are the fuel tanks. Let's see through the wall! The fuel is like the ship's lunch: it gives the engine the energy to push.",
-     "do": [{"cutaway": ["module"]}, {"reveal": ["tank"]}, {"label": ["tank"]}, {"highlight": ["tank"]}]},
-    {"say": "At the bottom is the main engine. It burns fuel and shoots hot gas out the back. Pushing gas down pushes the ship up, like a skateboarder pushing off a wall!",
-     "do": [{"label": ["engine"]}, {"highlight": ["engine"]}, {"zoom": "engine"}]},
-    {"say": "These big wings are solar panels. They catch sunlight and turn it into electricity, so a spaceship basically drinks sunshine!",
-     "do": [{"reveal": ["panels"]}, {"label": ["panels"]}, {"highlight": ["panels"]}]},
-    {"say": "The antenna dish talks to Earth. It is the spaceship's phone, so astronauts can say hello and send pictures home.",
-     "do": [{"reveal": ["dish"]}, {"label": ["dish"]}, {"highlight": ["dish"]}]},
-    {"say": "Tiny thrusters around the module puff little jets of gas to turn and steer the ship, like the handlebars on a bicycle.",
-     "do": [{"reveal": ["thrusters"]}, {"label": ["thrusters"]}, {"highlight": ["thrusters"]}]},
-    {"say": "Now let's pull the whole ship apart to see how the team fits together, from the engine at the bottom to the capsule at the top.",
-     "do": [{"explode": "all"}, {"label": ["capsule", "module", "engine"]}, {"zoom": "all"}]}
+    {
+      "say": "A spaceship is like a team, and every part has its own job. Let's build one and see who does what!",
+      "do": [
+        {
+          "reveal": [
+            "engine",
+            "module",
+            "capsule"
+          ]
+        },
+        {
+          "zoom": "all"
+        }
+      ]
+    },
+    {
+      "say": "At the top is the crew capsule. It is the cozy room where the astronauts live and ride.",
+      "do": [
+        {
+          "label": [
+            "capsule"
+          ]
+        },
+        {
+          "highlight": [
+            "capsule"
+          ]
+        },
+        {
+          "zoom": "capsule"
+        }
+      ]
+    },
+    {
+      "say": "Below it is the service module, like the backpack of the ship. It carries the air, water and power for the whole trip.",
+      "do": [
+        {
+          "label": [
+            "module"
+          ]
+        },
+        {
+          "zoom": "module"
+        }
+      ]
+    },
+    {
+      "say": "Inside the module are the fuel tanks. Let's see through the wall! The fuel is like the ship's lunch: it gives the engine the energy to push.",
+      "do": [
+        {
+          "cutaway": [
+            "module"
+          ]
+        },
+        {
+          "reveal": [
+            "tank"
+          ]
+        },
+        {
+          "label": [
+            "tank"
+          ]
+        },
+        {
+          "highlight": [
+            "tank"
+          ]
+        }
+      ]
+    },
+    {
+      "say": "At the bottom is the main engine. It burns fuel and shoots hot gas out the back. Pushing gas down pushes the ship up, like a skateboarder pushing off a wall!",
+      "do": [
+        {
+          "label": [
+            "engine"
+          ]
+        },
+        {
+          "highlight": [
+            "engine"
+          ]
+        },
+        {
+          "zoom": "engine"
+        }
+      ]
+    },
+    {
+      "say": "These big wings are solar panels. They catch sunlight and turn it into electricity, so a spaceship basically drinks sunshine!",
+      "do": [
+        {
+          "reveal": [
+            "panels"
+          ]
+        },
+        {
+          "label": [
+            "panels"
+          ]
+        },
+        {
+          "highlight": [
+            "panels"
+          ]
+        }
+      ]
+    },
+    {
+      "say": "The antenna dish talks to Earth. It is the spaceship's phone, so astronauts can say hello and send pictures home.",
+      "do": [
+        {
+          "reveal": [
+            "dish"
+          ]
+        },
+        {
+          "label": [
+            "dish"
+          ]
+        },
+        {
+          "highlight": [
+            "dish"
+          ]
+        }
+      ]
+    },
+    {
+      "say": "Tiny thrusters around the module puff little jets of gas to turn and steer the ship, like the handlebars on a bicycle.",
+      "do": [
+        {
+          "reveal": [
+            "thrusters"
+          ]
+        },
+        {
+          "label": [
+            "thrusters"
+          ]
+        },
+        {
+          "highlight": [
+            "thrusters"
+          ]
+        }
+      ]
+    },
+    {
+      "say": "Now let's pull the whole ship apart to see how the team fits together, from the engine at the bottom to the capsule at the top.",
+      "do": [
+        {
+          "explode": "all"
+        },
+        {
+          "label": [
+            "capsule",
+            "module",
+            "engine"
+          ]
+        },
+        {
+          "zoom": "all"
+        }
+      ]
+    }
   ],
   "recap": "So a spaceship is a team: a capsule to live in, a module with supplies, tanks of fuel, an engine to push, panels for power, an antenna to talk, and thrusters to steer.",
-  "question": "If you were the captain, which part would you check first before launch?"
+  "question": "If you were the captain, which part would you check first before launch?",
+  "finale": {
+    "say": "Now watch what happens when everything works together! The engine, the fuel tank, the crew capsule, the solar wings and the dish all join up into one spaceship. Three, two, one... lift off!",
+    "motion": "launch",
+    "emitter": "engine"
+  }
 }

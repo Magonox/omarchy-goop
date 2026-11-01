@@ -22,7 +22,8 @@ PanelWindow {
     readonly property var subs: scene ? scene.parts.map(function (p) { return S.build(p.shape); }) : []
     readonly property var ringMesh: M.torus(1.0, 0.012, 64, 6)
 
-    function play() { startedAt = Date.now(); t = 0; playing = true; }
+    // GOOP_START=95 starts the lesson 95 seconds in (for testing the ending)
+    function play() { startedAt = Date.now() - Number(Quickshell.env("GOOP_START") || 0) * 1000 / speed; t = 0; playing = true; }
     function stop() { playing = false; }
 
     visible: playing && !!scene
@@ -61,6 +62,11 @@ PanelWindow {
             PerspectiveCamera { id: cam; z: ex.st ? ex.st.cam.dist : 20; fieldOfView: 34; clipNear: 0.5; clipFar: 300 }
         }
 
+        Node {      // the whole assembled body: the finale moves, rolls and sinks it as one
+            id: modelRoot
+            pivot: ex.st ? Qt.vector3d(ex.st.root.pivot[0], ex.st.root.pivot[1], ex.st.root.pivot[2]) : Qt.vector3d(0, 0, 0)
+            position: ex.st ? Qt.vector3d(ex.st.root.pos[0], ex.st.root.pos[1], ex.st.root.pos[2]) : Qt.vector3d(0, 0, 0)
+            eulerRotation: ex.st ? Qt.vector3d(ex.st.root.rot[0], ex.st.root.rot[1], ex.st.root.rot[2]) : Qt.vector3d(0, 0, 0)
         Repeater3D {
             model: ex.scene ? ex.scene.parts.length : 0
             delegate: Node {
@@ -111,6 +117,8 @@ PanelWindow {
             }
         }
 
+        }
+
         Repeater3D {   // flowing air, fuel, exhaust, water
             model: 64
             delegate: Model {
@@ -139,6 +147,43 @@ PanelWindow {
                     baseColor: "#9fdcff"; emissiveFactor: Qt.vector3d(0.25, 0.6, 0.9)
                     opacity: d ? d.a : 0; alphaMode: PrincipledMaterial.Blend; cullMode: PrincipledMaterial.NoCulling
                 }
+            }
+        }
+
+        Repeater3D {   // the finale's flame, smoke, bubbles, dust and contrails
+            model: 96
+            delegate: Model {
+                required property int index
+                readonly property var d: ex.st && index < ex.st.fx.length ? ex.st.fx[index] : null
+                source: "#Sphere"
+                visible: d !== null
+                position: d ? Qt.vector3d(d.x, d.y, d.z) : Qt.vector3d(0, 0, 0)
+                scale: d ? Qt.vector3d(d.s, d.s, d.s) : Qt.vector3d(0, 0, 0)
+                castsShadows: false
+                materials: PrincipledMaterial {
+                    baseColor: d ? Qt.rgba(d.r, d.g, d.b, 1) : "white"
+                    emissiveFactor: d ? Qt.vector3d(d.r * d.em, d.g * d.em, d.b * d.em) : Qt.vector3d(0, 0, 0)
+                    roughness: 0.9
+                    opacity: d ? d.a : 0
+                    alphaMode: PrincipledMaterial.Blend
+                }
+            }
+        }
+
+        Model {   // the finale's prop: a launch pad, a road, or the surface of the sea
+            id: envModel
+            readonly property var e: ex.st ? ex.st.env : null
+            source: "#Cube"
+            visible: e !== null
+            position: e ? Qt.vector3d(e.pos[0], e.pos[1], e.pos[2]) : Qt.vector3d(0, 0, 0)
+            scale: e ? Qt.vector3d(e.size[0] / 100, e.size[1] / 100, e.size[2] / 100) : Qt.vector3d(0, 0, 0)
+            castsShadows: false
+            receivesShadows: true
+            materials: PrincipledMaterial {
+                baseColor: envModel.e ? Qt.rgba(envModel.e.color[0], envModel.e.color[1], envModel.e.color[2], 1) : "white"
+                roughness: 0.8
+                opacity: envModel.e ? envModel.e.a : 0
+                alphaMode: PrincipledMaterial.Blend
             }
         }
 

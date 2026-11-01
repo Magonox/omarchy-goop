@@ -93,7 +93,7 @@ def _clean(out, where):
         m["p"] = [round(m["p"][k] - center[k % 3], 4) for k in range(len(m["p"]))]
         m["n"] = [round(v, 3) for v in m["n"]]
     r = max(math.hypot(p[0] - center[0], p[2] - center[2]) for p in pts)
-    return meshes, {"r": r, "h": hi[1] - lo[1]}
+    return meshes, {"r": r, "h": hi[1] - lo[1], "ex": hi[0] - lo[0], "ey": hi[1] - lo[1], "ez": hi[2] - lo[2]}
 
 
 def compile_part(code, where):
@@ -105,6 +105,15 @@ def compile_part(code, where):
     if "error" in res:
         raise CodeError(f"{where}: your code threw an error: {res['error']}")
     return _clean(res.get("result"), where)
+
+
+def fit_box(dims, size):
+    """Scale a part's mesh to fill a blueprint box [width, height, depth] without changing its proportions (it touches the tightest side)."""
+    return min(size[0] / max(dims["ex"], 1e-6), size[1] / max(dims["ey"], 1e-6), size[2] / max(dims["ez"], 1e-6))
+
+
+def part_scale(part, dims):
+    return fit_box(dims, part["size"]) if isinstance(part.get("size"), list) else fit_scale(dims, part["width"], part["height"])
 
 
 def fit_scale(dims, width, height):
@@ -125,5 +134,5 @@ def resolve(story):
         if key not in _cache:
             _cache[key] = compile_part(code, f"part {p['id']!r}")
         p["_meshes"], p["_dims"] = _cache[key]
-        if "width" in p:
-            p["_scale"] = fit_scale(p["_dims"], p["width"], p["height"])
+        if "width" in p or isinstance(p.get("size"), list):
+            p["_scale"] = part_scale(p, p["_dims"])

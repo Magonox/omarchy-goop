@@ -79,7 +79,7 @@ def main(job_path):
         log(f"part {pid} {'ready' if ok else 'FAILED, using a stand-in'} in {seconds}s")
         with lock:
             done.add(pid)
-            if need <= done:
+            if len(need & done) >= max(1, -(-len(need) * 3 // 5)):        # most of the opening parts are enough: the rest pop in while the lesson starts
                 first_ready.set()
     results, worker = {}, None
 

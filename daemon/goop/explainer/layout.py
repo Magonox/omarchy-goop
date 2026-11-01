@@ -3,17 +3,19 @@ Every template returns {placed, instances, bounds}: `placed` maps an id to its p
 it became (a part attached "at sides" or in a "ring" becomes several)."""
 import math
 
-from . import vocab
+from . import blueprint, vocab
 
 
 def _shape(part):
     kind = vocab.KINDS[part["kind"]]
-    f = vocab.SIZES[part.get("size", "medium")]
+    f = vocab.SIZES[part["size"]] if isinstance(part.get("size"), str) else 1.0
     shape = {k: (round(v * f, 3) if k in ("r", "h", "w", "d", "t", "r0", "r1") else v) for k, v in kind.items() if k != "material"}
     if part["kind"] == "device":
         shape["variant"] = part.get("variant", "laptop")
     if part["kind"] == "code":
-        if "width" in part:                 # the outline gave a target box, so placement never waits for the code; the mesh is scaled to fit inside it
+        if blueprint.is_box(part):          # a blueprint box in the machine frame: the mesh is scaled to fill it, so the parts fit together by construction
+            shape |= {"type": "mesh", "r": round(max(part["size"][0], part["size"][2]) / 2, 3), "h": round(part["size"][1], 3), "scale": part.get("_scale", 1.0)}
+        elif "width" in part:               # the outline gave a target box, so placement never waits for the code; the mesh is scaled to fit inside it
             shape |= {"type": "mesh", "r": round(part["width"] / 2, 3), "h": round(part["height"], 3), "scale": part.get("_scale", 1.0)}
         else:                               # geometry came out of the sandbox, already centred; only its size is needed
             shape |= {"type": "mesh", "scale": f, "r": round(part["_dims"]["r"] * f, 3), "h": round(part["_dims"]["h"] * f, 3)}
@@ -173,7 +175,27 @@ def assembly(story):
     return placed, instances
 
 
-TEMPLATES = {"axis": axis, "network": network, "assembly": assembly}
+def bp(story):
+    """The blueprint template: every part sits exactly in its own box of the shared machine frame; the parts fly apart radially and come back to the same boxes."""
+    placed, instances = {}, {}
+    items = blueprint.place(story["parts"])
+    lo = [min(c[i] - s[i] / 2 for _, _, c, s in items) for i in range(3)]
+    hi = [max(c[i] + s[i] / 2 for _, _, c, s in items) for i in range(3)]
+    mid = [(a + b) / 2 for a, b in zip(lo, hi)]
+    reach = max(h - l for h, l in zip(hi, lo)) / 2
+    for p, pid, c, s in items:
+        pl = _place(p, pid)
+        pl["pos"] = _r3(c)
+        d = [c[i] - mid[i] for i in range(3)]
+        n = math.sqrt(sum(x * x for x in d))
+        d = [x / n for x in d] if n > 0.25 else [0.0, 1.0, 0.0]
+        pl["explode"] = _r3([x * (0.55 * reach + 0.5) for x in d])
+        placed[pid] = pl
+        instances.setdefault(p["id"], []).append(pid)
+    return placed, instances
+
+
+TEMPLATES = {"axis": axis, "network": network, "assembly": assembly, "blueprint": bp}
 
 
 def layout(story):

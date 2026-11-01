@@ -38,13 +38,18 @@ You never write code or scene coordinates here. Output ONE JSON object and nothi
 SHAPE: {{"version":1,"title":str,"layout":{{"template":T}},"parts":[...],"steps":[...],"recap":str,"question":str}}
 
 TEMPLATES (pick the one that fits the idea; the engine places the parts):
+- "blueprint": USE THIS for any vehicle or machine whose finished shape matters (rocket, truck, car, submarine, plane, robot, engine) and whenever you add a finale. YOU draw the blueprint: every part gets a box
+  in one shared machine frame, "size":[width,height,depth] and "at":[[x,y,z],...] with one centre per copy (four wheels = ONE part with four centres, so it is drawn once). The frame: x is front-to-back with the
+  FRONT at +x (it drives and flies toward +x), y is up with the ground at y=0 and nothing below it, z is left-to-right. Use real proportions (a monster truck: body 5 x 1.8 x 2.4, frame 5.4 x 0.5 x 2,
+  four tires 1.6 x 1.6 x 0.9 with axles along z; a rocket stands upright: tall in y with the nozzle at the bottom, fins at the base). Boxes of different parts must touch or fit in each other's gaps and
+  not pass through each other, unless a part is "inside":id of the part around it (an engine inside a body); no part may float loose. Coordinates within +-10, sizes 0.1-10. Parts have NO width/height in this template.
 - "axis": things in a row along one line, like a pipeline, a production line or a sequence. Parts go in the order they appear.
 - "assembly": one machine or vehicle made of pieces, stacked bottom to top. A part may have "attach":{{"to":id,"at":one of {list(vocab.ATTACH_AT)},"count":1-8}} (hung on another part) or "inside":id.
 - "network": one part with "sender":true in the middle (a tower, router, speaker, sun) and the other parts placed around it, each with a "distance" (near, medium, far); a part with "between":[id,id] sits between those two parts as a blocker (a wall, a hill) and weakens the signal.
 
 PARTS ({vocab.LIMITS['parts'][0]}-{vocab.LIMITS['parts'][1]}, aim for 5-8): {{"id":"lowercase_id","kind":"code","label":"up to {vocab.LIMITS['label']} chars, shown on screen",
 "brief":"2-4 sentences: what this part looks like, its main shapes, small details (rims, screws, lenses, vents, teeth) and colours, as a real one would look","width":N,"height":N}}
-width and height are the part's size in the scene, between 0.2 and 8: 1 is about a hand-sized object, 2-4 is typical for a main part, small details are 0.4-1. A flat disc is wide and short,
+(In the blueprint template use "size" and "at" instead of width and height.) width and height are the part's size in the scene, between 0.2 and 8: 1 is about a hand-sized object, 2-4 is typical for a main part, small details are 0.4-1. A flat disc is wide and short,
 a tower is narrow and tall. Parts that sit next to each other should be sized sensibly against each other. Every part is kind "code".
 
 STEPS ({vocab.LIMITS['steps'][0]}-{vocab.LIMITS['steps'][1]}): {{"say":"narration","do":[actions]}}. Narration is spoken aloud, so write it like a friendly teacher talking to kids: plain words,
@@ -53,7 +58,17 @@ Actions (each object has exactly one key): "reveal":[ids] makes parts appear; "l
 "explode":"all" or [ids] pulls parts apart; "pulse":id sends waves out from a part; "flow":{{"from":id,"to":id,"medium":one of {list(vocab.MEDIA)}}} moves a stream between parts; "zoom":id or "all" moves the camera.
 Start by revealing the first parts and zooming to "all"; reveal each part before you label or highlight it; end with a step that shows the whole thing again.
 The first step should reveal only the 1-3 parts that open the story, so the lesson can start while the other parts are still being drawn.
+BLUEPRINT lessons work like a teardown instead: step 1 introduces the whole finished machine (the engine shows every part assembled, so just talk about the machine, e.g. "This is a monster truck"), then from step 2 on the parts hang taken apart
+while you explain them one at a time (label, highlight, zoom to the part), and the finale puts everything back together.
 "recap" is one sentence to remember; "question" is one friendly question inviting the child to ask more.
+
+FINALE (optional, only for "assembly" or "axis"): when the lesson is about a vehicle or machine that has an obvious job (a rocket, a submarine, a monster truck, a plane), end with
+"finale": {{"say":"1-3 sentences of narration","motion":one of {list(vocab.FINALES)},"emitter":"id of the part the exhaust, bubbles or dust come from"}}.
+The engine then pulls all the parts apart, snaps them together into the finished machine, and sends it off: "launch" blasts it upward from a pad (rockets), "drive" rolls it away along a road
+(trucks, cars), "sink" lowers it into the sea with bubbles (submarines, ships), "fly" climbs away with a contrail (planes, helicopters); then everything disappears. The narration should be
+exciting and tell the child what is happening ("Now watch all the parts join together... three, two, one, lift off!"). Leave the finale out for ideas that are not a machine.
+So that the assembled parts really look like the machine, place them with "attach" and "inside" (wheels attached at the "sides" of the body, wings "sides" of the fuselage, an engine at the "bottom"),
+not just stacked up.
 
 TRUTH: only teach what the notes and common knowledge support. Do not invent figures. If the page names parts, use those parts.
 
@@ -102,6 +117,17 @@ function build(M) {{
 
 
 def part_user(story, part, topic):
+    if isinstance(part.get("size"), list):      # a blueprint box: the part must be drawn to fill exactly this shape, so it meets its neighbours
+        w, h, d = part["size"]
+        others = ", ".join(f"{p['label']} ({p['size'][0]:g} x {p['size'][1]:g} x {p['size'][2]:g})" for p in story["parts"] if p["id"] != part["id"])
+        copies = len(part["at"])
+        return (f"Lesson: {story['title']} (topic: {topic})\n"
+                f"Write the shape of this part: {part['label']}\n"
+                f"What it looks like: {part['brief']}\n"
+                f"It fills a box {w:g} long (x, back to front: the FRONT of the machine is +x), {h:g} tall (y, up) and {d:g} wide (z, left to right). Draw it so it fills that box in proportion: "
+                f"its long side along x if it is longer than it is wide, its parts reaching the faces of the box where it joins other parts.\n"
+                + (f"This part appears {copies} times in the machine (for example every wheel), so draw ONE copy filling the box.\n" if copies > 1 else "")
+                + f"The other parts of the machine and their boxes (x x y x z), for scale: {others or 'none'}.\n\nOutput the JavaScript now.")
     others = ", ".join(f"{p['label']} ({p['width']:g} x {p['height']:g})" for p in story["parts"] if p["id"] != part["id"])
     return (f"Lesson: {story['title']} (topic: {topic})\n"
             f"Write the shape of this part: {part['label']}\n"
@@ -165,7 +191,7 @@ def make_part(story, part, topic, run, repairs=REPAIRS):
         code = extract_code(reply)
         try:
             meshes, dims = codegen.compile_part(code, f"part {part['id']!r}")
-            return {"code": code, "meshes": meshes, "scale": codegen.fit_scale(dims, part["width"], part["height"])}
+            return {"code": code, "meshes": meshes, "scale": codegen.part_scale(part, dims)}
         except codegen.CodeError as e:
             last = str(e)
             problem = f"Your previous code was rejected: {e}\nFix it and output the complete corrected JavaScript.\n\nYour previous code:\n{code[:5000]}"
@@ -176,7 +202,7 @@ def stand_in(part):
     """A plain translucent block the size of the part, used when its code could not be made to work, so the lesson still plays."""
     code = "function build(M){ return [{material:'steel', look:'glass', mesh: M.box(1,1,1,-0.5)}]; }"
     meshes, dims = codegen.compile_part(code, f"part {part['id']!r}")
-    return {"code": code, "meshes": meshes, "scale": codegen.fit_scale(dims, part["width"], part["height"])}
+    return {"code": code, "meshes": meshes, "scale": codegen.part_scale(part, dims)}
 
 
 def write_part(parts_dir, pid, data):
@@ -194,7 +220,10 @@ def write_pending(parts_dir, story):
 
 
 def first_parts(story):
-    """The part ids the first step reveals (so the window can open once they exist); falls back to the first part."""
+    """The part ids the first step reveals (so the window can open once they exist); falls back to the first part.
+    A blueprint lesson opens by showing the whole machine, so all of its parts count."""
+    if story.get("layout", {}).get("template") == "blueprint":
+        return [p["id"] for p in story["parts"]]
     ids = []
     for verb in story["steps"][0].get("do", []) or []:
         if "reveal" in verb:
