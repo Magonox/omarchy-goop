@@ -53,6 +53,25 @@ def set_value(key, raw, path=None):
     return value
 
 
+def migrate_file(path=None):
+    """Bring the saved config up to the current version and write it (after a backup). Returns the notes of what changed; nothing is written when there is nothing to do."""
+    from . import migrate
+    path = path or config.PATH
+    data = _read(path)
+    if not data:
+        return []                                    # no config file: nothing of the user's to migrate
+    new, notes = migrate.migrate(data)
+    if new != data:
+        import shutil, time
+        shutil.copy2(path, f"{path}.bak.{time.strftime('%Y%m%d%H%M%S')}")
+        tmp = path + ".tmp"
+        with open(tmp, "w") as f:
+            json.dump(new, f, indent=2)
+            f.write("\n")
+        os.replace(tmp, path)
+    return notes
+
+
 def get_value(key, path=None):
     node = config.load() if path is None else {**config.DEFAULTS, **_read(path)}
     for part in key.split("."):

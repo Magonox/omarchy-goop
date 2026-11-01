@@ -128,13 +128,9 @@ PanelWindow {
         Item {
             id: head
             x: 24; y: 20; width: parent.width - 48; height: 40
-            Rectangle {   // a small goop
-                width: 38; height: 34; radius: 15; color: wz.accent
-                Rectangle { x: 10; y: 11; width: 4.5; height: 9; radius: 2.2; color: "white" }
-                Rectangle { x: 23; y: 11; width: 4.5; height: 9; radius: 2.2; color: "white" }
-            }
+            GoopMark { x: 2; y: -6; size: 42; color: wz.accent; animate: wz.visible }
             Text {
-                x: 52; anchors.verticalCenter: parent.verticalCenter
+                x: 58; anchors.verticalCenter: parent.verticalCenter
                 text: ["Meet Goop", "Check your setup", "Voice", "Safety and 3D lessons", "Try it"][wz.step]
                 color: wz.ink; font.pixelSize: 20; font.weight: Font.DemiBold
             }

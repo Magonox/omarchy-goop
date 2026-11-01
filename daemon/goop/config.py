@@ -44,7 +44,8 @@ def load():
             cfg.update(json.load(f))
     except (OSError, ValueError):
         pass
-    return cfg
+    from . import migrate        # an older config is brought up to date in memory every time it is read; `settings.py migrate` saves the result
+    return migrate.migrate(cfg)[0]
 
 
 def is_denied(window, cfg=None):
