@@ -17,6 +17,9 @@ PanelWindow {
     property real t: 0
     property real startedAt: 0
     readonly property real speed: Number(Quickshell.env("GOOP_SPEED") || 1)
+    // GOOP_CLOCK_FILE=/path: the lesson time is read from this file (a number of seconds) instead of the wall clock, so a script can step the lesson frame by frame
+    // (used to film smooth footage). The picture is a pure function of the time, so the same number always gives the same frame.
+    readonly property string clockFile: Quickshell.env("GOOP_CLOCK_FILE")
     readonly property var ctx: scene ? L.prepare(scene) : null
     readonly property var st: ctx ? L.state(ctx, t) : null
     readonly property var subs: scene ? scene.parts.map(function (p) { return S.build(p.shape); }) : []
@@ -225,8 +228,17 @@ PanelWindow {
         }
     }
 
+    FileView {
+        path: ex.clockFile
+        watchChanges: true
+        printErrors: false
+        onFileChanged: reload()
+        onLoaded: { var v = parseFloat(text()); if (!isNaN(v)) ex.t = v; }
+    }
+
     Rectangle {     // the only way to end a lesson early (also: goopctl explain3d stop)
         id: closeBtn
+        visible: ex.clockFile === ""            // not in filmed footage
         anchors.right: parent.right; anchors.top: parent.top
         anchors.rightMargin: 14; anchors.topMargin: 10
         width: closeTxt.implicitWidth + 24; height: 28; radius: 14
@@ -239,6 +251,6 @@ PanelWindow {
 
     Timer {
         interval: 33; repeat: true; running: ex.playing
-        onTriggered: { ex.t = (Date.now() - ex.startedAt) / 1000 * ex.speed; if (ex.scene && ex.t >= ex.scene.duration) ex.stop(); }
+        onTriggered: { if (ex.clockFile !== "") return; ex.t = (Date.now() - ex.startedAt) / 1000 * ex.speed; if (ex.scene && ex.t >= ex.scene.duration) ex.stop(); }
     }
 }

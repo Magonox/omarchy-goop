@@ -21,6 +21,8 @@ Work is planned in [`docs/BACKLOG.md`](docs/BACKLOG.md).
   Measured: a code-built lesson plays at about 10% of one core and 257 MB, the same as the library lessons.
 
 ### Fixed
+- The setup card's and the panel's goop was a plain orb; the mascot is now drawn from the real goop parts (`shell/GoopMark.qml`: the wobbling liquid body and the drip), with a wet gloss and
+  a drip that ride on the live outline. A gloss anchored to a fixed spot had floated off the body as it wobbled.
 - Voices that talk too fast: every Piper speaker has its own natural pace (on the voices in use, 20 to 29 characters of speech per second; speaker 358 was 40% faster than speaker 233) and one
   global speed left the fast ones fast. `goop/tts/pace.py` measures each speaker's pace on a fixed paragraph and the engine stretches fast talkers and tightens slow ones to the median pace;
   `tts.speed` still scales it. Piper's `length_scale` turned out to be a weak lever (pace changes roughly as length_scale to the power -0.45: doubling it slows a voice by only about a quarter), so each speaker's stretch is solved, not assumed: predicted from that curve, measured, and corrected once from the voice's own response (`--refine`). A table for every speaker of the default voice ships in `goop/tts/pace_<model>.json` (made by `daemon/calibrate_voices.py --all`, then `--refine`); any other model measures a
@@ -30,6 +32,8 @@ Work is planned in [`docs/BACKLOG.md`](docs/BACKLOG.md).
   the finale begins. A node-based test runs the renderer's own `state()` to check this.
 
 ### Added
+- Marketplace launch kit: `preview.png` (the listing card), `docs/media/teardown.gif` (README), the first-run setup card, multi-monitor support (the overlay follows the focused monitor),
+  config migrations, a deterministic lesson clock (`GOOP_CLOCK_FILE`) so footage can be filmed frame by frame, the renamed id `io.github.magonox.goop`, an MIT `LICENSE`.
 - P1: **the page reader.** A tiny Chromium extension (`browser/pagereader/`, pinned id, permissions tabs/scripting/nativeMessaging, not allowed in incognito) plus a native-messaging host
   (`daemon/pagereader_host.py`, a private 0600 Unix socket `~/.cache/goop/page.sock`) lets a goop read the text of the page you are on, only when asked: title, address, headings, your selection
   and the readable text without menus, footers and sidebars. New agent tool `read_page` (untrusted-data marking, the privacy deny list also checks the page's title and address, a card at

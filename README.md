@@ -4,6 +4,10 @@
 
 An [Omarchy](https://omarchy.org) plugin: a Quickshell overlay and a small Python daemon. Everything about voice runs on your machine.
 
+![A goop explaining how a monster truck works: the truck comes apart, snaps back together and drives off](docs/media/teardown.gif)
+
+*A 3D lesson built by Goop: it comes apart to explain each part, snaps back together, and drives off. Recorded from the real thing.*
+
 - **Talk or type.** Click a goop and two buttons appear beside it: **Talk** (microphone) and **Type** (pencil). Speak, pause, and your words show on screen for a moment before they are sent, so you can fix them.
 - **It understands the window.** A terminal (which shell, which project, git state), a file manager (which folder, what is in it), a web page in Chromium (the actual text, not a screenshot), anything else (a screenshot it takes itself).
 - **3D lessons.** Reading about how something works? Goop offers to build a narrated 3D model: the finished machine appears, comes apart while each part is explained, then snaps back together and does what it is for (a truck drives off, a balloon floats away, a rocket lifts off). About a minute to build.
