@@ -7,7 +7,7 @@ Quickshell 0.3.2, single 2x display).
 
 Goop is an **Omarchy plugin** (`manifest.json`: kind `overlay`, `keepLoaded: true`), so it starts with the Omarchy shell.
 
-- Dev checkout lives in `~/ai_apps/goop`, symlinked into `~/.config/omarchy/plugins/shawn.goop` (Omarchy follows the symlink).
+- Dev checkout lives in `~/ai_apps/goop`, symlinked into `~/.config/omarchy/plugins/io.github.magonox.goop` (Omarchy follows the symlink).
 - After editing QML or Python: `bin/goopctl reload` (= `omarchy-shell shell rescanPlugins`). Python daemon scripts are started
   fresh per request, so most daemon edits apply immediately; the long-lived ones (`tts_server.py`, `cursor.py`) need a reload.
 - Full restart, same as login: `omarchy-restart-shell`. Goops are ephemeral: after a restart the first window gets one again.
@@ -17,7 +17,7 @@ Goop is an **Omarchy plugin** (`manifest.json`: kind `overlay`, `keepLoaded: tru
 - Voice runtime is outside the repo (plugins may not contain symlinks, and venvs do): `setup.sh` -> `~/.local/share/goop/{venv,voices}`.
 
 **Gotcha: Omagen.** It rewrites `~/.config/omarchy/shell.json` on every theme change and drops third-party plugins. The user's
-hook `~/.config/omarchy/hooks/theme-set.d/zz-shell-overrides.sh` re-adds `shawn.goop` (a `jq` line next to `shawn.idle`). Without
+hook `~/.config/omarchy/hooks/theme-set.d/zz-shell-overrides.sh` re-adds `io.github.magonox.goop` (a `jq` line next to `shawn.idle`). Without
 it the day/night theme timer would switch goop off at sunset.
 
 ## Bar button and settings panel
@@ -27,10 +27,10 @@ it the day/night theme timer would switch goop off at sunset.
 - **They cannot see each other.** Third-party plugins only get scoped `PluginBarApi` / `PluginShellApi` facades (no `panelLoaders`),
   so they communicate through files: the overlay writes `~/.cache/goop/status.json` (debounced, only when the state really changes);
   the panel watches it. Settings flow the other way through `~/.config/goop/config.json` (`daemon/settings.py`, watched by the overlay).
-- Open it without a click: `omarchy-shell shawn.goop open` (or `close`). It dismisses itself after a few seconds without interaction.
+- Open it without a click: `omarchy-shell io.github.magonox.goop open` (or `close`). It dismisses itself after a few seconds without interaction.
 - **Hot reload only covers the overlay's visuals.** A changed bar widget, a new IPC function or a manifest change needs
   `omarchy-restart-shell` (about 2 s, same as login).
-- Placing the widget on a bar that already lists the plugin: `omarchy plugin disable shawn.goop && omarchy plugin enable shawn.goop`
+- Placing the widget on a bar that already lists the plugin: `omarchy plugin disable io.github.magonox.goop && omarchy plugin enable io.github.magonox.goop`
   (`omarchy bar put` skips a plugin it thinks is already placed). The user's theme hook re-adds both the plugin and the bar button.
 - Screenshots of the screen can include whatever the owner is doing: crop tightly when checking visuals.
 
@@ -97,8 +97,7 @@ bubble, mood, voice. Sessions resume per goop (`--resume`), so "yes, keep going"
 
 ## Before publishing to GitHub (details in PUBLISHING.md, items in BACKLOG.md as L1-L8)
 
-- Choose a license (none yet) and set `manifest.json` `id`/`author`. The id is `shawn.goop` now; GitHub plugins usually use
-  `io.github.<user>.goop`. If you rename it, update `README.md`, the hook above, `bin/goopctl`'s docs, and re-enable.
+- Done: MIT license, the permanent id `io.github.magonox.goop` (renaming it later would orphan every user's settings and the marketplace listing), author in `manifest.json`.
 - Create the repo, then `git remote add origin <url> && git push -u origin main`.
 - Run `omarchy plugin validate .` (no symlinks allowed inside the plugin folder; the venv is kept outside for that reason).
 - Piper (GPL-3.0) is installed by `setup.sh` from PyPI, not bundled; voices have their own licenses.

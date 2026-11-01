@@ -9,8 +9,8 @@ import qs.Ui
 // changes apply instantly. It shows only while the plugin is enabled, i.e. whenever goop runs.
 Panel {
   id: root
-  moduleName: "shawn.goop"
-  ipcTarget: "shawn.goop"
+  moduleName: "io.github.magonox.goop"
+  ipcTarget: "io.github.magonox.goop"
 
   readonly property color fg: bar ? bar.foreground : Color.foreground
   readonly property color dim: Qt.darker(fg, 1.5)

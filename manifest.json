@@ -1,9 +1,9 @@
 {
   "schemaVersion": 1,
-  "id": "shawn.goop",
+  "id": "io.github.magonox.goop",
   "name": "Goop",
   "version": "0.1.0",
-  "author": "Shawn",
+  "author": "Shawn Boehm",
   "description": "A small animated creature that lives on your windows. Peel copies onto other windows, ask them about what's in the window, and let them act with your approval. On-device voice, and a settings button in the bar.",
   "kinds": [
     "overlay",

@@ -20,8 +20,8 @@ Tracks: **L** launch · **V** visual · **A** agent · **P** other apps · **T**
 
 | ID | Item | Status | Notes |
 |---|---|---|---|
-| L3 | Rename the id everywhere (manifest, theme hook, plugin symlink, docs, `goopctl`) | decision | Blocked on L1. Re-enable the plugin after. |
-| L4 | Marketplace-ready README: install, **removal**, external dependencies | todo | Required by the submission guide. Mostly written. |
+| L3 | Rename the id everywhere (manifest, theme hook, plugin symlink, docs, `goopctl`) | done | Renamed to `io.github.magonox.goop` everywhere on 2026-11-01 (manifest, panel, README, docs, the owner's symlink, shell.json and theme hook; backups `.bak.20261101193118`).
+| L4 | Marketplace-ready README: install, **removal**, external dependencies | done | README rewritten 2026-11-01: features, install, requirements, privacy and permissions, troubleshooting, removal, third-party licenses.
 | L5 | `preview.png` in the repo root | todo | Optional but it is the card image. Needs a good screenshot (see M1). |
 | L6 | Self-check against the security baseline | todo | `setup.sh` is an installer (pip, model download) so it will be flagged `review-required`, not rejected. Keep: no `curl | sh`, no unpinned remote code. |
 | V1 | Gooey outline: edges that wobble like liquid instead of a plain circle | doing | First pass in (2026-10-30): `shell/goo.js` + `GooBody.qml`, jelly squash-and-stretch breathing, livelier when speaking/thinking/startled, the peel blobs use the same shape. CPU unchanged (5-6% of a core for the whole shell). **Waiting on owner feedback**: more or less wobble? Knobs: amplitudes in `goo.js` (`a2/a3/a4/ab`, sag), breathing 0.05 in `Goop.qml`. |
@@ -42,9 +42,9 @@ file. Goal: install, see goop, and be talking to it within two minutes, with not
 | S2d | Animations step: recommend a level from the hardware (core count, laptop/battery) | todo | Pairs with V6 (`auto`). |
 | S2e | Final step: a real test (ask the agent, speak the answer) and a 3-line tour (peel, click, approve) | todo | |
 | S2f | 3D lessons step: choose **On: ask me first** (default) / **On: build automatically** / **Off** (same `explainers` setting as the panel); shows the qt6-quick3d and claude-CLI checks from `doctor.py` with their hints (`sudo pacman -S qt6-quick3d`); the deno check (`sudo pacman -S deno`, required for lessons), a **Play a sample lesson** button (`goopctl explain3d jet_engine`) and one line on privacy (the topic and notes go to the model after you approve a card) | todo | Setting and panel section exist (2026-10-30); the wizard that hosts this step does not yet. Turning lessons Off in the wizard must also drop the quick3d check to optional. |
-| Q3 | **Multi-monitor support** | todo | Overlay and perch math assume one display at 0,0. Must work before publishing: other users have several. |
-| Q4 | Config version + migrations for `omarchy plugin update` | todo | So later releases can rename or add settings without breaking old configs. |
-| Q5 | Friendly first-run errors: a missing CLI/key opens the wizard at the right step instead of a bare message | todo | Today: "the claude CLI was not found on PATH". |
+| Q3 | **Multi-monitor support** | done (virtual-monitor tested) | The overlay follows the focused monitor and shifts positions by its origin. Tested on a Hyprland headless output; not yet on a real second display. A goop on a window of the other monitor is hidden until you are there; peeling a goop across monitors is untested.
+| Q4 | Config version + migrations for `omarchy plugin update` | done | `config_version` + `goop/migrate.py` + `settings.py migrate`; nothing to migrate yet (v1).
+| Q5 | Friendly first-run errors: a missing CLI/key opens the wizard at the right step instead of a bare message | partly | The setup card shows the exact fix for every missing piece; the agent's own bare error message when `claude` is missing is still raw.
 | Q6 | Offer (never force) a Hyprland keybinding to summon the ask box on the focused window | todo | A snippet to copy; goop does not edit the user's bindings. |
 | Q7 | Languages: voice and agent language (today English voice only) | todo | Needs a voice per language and a prompt language hint. |
 
