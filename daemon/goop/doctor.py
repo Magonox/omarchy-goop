@@ -29,7 +29,11 @@ def checks(provider_name="claude", provider_problem=None, which=shutil.which, ex
     if has_module is None:
         def has_module(name):
             site = os.path.join(os.path.dirname(os.path.dirname(VENV_PYTHON)), "lib")
-            return any(exists(os.path.join(site, v, "site-packages", name)) for v in (os.listdir(site) if exists(site) else []))
+            try:
+                versions = os.listdir(site)
+            except OSError:
+                return False
+            return any(exists(os.path.join(site, v, "site-packages", name)) for v in versions)
     return [
         {"id": "agent", "label": f"Agent ({provider_name})", "ok": agent_ok, "required": True, "hint": agent_hint},
         tool("hyprctl", "Hyprland (hyprctl)", "hyprctl", True, "Goop needs Hyprland"),
