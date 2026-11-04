@@ -51,14 +51,12 @@ The **setup card opens by itself** the first time a goop appears. It checks what
 
 ## For learning and teaching
 
-Goop is good at *explaining how things work*, which makes it handy for kids and for teachers.
+Goop is good at *explaining how things work*, for yourself, a class or a curious friend.
 
-- **Lessons pitched at a ten-year-old.** Ask "how does a hot air balloon rise?" and it builds a narrated 3D model: the finished machine, taken apart one part at a time with plain-words explanations and everyday comparisons, then put back together to do its job.
-- **No typing needed.** Click the goop and press **Talk**; children who cannot type yet can still ask. Speech runs on the computer, nothing is recorded.
-- **A calmer setup for children.** In the setup card (or the bar panel) choose **Look only**, so Goop can see and explain but can never change anything, and leave 3D lessons on **Ask me first** so a grown-up approves each lesson.
-- **Good for a projector.** A teacher can ask about whatever is on screen and let the model explain it to the room.
-
-Goop is an AI helper that runs on your own Claude account, not a children's product. It can be wrong, and a grown-up should be nearby when children use it.
+- **Lessons in plain words.** Ask "how does a hot air balloon rise?" and it builds a narrated 3D model, pitched at about a ten-year-old's level: the finished machine, taken apart one part at a time with everyday comparisons, then put back together to do its job.
+- **No typing needed.** Click the goop and press **Talk**. Speech runs on the computer and nothing is recorded.
+- **Calm when you want it.** Choose **Look only** in the setup card or bar panel, so Goop can see and explain but never change anything, and leave 3D lessons on **Ask me first** so you approve each one.
+- **Good for a projector.** Ask about whatever is on screen and let the model explain it to the room.
 
 ## Privacy and permissions
 
