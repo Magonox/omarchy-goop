@@ -886,6 +886,19 @@ PanelWindow {
         function listenAsk(addr: string): void { win.openAsk(addr, true); }         // the typing box, already listening
         function chooseAsk(addr: string): void { win.clickGoop(addr); }             // what a click does: the Talk / Type buttons
         function closeAsk(): void { win.askAddr = ""; win.chooseAddr = ""; }
+        // the peel without a mouse (filming, tests): dragBegin <addr>, dragTo <x> <y> as often as you like, then dragEnd lands it under the real cursor
+        function dragBegin(addr: string): void {
+            if (win.dragging || win.perched.indexOf(addr) < 0) return;
+            win.srcAddr = addr;
+            win.dragColor = win.nextColor();
+            win.dragSeed = Math.floor(Math.random() * 100000);
+            win.bx = win.sx; win.by = win.sy;
+            win.dragging = true;
+            win.setMood("_drag", "startled", 700);
+            pop.restart();
+        }
+        function dragTo(x: real, y: real): void { if (win.dragging) { win.bx = x; win.by = y; } }
+        function dragEnd(): void { if (win.dragging) { win.dragging = false; win.settling = true; probe.running = true; } }
         function wizardStep(n: int): void { wizardWin.step = n; if (n === 1) wizardWin.refresh(); }     // jump to a step (for testing)
         function wizard(open: bool): void { win.wizardOpen = open; }
         function perch(addr: string): void {                                          // put a goop on a window (testing, and `goopctl perch`)

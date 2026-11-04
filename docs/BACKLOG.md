@@ -106,6 +106,7 @@ of the screen: the model is built up, exploded into components and the flow foll
 
 ## Ideas (not yet judged)
 
+- **File-manager folders are found by name.** The adapter picks the shallowest folder matching the window title, so a window titled "Downloads" resolves to `~/Downloads` even when it shows a different Downloads. Approval cards for moves should show the full resolved path, and `move_files` should refuse when `alternatives` is non-empty (found while filming the launch video, 2026-11-04).
 - Goop sounds (soft squelch on peel, plop on landing).
 - A goop that sleeps when its window is idle.
 - Goops react to what is on screen (wave when a build finishes, worry on an error).

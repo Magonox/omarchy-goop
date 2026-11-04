@@ -4,6 +4,10 @@
 
 An [Omarchy](https://omarchy.org) plugin: a Quickshell overlay and a small Python daemon. Everything about voice runs on your machine.
 
+![Click a goop, press Talk and ask a question out loud; the goop reads the project and answers](docs/media/goop.gif)
+
+*Click a goop, press Talk, and ask. It read the real project files to answer. Recorded from the real thing.*
+
 ![A goop explaining how a monster truck works: the truck comes apart, snaps back together and drives off](docs/media/teardown.gif)
 
 *A 3D lesson built by Goop: it comes apart to explain each part, snaps back together, and drives off. Recorded from the real thing.*
