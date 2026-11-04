@@ -14,7 +14,7 @@ install rate). It "validates listings, not plugin security": plugins run unsandb
 - Optional `preview.png` in the repo root (up to 50 MB / 40 MP); the marketplace makes the card and detail images.
 - One **category** (case-sensitive): Appearance, Desktop, Developer Tools, Hardware, Kids, Productivity, System, Widgets, Other.
   One to three **tags**: ai, bar, education, games, hyprland, kids, launcher, media, power-management, quickshell, security, system,
-  vpn, workspaces. Planned for Goop: **Productivity**; `ai`, `hyprland`, `quickshell`.
+  vpn, workspaces. Planned for Goop: category **Productivity** (the marketplace allows one; `Kids` would overstate it, since Goop is a general AI helper) with tags `ai`, `education`, `kids`.
 - `omarchy plugin validate .` must pass (no symlinks inside the plugin folder; the voice venv lives outside the repo for this reason).
 
 ## How to submit

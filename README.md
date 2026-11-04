@@ -49,6 +49,17 @@ The **setup card opens by itself** the first time a goop appears. It checks what
 
 `bin/goopctl` talks to the running goop: `list`, `say <addr> "..."`, `speak`, `mute`, `hush`, `explain3d <name>`, `config get|set`.
 
+## For learning and teaching
+
+Goop is good at *explaining how things work*, which makes it handy for kids and for teachers.
+
+- **Lessons pitched at a ten-year-old.** Ask "how does a hot air balloon rise?" and it builds a narrated 3D model: the finished machine, taken apart one part at a time with plain-words explanations and everyday comparisons, then put back together to do its job.
+- **No typing needed.** Click the goop and press **Talk**; children who cannot type yet can still ask. Speech runs on the computer, nothing is recorded.
+- **A calmer setup for children.** In the setup card (or the bar panel) choose **Look only**, so Goop can see and explain but can never change anything, and leave 3D lessons on **Ask me first** so a grown-up approves each lesson.
+- **Good for a projector.** A teacher can ask about whatever is on screen and let the model explain it to the room.
+
+Goop is an AI helper that runs on your own Claude account, not a children's product. It can be wrong, and a grown-up should be nearby when children use it.
+
 ## Privacy and permissions
 
 **What leaves your computer.**
