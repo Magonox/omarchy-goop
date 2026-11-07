@@ -5,6 +5,9 @@ Work is planned in [`docs/BACKLOG.md`](docs/BACKLOG.md).
 
 ## [Unreleased]
 
+### Added
+- S3: **Turn off Goop.** A "Turn off Goop" / "Turn on Goop" button at the top of the bar popup (the popup now scrolls when taller than the screen), and `goopctl on|off|toggle`, set the new `enabled` config key. Off hides every goop and stops the voice, microphone, cursor and window-state processes; the agent refuses to run. The bar button stays, so it can be turned back on.
+
 ### Changed
 - E8: **lessons build in parallel and start early.** The agent tool now starts a detached builder (`daemon/explain_run.py`) and returns at once. Stage 1: one model call writes
   the outline (steps, narration, and for each part a brief and a target size, so the layout is final before any code exists). Stage 2: one call per part, all at the same

@@ -4,6 +4,7 @@ import json, os, re
 DEFAULTS = {
     "deny_classes": ["1password", "bitwarden", "keepassxc", "seahorse", "gnome-keyring"],
     "deny_title_regex": ["password", "bank", "paypal", "1password", "bitwarden"],
+    "enabled": True,            # the master switch: false = goop is off (nothing on screen, nothing runs); the bar button stays to turn it back on
     "access": "ask",            # how much goop may do: "look" (never act), "ask" (cards for actions), "ask_all" (cards for everything); see access.py
     "tts": {                    # a goop's spoken voice; all on-device, nothing leaves the machine
         "enabled": True,
@@ -46,6 +47,11 @@ def load():
         pass
     from . import migrate        # an older config is brought up to date in memory every time it is read; `settings.py migrate` saves the result
     return migrate.migrate(cfg)[0]
+
+
+def is_enabled(cfg=None):
+    cfg = load() if cfg is None else cfg
+    return cfg.get("enabled") is not False
 
 
 def is_denied(window, cfg=None):

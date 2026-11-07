@@ -1,4 +1,5 @@
 import QtQuick
+import QtQuick.Controls
 import Quickshell
 import Quickshell.Io
 import qs.Commons
@@ -21,7 +22,7 @@ Panel {
   readonly property string pluginDir: Qt.resolvedUrl("GoopPanel.qml").toString().replace("file://", "").replace(/\/[^\/]*$/, "") + "/.."
 
   // live state, published by the overlay (see Goop.qml) to a file the panel watches
-  property var st: ({ goops: 0, voiceReady: false, muted: false, animations: "full", provider: "claude", access: "ask", explainers: "offer", voiceInput: true })
+  property var st: ({ enabled: true, goops: 0, voiceReady: false, muted: false, animations: "full", provider: "claude", access: "ask", explainers: "offer", voiceInput: true })
   FileView {
     path: Quickshell.env("HOME") + "/.cache/goop/status.json"
     watchChanges: true
@@ -43,7 +44,8 @@ Panel {
     for (var i = 0; i < providers.length; i++) if (providers[i].active) return providers[i]
     return null
   }
-  readonly property string summary: st.goops + (st.goops === 1 ? " goop" : " goops")
+  readonly property bool on: st.enabled !== false
+  readonly property string summary: !on ? "Goop is off" : st.goops + (st.goops === 1 ? " goop" : " goops")
     + " · " + (!st.voiceReady ? "no voice" : (st.muted ? "muted" : "voice on"))
     + " · " + st.provider
 
@@ -98,11 +100,21 @@ Panel {
       onCloseRequested: root.close()
       onTabRequested: function(direction) { root.switchPanel(direction) }
 
+      // the popup can be taller than the screen: the contents scroll (mouse wheel or drag)
+      Flickable {
+        id: flick
+        anchors.fill: parent
+        contentWidth: width
+        contentHeight: column.implicitHeight
+        clip: true
+        boundsBehavior: Flickable.StopAtBounds
+        flickableDirection: Flickable.VerticalFlick
+        interactive: contentHeight > height
+        ScrollBar.vertical: ScrollBar { policy: ScrollBar.AsNeeded }
+
       Column {
         id: column
-        anchors.left: parent.left
-        anchors.right: parent.right
-        anchors.top: parent.top
+        width: flick.width
         spacing: Style.space(14)
 
         // ---------- hero ----------
@@ -120,6 +132,17 @@ Panel {
             Text { text: "Goop"; color: root.fg; font.family: root.fontFamily; font.pixelSize: Style.font.title; font.bold: true }
             Text { text: root.summary; color: root.dim; font.family: root.fontFamily; font.pixelSize: Style.font.bodySmall }
           }
+        }
+
+        Button {
+          text: root.on ? "Turn off Goop" : "Turn on Goop"
+          fontSize: Style.font.bodySmall
+          foreground: root.on ? root.urgent : root.fg
+          fontFamily: root.fontFamily
+          bordered: true
+          horizontalPadding: Style.spacing.controlPaddingX
+          verticalPadding: Style.spacing.controlPaddingY
+          onClicked: root.change("enabled", root.on ? "false" : "true")      // the overlay watches the config; this panel stays so it can be turned back on
         }
 
         // ---------- animations ----------
@@ -402,6 +425,7 @@ Panel {
           font.family: root.fontFamily
           font.pixelSize: Style.font.caption
         }
+      }
       }
     }
   }

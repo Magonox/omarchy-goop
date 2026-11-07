@@ -4,6 +4,32 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from goop import config, settings
 
 
+class Enabled(unittest.TestCase):
+    def test_default_on_and_only_false_turns_off(self):
+        self.assertTrue(config.DEFAULTS["enabled"])
+        self.assertTrue(config.is_enabled({}))
+        self.assertTrue(config.is_enabled({"enabled": "no"}))      # junk never switches goop off by accident
+        self.assertFalse(config.is_enabled({"enabled": False}))
+
+    def test_set_round_trips_a_boolean(self):
+        with tempfile.TemporaryDirectory() as d:
+            path = os.path.join(d, "config.json")
+            settings.set_value("enabled", "false", path)
+            with open(path) as f:
+                self.assertEqual(json.load(f), {"enabled": False})
+
+    def test_agent_refuses_while_off(self):
+        import io, contextlib
+        from unittest import mock
+        import agent
+        out = io.StringIO()
+        with mock.patch.object(config, "load", return_value={"enabled": False}), \
+             mock.patch.object(sys, "argv", ["agent.py", "--address", "0x1", "--command", "hi"]), \
+             contextlib.redirect_stdout(out):
+            agent.main()
+        self.assertIn("turned off", out.getvalue())
+
+
 class Settings(unittest.TestCase):
     def setUp(self):
         self.tmp = tempfile.TemporaryDirectory()

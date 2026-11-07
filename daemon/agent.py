@@ -29,6 +29,9 @@ def main():
     ap.add_argument("--provider")
     a = ap.parse_args()
 
+    if not config.is_enabled():
+        return emit(events.error("goop is turned off"))
+
     clients, _ = hypr.snapshot()
     window = next((c for c in clients if c["address"] == a.address and c["mapped"]), None)
     if not window:

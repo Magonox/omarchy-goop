@@ -7,6 +7,7 @@
 #   goopctl mood <mood> <ms>          idle|startled|thinking|happy|error on every goop
 #   goopctl mute true|false           mute the voice
 #   goopctl hush                      stop talking
+#   goopctl on|off|toggle             turn goop on or off (saved; the bar button stays so it can be turned back on)
 #   goopctl reload                    re-read plugin code after editing it
 #   goopctl explain3d jet_engine|wifi|spacecraft|antenna|dam   play a 3D lesson (needs qt6-quick3d); `explain3d stop` closes it
 #   goopctl drip                      make every goop drip now (to see the animation)
@@ -18,6 +19,9 @@ if [ "${1:-}" = reload ]; then exec omarchy-shell shell rescanPlugins; fi
 case "${1:-}" in
   explain3d) shift; exec "$here/bin/goop-explain" "${1:-dam}" ;;
   animations) shift; exec python3 "$here/daemon/settings.py" set animations "${1:?usage: goopctl animations full|reduced|off}" ;;
+  on) exec python3 "$here/daemon/settings.py" set enabled true ;;
+  off) exec python3 "$here/daemon/settings.py" set enabled false ;;
+  toggle) if [ "$(python3 "$here/daemon/settings.py" get enabled 2>/dev/null)" = false ]; then exec python3 "$here/daemon/settings.py" set enabled true; else exec python3 "$here/daemon/settings.py" set enabled false; fi ;;
   config) shift; exec python3 "$here/daemon/settings.py" "$@" ;;
 esac
 # the plugin runs inside omarchy-shell; a standalone dev instance is addressed by its path

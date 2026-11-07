@@ -16,7 +16,7 @@ Scope {
     // shell facades), so the live state is published to a small file that the panel watches.
     // A string, so it only "changes" when the state really does (an object would re-fire on every dependency re-evaluation).
     readonly property string statusJson: JSON.stringify({ goops: win.perched.length, voiceReady: win.ttsReady, muted: win.muted,
-                                                          animations: win.animations, provider: win.provider, access: win.access, explainers: win.explainers, voiceInput: win.sttEnabled })
+                                                          animations: win.animations, enabled: win.gooEnabled, provider: win.provider, access: win.access, explainers: win.explainers, voiceInput: win.sttEnabled })
     readonly property string statusPath: Quickshell.env("HOME") + "/.cache/goop/status.json"
     onStatusJsonChanged: statusWrite.restart()
     Timer {
@@ -39,6 +39,7 @@ Scope {
 PanelWindow {
     id: win
     screen: root.screenFor(win.monName)
+    visible: win.gooEnabled
     anchors { top: true; bottom: true; left: true; right: true }
     color: "transparent"
     exclusionMode: ExclusionMode.Ignore
@@ -77,6 +78,12 @@ PanelWindow {
     // --- animation level, from ~/.config/goop/config.json (watched: `goopctl animations off` applies instantly) ---
     //   full: liquid wobble, jelly breathing, drips   reduced: plain round goops, blinking and gaze   off: static, no cursor tracking
     property string animations: "full"
+    // the master switch (config `enabled`, the panel's Turn off button, `goopctl off`): off hides the goops and stops every helper process
+    property bool gooEnabled: true
+    onGooEnabledChanged: if (!gooEnabled) {
+        stopSpeech(); askAddr = ""; chooseAddr = ""; wizardOpen = false;
+        ttsReady = false; sttWanted = false; sttReady = false; sttWantListen = false;
+    }
     readonly property bool animLive: animations === "full"
     readonly property bool animEyes: animations !== "off"
     property bool cfgMissing: false
@@ -85,7 +92,7 @@ PanelWindow {
     property bool configLoaded: false
     property bool wizardOpen: false
     property bool wizardShown: false
-    readonly property bool wantWizard: configLoaded && setupVersion < 1 && perched.length > 0
+    readonly property bool wantWizard: gooEnabled && configLoaded && setupVersion < 1 && perched.length > 0
     onWantWizardChanged: if (wantWizard && !wizardShown) { wizardShown = true; wizardOpen = true; }
     function reloadVoice() {          // after setup installed the voice: start the voice and microphone processes again so they find it
         ttsReady = false; tts.running = false; voiceRestart.start();
@@ -103,6 +110,7 @@ PanelWindow {
         try {
             var c = JSON.parse(t), a = c.animations;
             animations = (a === "reduced" || a === "off") ? a : "full";
+            gooEnabled = c.enabled !== false;
             provider = c.provider || "claude";
             setupVersion = c.setup_version || 0;
             configLoaded = true;
@@ -385,14 +393,14 @@ PanelWindow {
         }
     }
     Timer {
-        interval: 250; running: true; repeat: true
+        interval: 250; running: win.gooEnabled; repeat: true
         onTriggered: { win.expireMoods(); if (!state.running) state.running = true }
     }
 
     // --- the goops' voice: Piper, on-device, kept warm. Missing venv/model just means silence. ---
     Process {
         id: tts
-        running: true
+        running: win.gooEnabled
         stdinEnabled: true
         command: [root.venvPython, root.daemon + "/tts_server.py"]
         stdout: SplitParser { onRead: line => win.ttsEvent(line) }
@@ -402,7 +410,7 @@ PanelWindow {
     // --- the goops' ears: Moonshine, on-device. Loads on the first ask box; missing venv/model just means no microphone button. ---
     Process {
         id: stt
-        running: win.sttEnabled && win.sttWanted
+        running: win.gooEnabled && win.sttEnabled && win.sttWanted
         stdinEnabled: true
         command: [root.venvPython, root.daemon + "/stt_server.py"]
         stdout: SplitParser { onRead: line => win.sttEvent(line) }
@@ -411,7 +419,7 @@ PanelWindow {
 
     // --- cursor feed for gaze (only while a goop exists) ---
     Process {
-        running: win.perched.length > 0 && win.animEyes
+        running: win.gooEnabled && win.perched.length > 0 && win.animEyes
         command: ["python3", root.daemon + "/cursor.py"]
         stdout: SplitParser {
             onRead: line => {
@@ -875,7 +883,7 @@ PanelWindow {
         function speak(addr: string, text: string): void { win.speak(addr, text); }
         function mute(on: bool): void { win.setMuted(on); root.setSetting("tts.muted", on ? "true" : "false"); }
         function hush(): void { win.stopSpeech(); }
-        function drip(): void { win.dripNow(); }
+        function drip(): void { if (win.gooEnabled) win.dripNow(); }
         function explain(name: string): void { explainer.play(); }
         function explainStop(): void { explainer.stop(); }
         // The 3D version runs as its own program: a failure inside Qt Quick 3D must never be able to take down the shell (it once did).
