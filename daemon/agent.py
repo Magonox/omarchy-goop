@@ -1,7 +1,11 @@
 #!/usr/bin/env python3
 """Ask the agent about a window. Streams goop events as JSON lines on stdout.
 
-  agent.py --address 0x... --command "what is this?" [--session ID] [--provider claude]
+  agent.py --address 0x... --stdin [--session ID] [--provider claude]      (the shell: the question arrives as one JSON line)
+  agent.py --address 0x... --command "what is this?" [--session ID]        (by hand in a terminal)
+
+The shell must use --stdin: command-line arguments are readable by every local account (/proc/<pid>/cmdline), and the
+question can be private. The stdin line is {"command": "..."}.
 
 Context is built fresh from the window at ask time. A window on the privacy deny list is never sent anywhere.
 """
@@ -21,16 +25,36 @@ def emit(ev):
     print(json.dumps(ev), flush=True)
 
 
+def read_command(args, stdin):
+    """The user's question, from --command or from one JSON line on stdin. Raises ValueError with a readable message."""
+    if args.command is not None:
+        return args.command
+    line = stdin.readline()
+    try:
+        command = json.loads(line)["command"]
+    except (ValueError, KeyError, TypeError):
+        raise ValueError("the question did not arrive on stdin") from None
+    if not isinstance(command, str) or not command.strip():
+        raise ValueError("the question was empty")
+    return command
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--address", required=True)
-    ap.add_argument("--command", required=True)
+    src = ap.add_mutually_exclusive_group(required=True)
+    src.add_argument("--command", help="the question (visible to other local users in the process list; prefer --stdin)")
+    src.add_argument("--stdin", action="store_true", help='read the question as one JSON line: {"command": "..."}')
     ap.add_argument("--session")
     ap.add_argument("--provider")
     a = ap.parse_args()
 
     if not config.is_enabled():
         return emit(events.error("goop is turned off"))
+    try:
+        command = read_command(a, sys.stdin)
+    except ValueError as e:
+        return emit(events.error(str(e)))
 
     clients, _ = hypr.snapshot()
     window = next((c for c in clients if c["address"] == a.address and c["mapped"]), None)
@@ -56,8 +80,8 @@ def main():
                                            "env": {"GOOP_WINDOW": a.address}}}}, f)
 
     req = AgentRequest(
-        command=a.command, packet=pkt, window_address=a.address,
-        system=prompt.system_for(access.level(cfg), lessons=access.explainers(cfg) != "never"), prompt=prompt.user_prompt(pkt, a.command),
+        command=command, packet=pkt, window_address=a.address,
+        system=prompt.system_for(access.level(cfg), lessons=access.explainers(cfg) != "never"), prompt=prompt.user_prompt(pkt, command),
         session=a.session, cwd=project_cwd or RUN_DIR, mcp_config=mcp,
         model=cfg.get("model"), read_paths=bool(project_cwd),
     )

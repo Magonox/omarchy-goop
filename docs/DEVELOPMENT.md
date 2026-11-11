@@ -49,7 +49,7 @@ daemon/goop/          adapters/ (terminal, folder), agent/ (provider interface +
                       rules, pure and tested), approvals.py (file handshake with the shell), config.py, hypr.py, ...
 ```
 
-Flow of a question: click goop -> ask box -> `agent.py` builds a packet, writes an MCP config, runs `claude -p` (prompt on stdin)
+Flow of a question: click goop -> ask box -> the shell starts `agent.py --stdin` and writes the question to its stdin as one JSON line (never on the command line: argv is world-readable in `/proc`, and `claude -p` gets its prompt on stdin for the same reason) -> `agent.py` builds a packet, writes an MCP config, runs `claude -p` (prompt on stdin)
 -> Claude calls tools through `mcp_server.py` -> acting tools block on an approval card (`approvals.py`) -> events stream back ->
 bubble, mood, voice. Sessions resume per goop (`--resume`), so "yes, keep going" has context.
 
