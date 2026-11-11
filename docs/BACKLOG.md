@@ -52,7 +52,7 @@ file. Goal: install, see goop, and be talking to it within two minutes, with not
 
 | ID | Item | Status | Notes |
 |---|---|---|---|
-| L8 | Marketplace review of issue #13859 (`[Plugin]: Goop`) | blocked | Submitted 2026-11-04, validated at `97e82fd`. `needs-fixes` label added 2026-11-06 with no explanation; we asked what to change in issue comment 6707988432 (2026-11-07). Waiting on a maintainer; do not push a guessed fix (a new commit resets the pinned-commit review). Later updates need the "Plugin verification" issue form with the full SHA. |
+| L8 | Marketplace review of issue #13859 (`[Plugin]: Goop`) | blocked | Submitted 2026-11-04, validated at `97e82fd`. `needs-fixes` label added 2026-11-06 with no explanation; we asked what to change in issue comment 6707988432 (2026-11-07). 2026-11-07 a reviewer (`HANCORE-linux`) replied with one medium finding: the question was visible in `agent.py`'s argv. Fixed (question now on stdin, `agent.py --stdin`, verified live on 2026-11-11). Next: push, then resubmit via the verification form with the full SHA and reply on the issue. Old note: waiting on a maintainer; do not push a guessed fix (a new commit resets the pinned-commit review). Later updates need the "Plugin verification" issue form with the full SHA. |
 | M1 | Marketing videos with `latent-spaces/brag` | todo | Evaluate first in a scratch dir (needs Node 22+, ffmpeg, `npx hyperframes`). One run = one ~20 s video, so one run per feature: peel, voice, approvals. |
 | V3 | Squash and stretch on pick-up and landing; jelly settle | todo | |
 | A1 | Test the OpenAI-compatible provider against a real model | blocked | Needs an API key or a local Ollama. |

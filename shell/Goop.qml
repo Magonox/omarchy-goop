@@ -542,8 +542,11 @@ PanelWindow {
                 fade.stop();
                 bubble = "...";
                 win.setMood(modelData, "thinking", 600000);
-                var cmd = ["python3", root.daemon + "/agent.py", "--address", modelData, "--command", t];
+                // The question goes over stdin, never on the command line: argv is readable by every local account
+                // (/proc/<pid>/cmdline) and questions can be private. Written in agent.onStarted.
+                var cmd = ["python3", root.daemon + "/agent.py", "--address", modelData, "--stdin"];
                 if (sessionId) cmd = cmd.concat(["--session", sessionId]);
+                agent.pendingQuestion = JSON.stringify({ command: t }) + "\n";
                 agent.command = cmd;
                 agent.running = true;
             }
@@ -594,9 +597,12 @@ PanelWindow {
             }
             Process {
                 id: agent
+                property string pendingQuestion: ""
+                stdinEnabled: true
+                onStarted: { if (pendingQuestion) { write(pendingQuestion); pendingQuestion = ""; } }
                 stdout: SplitParser { onRead: line => gp.handleEvent(line) }
                 stderr: StdioCollector { onStreamFinished: if (text) console.log("AGENT-ERR:", text) }
-                onExited: (code) => { if (gp.busy) gp.fail("the agent stopped unexpectedly"); }
+                onExited: (code) => { pendingQuestion = ""; if (gp.busy) gp.fail("the agent stopped unexpectedly"); }
             }
             Timer { id: fade; onTriggered: { gp.bubble = ""; gp.offer = null } }
             Connections {
