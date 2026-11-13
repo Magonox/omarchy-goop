@@ -75,7 +75,7 @@ Goop is good at *explaining how things work*, for yourself, a class or a curious
 
 **The page reader (Chromium extension).** It needs permission to read pages (`tabs`, `scripting`, access to all sites) because Chromium offers no narrower way to read the page you ask about. It does nothing until a goop asks for the page you are on, sends that one tab's text to Goop over a private socket on this computer, and keeps nothing. It is off in incognito windows. Read its entire source in `browser/pagereader/` (one 62-line script). The installer adds it to the `--load-extension` list in `~/.config/chromium-flags.conf` (after backing that file up) and writes a native-messaging host file. Remove it with `bin/goop-install-pagereader --uninstall`.
 
-**Files Goop writes:** `~/.config/goop/` (settings), `~/.local/share/goop/` (voice and the Python environment), `~/.cache/goop/` (logs, screenshots, built lessons; safe to delete).
+**Files Goop writes:** `~/.config/goop/` (settings), `~/.local/share/goop/` (voice and the Python environment), `~/.cache/goop/` (logs, screenshots, saved conversations, built lessons; safe to delete). Everything in `~/.cache/goop/` can contain what you asked and what was on your windows, so Goop keeps that folder readable by you only (folders `0700`, files `0600`) and tightens an older, more open folder the next time it writes.
 
 ## Choosing the agent
 

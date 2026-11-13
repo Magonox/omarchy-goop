@@ -10,6 +10,7 @@
 import json, os, re, shutil, subprocess, tempfile, time
 from concurrent.futures import ThreadPoolExecutor
 
+from .. import private
 from . import build, codegen, vocab
 
 REPAIRS = 2
@@ -207,7 +208,7 @@ def stand_in(part):
 
 def write_part(parts_dir, pid, data):
     """Atomically write a part's geometry file; the renderer is watching for it."""
-    os.makedirs(parts_dir, exist_ok=True)
+    private.makedirs(parts_dir)
     fd, tmp = tempfile.mkstemp(dir=parts_dir, suffix=".tmp")
     with os.fdopen(fd, "w") as f:
         json.dump({"meshes": data["meshes"], "scale": data["scale"]}, f, separators=(",", ":"))
@@ -270,7 +271,7 @@ def claude_runner(model="opus", effort=None):
         raise PlanError("the claude CLI was not found on PATH (3D lessons use it for now)")
 
     def run(system, prompt):
-        os.makedirs(RUN_DIR, exist_ok=True)
+        private.makedirs(RUN_DIR)
         cmd = ["claude", "-p", "--model", model, "--output-format", "json", "--tools", "", "--no-session-persistence",
                "--strict-mcp-config", "--setting-sources", "", "--system-prompt", system] + (["--effort", effort] if effort else [])
         try:

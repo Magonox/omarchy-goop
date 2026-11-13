@@ -2,6 +2,8 @@
 it on a card; the user's click writes an answer file (answer.py). No answer in time means "no"."""
 import json, os, re, time, uuid
 
+from . import private
+
 DIR = os.path.expanduser("~/.cache/goop/approvals")
 TTL = 90
 _ID = re.compile(r"^[0-9a-f]{12}$")
@@ -10,10 +12,10 @@ _ID = re.compile(r"^[0-9a-f]{12}$")
 def request(address, kind, summary, detail="", ttl=None, poll=0.2):
     """Block until the user answers. True only on an explicit yes."""
     ttl = ttl or TTL
-    os.makedirs(DIR, exist_ok=True)
+    private.makedirs(DIR)
     rid = uuid.uuid4().hex[:12]
     req, ans = os.path.join(DIR, rid + ".json"), os.path.join(DIR, rid + ".answer")
-    with open(req, "w") as f:
+    with private.open_file(req) as f:
         json.dump({"id": rid, "address": address, "kind": kind, "summary": summary, "detail": detail,
                    "ts": time.time(), "ttl": ttl}, f)
     try:
@@ -55,8 +57,8 @@ def pending():
 def answer(rid, yes):
     if not _ID.match(rid):
         raise ValueError("bad approval id")
-    os.makedirs(DIR, exist_ok=True)
+    private.makedirs(DIR)
     tmp = os.path.join(DIR, rid + ".tmp")
-    with open(tmp, "w") as f:
+    with private.open_file(tmp) as f:
         f.write("yes" if yes else "no")
     os.replace(tmp, os.path.join(DIR, rid + ".answer"))

@@ -15,7 +15,9 @@ fi
 name="${1:?usage: goop-explain <lesson|storyboard.json> | --scene <scene.json> | --stop}"
 if [ ! -e /usr/lib/qt6/qml/QtQuick3D/libqquick3dplugin.so ]; then echo "3D lessons need qt6-quick3d: sudo pacman -S qt6-quick3d" >&2; exit 1; fi
 if [ "$name" = dam ]; then exec quickshell -n -p "$here/shell/explainer3d"; fi
-mkdir -p "$HOME/.cache/goop/scenes"
+# owner-only: lessons are built from what the user asked about (see daemon/goop/private.py)
+mkdir -p -m 700 "$HOME/.cache/goop" "$HOME/.cache/goop/scenes"
+chmod 700 "$HOME/.cache/goop" "$HOME/.cache/goop/scenes"
 scene="$HOME/.cache/goop/scenes/$(basename "${name%.json}").scene.json"
 python3 "$here/daemon/build_scene.py" "$name" -o "$scene"
 # narration: the running goop reads each step aloud (GOOP_QUIET=1 for silence)

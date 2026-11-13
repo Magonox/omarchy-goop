@@ -3,7 +3,7 @@ Looking tools are free. Acting tools show the user the exact action on a card an
 All are scoped to the window the goop is attached to, privacy-checked, and audit-logged."""
 import json, os, shutil, subprocess, sys, time
 
-from . import access, actions, approvals, classify, config, hypr, packet, proc, screenshot
+from . import access, actions, approvals, classify, config, hypr, packet, private, proc, screenshot
 from .adapters import browser as browser_adapter, folder as folder_adapter, terminal as terminal_adapter
 from .explainer import codegen
 
@@ -33,8 +33,8 @@ def _visible_window(address):
 
 
 def _audit(tool, address, ok, note=""):
-    os.makedirs(os.path.dirname(AUDIT), exist_ok=True)
-    with open(AUDIT, "a") as f:
+    private.makedirs(os.path.dirname(AUDIT))
+    with private.open_file(AUDIT, "a") as f:
         f.write(json.dumps({"ts": time.time(), "tool": tool, "window": address, "ok": ok, "note": note}) + "\n")
 
 
@@ -105,9 +105,9 @@ def _builder_running():
 
 def _spawn_builder(job):
     """Start the lesson builder detached: it must outlive this tool call and the agent that made it."""
-    os.makedirs(RUN_DIR, exist_ok=True)
+    private.makedirs(RUN_DIR)
     path = os.path.join(RUN_DIR, f"explain-{int(time.time())}.json")
-    with open(path, "w") as f:
+    with private.open_file(path) as f:
         json.dump(job, f)
     subprocess.Popen([sys.executable, BUILDER, path], stdin=subprocess.DEVNULL, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, start_new_session=True)
 

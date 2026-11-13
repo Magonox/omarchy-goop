@@ -5,6 +5,8 @@ stretch each speaker needs is solved from measurements, not assumed linear. A ta
 speaker is measured the first time it speaks and remembered in ~/.cache/goop/voice_pace.json."""
 import json, math, os
 
+from .. import private
+
 HERE = os.path.dirname(os.path.abspath(__file__))
 CACHE = os.path.expanduser("~/.cache/goop/voice_pace.json")
 ELASTICITY = 0.45          # measured on the libritts_r voices: pace ~ length_scale ** -0.45
@@ -81,7 +83,7 @@ class Pace:
         try:
             data = _read(self.cache_path)
             data[self.model] = {"target": self.target, "cps": {str(k): v for k, v in self.cps.items()}}
-            os.makedirs(os.path.dirname(self.cache_path), exist_ok=True)
+            private.makedirs(os.path.dirname(self.cache_path))
             with open(self.cache_path, "w") as f:
                 json.dump(data, f)
         except OSError:

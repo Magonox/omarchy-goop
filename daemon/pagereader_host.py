@@ -5,6 +5,9 @@ Unix socket, ~/.cache/goop/page.sock, readable only by this user). Goop sends on
 extension, waits for the page text, and answers with one JSON line. Nothing is stored and nothing leaves this computer."""
 import json, os, socket, struct, sys, threading
 
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+from goop import private  # noqa: E402
+
 SOCK = os.path.expanduser("~/.cache/goop/page.sock")
 TIMEOUT = 5.0
 
@@ -66,7 +69,7 @@ def serve_client(conn):
 
 
 def listen():
-    os.makedirs(os.path.dirname(SOCK), mode=0o700, exist_ok=True)
+    private.makedirs(os.path.dirname(SOCK))
     try:
         os.unlink(SOCK)                      # a stale socket from an earlier browser session
     except FileNotFoundError:

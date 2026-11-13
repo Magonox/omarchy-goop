@@ -1,6 +1,8 @@
 """Window screenshots via grim, kept in a cache dir and pruned after an hour."""
 import os, subprocess, time
 
+from . import private
+
 DIR = os.path.expanduser("~/.cache/goop/shots")
 MAX_AGE = 3600
 
@@ -14,7 +16,7 @@ def prune():
 
 
 def capture(window):
-    os.makedirs(DIR, exist_ok=True)
+    private.makedirs(DIR)
     prune()
     (x, y), (w, h) = window["at"], window["size"]
     path = os.path.join(DIR, f"{int(time.time())}-{window['pid']}.png")
@@ -23,4 +25,8 @@ def capture(window):
         subprocess.run(["grim", "-s", "1", "-g", f"{x},{y} {w}x{h}", path], check=True, timeout=5)
     except (OSError, subprocess.SubprocessError):
         return None
+    try:
+        os.chmod(path, 0o600)            # grim writes it with the default mode
+    except OSError:
+        pass
     return path

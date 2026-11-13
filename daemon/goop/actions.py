@@ -2,6 +2,8 @@
 tools.py adds the approval step and calls these. Nothing here deletes or overwrites anything."""
 import json, os, re, shutil, time
 
+from . import private
+
 UNDO_DIR = os.path.expanduser("~/.cache/goop/undo")
 MAX_MOVES = 200
 MAX_TYPED = 400
@@ -88,9 +90,9 @@ def apply_moves(plan, new_dirs, root):
 
 
 def _save_undo(root, moves, dirs):
-    os.makedirs(UNDO_DIR, exist_ok=True)
+    private.makedirs(UNDO_DIR)
     path = os.path.join(UNDO_DIR, f"{time.time():.3f}.json")
-    with open(path, "w") as f:
+    with private.open_file(path) as f:
         json.dump({"root": root, "moves": moves, "dirs": dirs}, f)
 
 

@@ -13,6 +13,7 @@ Goop is an **Omarchy plugin** (`manifest.json`: kind `overlay`, `keepLoaded: tru
 - Full restart, same as login: `omarchy-restart-shell`. Goops are ephemeral: after a restart the first window gets one again.
 - Tests: `python3 -I -m unittest discover -s daemon/tests` (70, stdlib only, no hardware).
 - Standalone (outside the plugin system): `quickshell -n -p shell`. Don't run it while the plugin is enabled: you get two overlays.
+- Anything written under `~/.cache/goop` goes through `daemon/goop/private.py` (`makedirs`, `open_file`): the folder is `0700` and files `0600` because they hold the user's questions, answers and screenshots. A plain `os.makedirs` or `open(..., "w")` there would be world-readable. Shell and `bin/` scripts use `mkdir -m 700`.
 - Logs: `quickshell log -p /usr/share/omarchy/shell | grep -i goop`. Audit of tool calls: `~/.cache/goop/audit.log`.
 - Voice runtime is outside the repo (plugins may not contain symlinks, and venvs do): `setup.sh` -> `~/.local/share/goop/{venv,voices}`.
 
