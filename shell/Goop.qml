@@ -22,7 +22,7 @@ Scope {
     Timer {
         id: statusWrite
         interval: 300
-        onTriggered: Quickshell.execDetached(["bash", "-c", "mkdir -p \"$(dirname \"$2\")\" && printf '%s' \"$1\" > \"$2.tmp\" && mv \"$2.tmp\" \"$2\"",
+        onTriggered: Quickshell.execDetached(["bash", "-c", "mkdir -p -m 700 \"$(dirname \"$2\")\" && printf '%s' \"$1\" > \"$2.tmp\" && mv \"$2.tmp\" \"$2\"",
                                               "_", root.statusJson, root.statusPath])
     }
     function screenFor(name) {          // the Quickshell screen with this name (the first one when unknown)

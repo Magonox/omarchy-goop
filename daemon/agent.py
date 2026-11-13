@@ -12,7 +12,7 @@ Context is built fresh from the window at ask time. A window on the privacy deny
 import argparse, json, os, sys
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-from goop import access, config, hypr, packet  # noqa: E402
+from goop import access, config, hypr, packet, private  # noqa: E402
 from goop.agent import events, prompt, registry  # noqa: E402
 from goop.agent.base import AgentRequest  # noqa: E402
 
@@ -72,10 +72,10 @@ def main():
     pkt = packet.build(window, shots=False)
     proj = (pkt.get("context") or {}).get("project") or {}
     project_cwd = proj.get("cwd") if proj.get("is_project") else None
-    os.makedirs(RUN_DIR, exist_ok=True)
+    private.makedirs(RUN_DIR)
 
     mcp = os.path.join(RUN_DIR, f"mcp-{a.address}.json")
-    with open(mcp, "w") as f:
+    with private.open_file(mcp) as f:
         json.dump({"mcpServers": {"goop": {"command": sys.executable, "args": [os.path.join(HERE, "mcp_server.py")],
                                            "env": {"GOOP_WINDOW": a.address}}}}, f)
 
@@ -89,8 +89,8 @@ def main():
     for ev in provider.run(req):
         emit(ev)
         if ev["type"] == "done":
-            os.makedirs(os.path.dirname(LAST), exist_ok=True)
-            with open(LAST, "w") as f:
+            private.makedirs(os.path.dirname(LAST))
+            with private.open_file(LAST) as f:
                 f.write(ev["text"] + "\n")
 
 

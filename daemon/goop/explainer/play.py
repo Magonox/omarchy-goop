@@ -1,6 +1,8 @@
 """Start and stop a lesson window (bin/goop-explain). One lesson plays at a time."""
 import json, os, re, signal, subprocess
 
+from .. import private
+
 HERE = os.path.dirname(os.path.abspath(__file__))
 BIN = os.path.join(HERE, "..", "..", "..", "bin", "goop-explain")
 LESSON_DIR = os.path.expanduser("~/.cache/goop/lessons")
@@ -36,10 +38,10 @@ def launch_scene(scene_path, address=""):
 
 
 def save(story):
-    os.makedirs(LESSON_DIR, exist_ok=True)
+    private.makedirs(LESSON_DIR)
     slug = re.sub(r"[^a-z0-9]+", "_", story.get("title", "lesson").lower()).strip("_")[:40] or "lesson"
     path = os.path.join(LESSON_DIR, slug + ".json")
-    with open(path, "w") as f:
+    with private.open_file(path) as f:
         json.dump(story, f, indent=2)
     return path
 

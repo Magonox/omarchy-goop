@@ -10,7 +10,7 @@ The full packet is always written to ~/.cache/goop/last_packet.json.
 import argparse, json, os, sys
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-from goop import hypr, packet  # noqa: E402
+from goop import hypr, packet, private  # noqa: E402
 
 OUT = os.path.expanduser("~/.cache/goop/last_packet.json")
 
@@ -34,8 +34,8 @@ def main():
     else:
         pkt = packet.build(window)
 
-    os.makedirs(os.path.dirname(OUT), exist_ok=True)
-    with open(OUT, "w") as f:
+    private.makedirs(os.path.dirname(OUT))
+    with private.open_file(OUT) as f:
         json.dump(pkt, f, indent=2)
 
     if a.full:

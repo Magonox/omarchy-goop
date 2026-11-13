@@ -9,6 +9,7 @@ Progress goes to ~/.cache/goop/explain_run.log; a failure is spoken by the goop 
 import json, os, re, shutil, subprocess, sys, threading, time
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+from goop import private  # noqa: E402
 from goop.explainer import build, planner, play  # noqa: E402
 
 HERE = os.path.dirname(os.path.abspath(__file__))
@@ -19,8 +20,8 @@ START_WAIT = 120          # seconds to wait for the first parts before opening t
 
 
 def log(msg):
-    os.makedirs(os.path.dirname(LOG), exist_ok=True)
-    with open(LOG, "a") as f:
+    private.makedirs(os.path.dirname(LOG))
+    with private.open_file(LOG, "a") as f:
         f.write(f"{time.strftime('%H:%M:%S')} {msg}\n")
 
 
@@ -62,14 +63,14 @@ def main(job_path):
         return tell(address, f"Sorry, I could not plan that lesson. {str(e)[:120]}")
     log(f"outline ready after {time.time() - t0:.0f}s: {len(story['parts'])} parts")
 
-    os.makedirs(SCENES, exist_ok=True)
+    private.makedirs(SCENES)
     prune()
     slug = re.sub(r"[^a-z0-9]+", "_", story["title"].lower()).strip("_")[:30] or "lesson"
     stem = f"{slug}-{int(time.time())}"
     parts_dir, scene_path = os.path.join(SCENES, stem + ".parts"), os.path.join(SCENES, stem + ".scene.json")
     planner.write_pending(parts_dir, story)
     scene = build.build(story, parts_dir=parts_dir)
-    with open(scene_path, "w") as f:
+    with private.open_file(scene_path) as f:
         json.dump(scene, f, separators=(",", ":"))
 
     need, done, first_ready = set(planner.first_parts(story)), set(), threading.Event()

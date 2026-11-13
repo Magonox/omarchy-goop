@@ -10,6 +10,7 @@ Work is planned in [`docs/BACKLOG.md`](docs/BACKLOG.md).
 
 ### Security
 - **The question no longer appears in the process list.** The shell used to start `agent.py --command "<question>"`, which any local account could read in `/proc/<pid>/cmdline`. It now sends the question as one JSON line on stdin (`agent.py --stdin`); `--command` stays for use by hand. Found by the marketplace security review (issue #13859). A test fails if `shell/Goop.qml` ever passes `--command` again.
+- **Everything under `~/.cache/goop` is now owner-only.** Questions, answers, saved conversations (`sessions/`, written with the OpenAI-compatible provider), screenshots, the tool-call log and undo records were world-readable (folders `0755`, files `0644`), so another local account could read them wherever the parent folders were traversable. Found by the marketplace security review (issue #13859). The folder is now created `0700` and files `0600`, through one helper (`daemon/goop/private.py`) used by every writer; an existing open folder is tightened the next time Goop writes. Tests check the modes at each write site.
 
 ### Changed
 - E8: **lessons build in parallel and start early.** The agent tool now starts a detached builder (`daemon/explain_run.py`) and returns at once. Stage 1: one model call writes

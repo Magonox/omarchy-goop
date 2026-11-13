@@ -5,7 +5,7 @@ Tools run in this process through goop.tools, so the approval cards and every sa
 provider uses. The API is stateless, so each goop's conversation is kept in a small history file (the "session")."""
 import base64, json, mimetypes, os, re, socket, time, urllib.error, urllib.request, uuid
 
-from .. import access, tools
+from .. import access, private, tools
 from . import events
 from .base import AgentRequest, Provider
 
@@ -50,9 +50,9 @@ def trim(messages):
 
 def save_session(sid, messages):
     sid = sid if sid and _SESSION_ID.match(sid) else uuid.uuid4().hex
-    os.makedirs(SESSION_DIR, exist_ok=True)
+    private.makedirs(SESSION_DIR)
     tmp = os.path.join(SESSION_DIR, sid + ".tmp")
-    with open(tmp, "w") as f:
+    with private.open_file(tmp) as f:
         json.dump(trim(messages), f)
     os.replace(tmp, os.path.join(SESSION_DIR, sid + ".json"))
     cutoff = time.time() - SESSION_DAYS * 86400
