@@ -9,7 +9,7 @@ Progress goes to ~/.cache/goop/explain_run.log; a failure is spoken by the goop 
 import json, os, re, shutil, subprocess, sys, threading, time
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-from goop import private  # noqa: E402
+from goop import private, say as goop_say  # noqa: E402
 from goop.explainer import build, planner, play  # noqa: E402
 
 HERE = os.path.dirname(os.path.abspath(__file__))
@@ -26,17 +26,15 @@ def log(msg):
 
 
 def say(address, text):
-    try:
-        subprocess.run([CTL, "speak", address, text], timeout=10, capture_output=True)
-    except (OSError, subprocess.SubprocessError):
-        pass
+    goop_say.speak(address, text)           # not `goopctl speak <text>`: that would put the text in the process list
 
 
 def tell(address, text):
     log(text)
     say(address, text)
     if shutil.which("notify-send"):
-        subprocess.run(["notify-send", "-a", "Goop", "3D lesson", text], capture_output=True)
+        # a fixed message: the lesson topic and the model's error text are private, and notify-send takes them as arguments
+        subprocess.run(["notify-send", "-a", "Goop", "3D lesson", "Goop could not finish this lesson. It told you what went wrong."], capture_output=True)
 
 
 def prune():

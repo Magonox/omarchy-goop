@@ -1,4 +1,5 @@
 import os, sys, unittest
+from unittest import mock
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from goop.explainer import build, codegen, schema
@@ -82,6 +83,26 @@ class Sandbox(unittest.TestCase):
                 with self.assertRaises(build.StoryboardError):
                     build.build(story(code))
         self.assertFalse(os.path.exists("/tmp/goop-escape-test"))
+
+    def test_imports_and_other_escapes_are_refused_before_anything_runs(self):
+        # no deno needed: the check happens before the sandbox starts, so a private file can never be loaded as a module
+        for name, code in {
+            "static import": 'import "file:///home/someone/private.txt";\nfunction build(M){ return []; }',
+            "import with a type": 'import s from "file:///x" with {type:"text"};\nfunction build(M){ throw new Error(s); }',
+            "dynamic import": "async function build(M){ await import('file:///x'); return []; }",
+            "eval": "function build(M){ eval('1'); return []; }",
+            "Function constructor": "function build(M){ new Function('return 1')(); return []; }",
+            "constructor trick": "function build(M){ (()=>1).constructor('return 1')(); return []; }",
+            "fetch": "function build(M){ fetch('http://x'); return []; }",
+        }.items():
+            with self.subTest(name), mock.patch.object(codegen, "_run", side_effect=AssertionError("the sandbox must not start")):
+                with self.assertRaises(codegen.CodeError) as cm:
+                    codegen.compile_part(code, "part 'a'")
+                self.assertIn("may not use", str(cm.exception))
+                self.assertNotIn("private.txt", str(cm.exception))
+
+    def test_the_example_code_in_the_prompts_passes_the_check(self):
+        self.assertIsNone(codegen.FORBIDDEN.search(GOOD))
 
     def test_endless_loops_are_stopped(self):
         old = codegen.LIMITS["seconds"]

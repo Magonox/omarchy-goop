@@ -5,6 +5,8 @@ Stops when the scene's duration is over, or when asked to (SIGTERM)."""
 import argparse, json, os, signal, subprocess, sys, time
 
 HERE = os.path.dirname(os.path.abspath(__file__))
+sys.path.insert(0, HERE)
+from goop import say as goop_say  # noqa: E402
 CTL = os.path.join(HERE, "..", "bin", "goopctl")
 
 
@@ -35,7 +37,7 @@ def main():
         wait = start + st["t0"] / a.speed - time.monotonic()
         if wait > 0:
             time.sleep(wait)
-        subprocess.run([CTL, "speak", addr, st["say"]], timeout=10)
+        goop_say.speak(addr, st["say"])
     if scene.get("question"):
         pass            # the closing question is shown by the renderer; asking it aloud comes with teacher mode
 

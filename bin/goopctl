@@ -4,6 +4,7 @@
 #   goopctl list                      addresses of windows that have a goop
 #   goopctl say <addr> "question"     ask that goop something
 #   goopctl speak <addr> "text"       say text aloud
+#   goopctl speakfile <addr> <file>   say the text in a file, then delete it (for private text: keeps it out of the process list)
 #   goopctl mood <mood> <ms>          idle|startled|thinking|happy|error on every goop
 #   goopctl mute true|false           mute the voice
 #   goopctl hush                      stop talking
