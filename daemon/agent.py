@@ -39,6 +39,12 @@ def read_command(args, stdin):
     return command
 
 
+def native_reads_allowed(project_cwd, cfg):
+    """Claude's own Read/Glob/Grep skip goop's approval cards, so they are offered only in a project folder and only when the access
+    setting lets files in the window's folder be read at once ("Look only" and "Ask first" do; "Ask for everything" and read_files off/ask do not)."""
+    return bool(project_cwd) and access.policy(cfg)["read"] == "folder"
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--address", required=True)
@@ -72,6 +78,7 @@ def main():
     pkt = packet.build(window, shots=False)
     proj = (pkt.get("context") or {}).get("project") or {}
     project_cwd = proj.get("cwd") if proj.get("is_project") else None
+    native_reads = native_reads_allowed(project_cwd, cfg)
     private.makedirs(RUN_DIR)
 
     mcp = os.path.join(RUN_DIR, f"mcp-{a.address}.json")
@@ -83,7 +90,7 @@ def main():
         command=command, packet=pkt, window_address=a.address,
         system=prompt.system_for(access.level(cfg), lessons=access.explainers(cfg) != "never"), prompt=prompt.user_prompt(pkt, command),
         session=a.session, cwd=project_cwd or RUN_DIR, mcp_config=mcp,
-        model=cfg.get("model"), read_paths=bool(project_cwd),
+        model=cfg.get("model"), read_paths=native_reads,
     )
     emit(events.start(provider.name, pkt["app_type"]))
     for ev in provider.run(req):

@@ -239,6 +239,12 @@ PanelWindow {
     property real landX: 0
     property real landY: 0
 
+    // The bubble renders Markdown, and Qt fetches an image link by itself: a reply influenced by a web page could carry private text in an image
+    // address and send it to a stranger's server. Images and raw HTML never reach the bubble; only their alt text does.
+    function noImages(t) {
+        return String(t).replace(/!\[([^\]]*)\]\([^)]*\)/g, "$1").replace(/!\[([^\]]*)\]\[[^\]]*\]/g, "$1").replace(/<[^>]*>/g, "");
+    }
+
     function tidy(t, max) {
         if (t.length <= max) return t;
         var head = t.substring(0, max), cut = Math.max(head.lastIndexOf(". "), head.lastIndexOf("! "), head.lastIndexOf("? "));
@@ -681,11 +687,11 @@ PanelWindow {
                 radius: 10
                 color: "#f0151518"
                 border.color: win.colorOf(modelData); border.width: 1.5
-                Text { id: bubbleMeasure; visible: false; font.pixelSize: 13; text: gp.bubble; textFormat: Text.MarkdownText; wrapMode: Text.NoWrap }
+                Text { id: bubbleMeasure; visible: false; font.pixelSize: 13; text: win.noImages(gp.bubble); textFormat: Text.MarkdownText; wrapMode: Text.NoWrap }
                 Text {
                     id: txt
                     x: 10; y: 9; width: parent.width - 20
-                    text: gp.bubble
+                    text: win.noImages(gp.bubble)
                     textFormat: Text.MarkdownText       // `code`, lists and bold render instead of showing raw symbols
                     color: "white"; font.pixelSize: 13
                     wrapMode: Text.Wrap
@@ -881,12 +887,20 @@ PanelWindow {
         }
     }
 
+    Process {
+        id: speakFileReader
+        property string addr: ""
+        stdout: StdioCollector { onStreamFinished: win.speak(speakFileReader.addr, text) }
+    }
+
     // test hooks (bin/goopctl wraps these): goopctl mood happy 3000 | goopctl list | goopctl say <addr> "..."
     IpcHandler {
         target: "goop"
         function list(): string { return win.perched.join("\n"); }
         function say(addr: string, text: string): void { win.ask(addr, text); }
         function speak(addr: string, text: string): void { win.speak(addr, text); }
+        // The text comes from a private file (daemon/goop/say.py), so it never shows up in a process list. The file is read once, then removed.
+        function speakfile(addr: string, path: string): void { speakFileReader.addr = addr; speakFileReader.command = ["sh", "-c", 'cat -- "$1"; rm -f -- "$1"', "sh", path]; speakFileReader.running = true; }
         function mute(on: bool): void { win.setMuted(on); root.setSetting("tts.muted", on ? "true" : "false"); }
         function hush(): void { win.stopSpeech(); }
         function drip(): void { if (win.gooEnabled) win.dripNow(); }

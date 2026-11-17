@@ -1,4 +1,5 @@
 import os, sys, unittest
+from unittest import mock
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from goop.explainer import build, codegen, schema
@@ -82,6 +83,54 @@ class Sandbox(unittest.TestCase):
                 with self.assertRaises(build.StoryboardError):
                     build.build(story(code))
         self.assertFalse(os.path.exists("/tmp/goop-escape-test"))
+
+    def test_imports_and_other_escapes_are_refused_before_anything_runs(self):
+        # no deno needed: the check happens before the sandbox starts, so a private file can never be loaded as a module
+        for name, code in {
+            "static import": 'import "file:///home/someone/private.txt";\nfunction build(M){ return []; }',
+            "import with a type": 'import s from "file:///x" with {type:"text"};\nfunction build(M){ throw new Error(s); }',
+            "dynamic import": "async function build(M){ await import('file:///x'); return []; }",
+            "eval": "function build(M){ eval('1'); return []; }",
+            "Function constructor": "function build(M){ new Function('return 1')(); return []; }",
+            "constructor trick": "function build(M){ (()=>1).constructor('return 1')(); return []; }",
+            "fetch": "function build(M){ fetch('http://x'); return []; }",
+        }.items():
+            with self.subTest(name), mock.patch.object(codegen, "_run", side_effect=AssertionError("the sandbox must not start")):
+                with self.assertRaises(codegen.CodeError) as cm:
+                    codegen.compile_part(code, "part 'a'")
+                self.assertIn("may not use", str(cm.exception))
+                self.assertNotIn("private.txt", str(cm.exception))
+
+    @needs_deno
+    def test_a_static_import_would_leak_a_file_and_the_check_stops_it(self):
+        # Reproduced with deno 2.9.8: with NO permissions, a static text import still loads a local file and `throw new Error(s)` returns it.
+        import tempfile
+        with tempfile.NamedTemporaryFile("w", suffix=".txt") as f:
+            f.write("PRIVATE-MARKER-123\n")
+            f.flush()
+            code = f'import s from "file://{f.name}" with {{type:"text"}};\nfunction build(M){{ throw new Error(s); }}'
+            self.assertIn("PRIVATE-MARKER-123", str(codegen._run(code)))          # the raw sandbox leaks it
+            with self.assertRaises(codegen.CodeError) as cm:
+                codegen.compile_part(code, "part 'a'")                              # compile_part refuses before running
+            self.assertNotIn("PRIVATE-MARKER-123", str(cm.exception))
+
+    @needs_deno
+    def test_a_dynamic_import_is_denied_by_deno_itself(self):
+        # The check relies on this: only static imports (the keywords import/export) skip the permission, and a keyword cannot be disguised.
+        import tempfile
+        with tempfile.NamedTemporaryFile("w", suffix=".txt") as f:
+            f.write("PRIVATE-MARKER-123\n")
+            f.flush()
+            code = ('const F=[]["constr"+"uctor"]["constr"+"uctor"];\n'
+                    f'const m=await F("return im"+"port(\'file://{f.name}\',{{with:{{type:\'text\'}}}})")();\n'
+                    'function build(M){ throw new Error(m.default); }')
+            self.assertIsNone(codegen.FORBIDDEN.search(code))                       # the regex does not see it...
+            with self.assertRaises(codegen.CodeError) as cm:
+                codegen.compile_part(code, "part 'a'")
+            self.assertNotIn("PRIVATE-MARKER-123", str(cm.exception))             # ...but deno refuses it anyway
+
+    def test_the_example_code_in_the_prompts_passes_the_check(self):
+        self.assertIsNone(codegen.FORBIDDEN.search(GOOD))
 
     def test_endless_loops_are_stopped(self):
         old = codegen.LIMITS["seconds"]

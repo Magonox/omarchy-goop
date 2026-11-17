@@ -3,7 +3,7 @@ This is the most open-ended way to make a shape, so it is also the one that must
 code is treated as untrusted. It runs in Deno started with NO permissions (no files, no network, no environment, no subprocesses), a memory cap, a
 time limit and a size limit on its output, and all it can do is return numbers: meshes made of positions, normals and triangle indexes.
 The helpers (box, cylinder, lathe, extrude...) are the renderer's own mesh builders (shell/explainer3d/meshes.js), so the same code runs in both places."""
-import hashlib, json, math, os, shutil, subprocess
+import hashlib, json, math, os, re, shutil, subprocess
 
 from . import vocab
 
@@ -20,6 +20,12 @@ HARNESS_TAIL = r"""
   console.log(JSON.stringify({result: out}));
 })();
 """
+
+
+# Pure geometry needs none of these. `import` matters most: Deno does not ask for file permission to load a local module, so
+# `import "file:///home/.../private.txt"` would pull a private file in, and its text could come back in an error message that is
+# sent to the model for repair. The rest close the usual ways to build such an import at run time or to reach the outside.
+FORBIDDEN = re.compile(r"\b(import|export|eval|Function|constructor|Deno|fetch|require|XMLHttpRequest|WebSocket|Worker|globalThis)\b")
 
 
 class CodeError(ValueError):
@@ -101,6 +107,9 @@ def compile_part(code, where):
     lo, hi = LIMITS["code"]
     if not isinstance(code, str) or not lo <= len(code) <= hi:
         raise CodeError(f"{where}: the code must be {lo}-{hi} characters defining function build(M)")
+    bad = FORBIDDEN.search(code)
+    if bad:
+        raise CodeError(f"{where}: the code may not use '{bad.group(1)}'; write plain JavaScript that defines function build(M) and uses only M")
     res = _run(code)
     if "error" in res:
         raise CodeError(f"{where}: your code threw an error: {res['error']}")
