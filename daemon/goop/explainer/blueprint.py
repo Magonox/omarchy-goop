@@ -111,7 +111,115 @@ def resolve(story):
         p["size"] = [round(max(LIMITS["size"][0], abs(a[k] - b[k]) + 2 * r), 4) for k in range(3)]
         p["at"] = [[mid[0], mid[1], mid[2] + z] for z in zs]
     errs += _connections(out)
+    errs += _links(out)
     return out, errs
+
+
+LINK_KINDS = ("mesh", "chain", "belt", "shaft")
+
+
+def _cross3(a, b):
+    return [a[1] * b[2] - a[2] * b[1], a[2] * b[0] - a[0] * b[2], a[0] * b[1] - a[1] * b[0]]
+
+
+def _links(story):
+    """Work out how fast and which way every driven part turns, from the one that drives it, and return errors for the model.
+
+    links: [{"a": id, "b": id, "kind": "mesh|chain|belt|shaft", "ratio": n (optional for mesh)}]
+      mesh   gears whose teeth touch. The point where they touch is the `connections` point between the two. Both surfaces move together there, which fixes the driven
+             gear's direction for any arrangement (side by side, at right angles like an egg beater's crown wheel and pinions) and its speed from the two radii;
+             "ratio" (how many times faster b turns than a) overrides the speed, not the direction.
+      chain, belt  the same way round, "ratio" times as fast (needed).
+      shaft  fixed together: they turn as one."""
+    links = story.get("links")
+    parts = {p.get("id"): p for p in story.get("parts", []) if isinstance(p, dict)}
+    if links is None:
+        stray = [pid for pid, p in parts.items() if p.get("_spin") and p["_spin"]["rate"] is None]
+        return [f"component {pid!r} has a spin axis but nothing drives it: give it period_s and dir, or link it to the part that drives it" for pid in stray]
+    if not isinstance(links, list) or len(links) > 60:
+        return ["links must be a list of up to 60 items like {\"a\": \"crank\", \"b\": \"gear\", \"kind\": \"mesh\"}"]
+    errs, contact = [], {}
+    for c in story.get("connections") or []:
+        if isinstance(c, dict) and _point(c.get("at")):
+            contact[frozenset((c.get("a"), c.get("b")))] = c["at"]
+    good = []
+    for n, ln in enumerate(links, 1):
+        if not (isinstance(ln, dict) and ln.get("a") in parts and ln.get("b") in parts and ln.get("kind") in LINK_KINDS):
+            errs.append(f"link {n}: needs a and b (ids of components) and kind, one of {', '.join(LINK_KINDS)}")
+            continue
+        a, b = parts[ln["a"]], parts[ln["b"]]
+        if not (a.get("_spin") and b.get("_spin")):
+            errs.append(f"link {ln['a']!r} to {ln['b']!r}: both components need a spin with their axis and pivot")
+            continue
+        ratio = ln.get("ratio")
+        if ln["kind"] in ("chain", "belt") and not (_num(ratio) and ratio > 0):
+            errs.append(f"link {ln['a']!r} to {ln['b']!r}: a {ln['kind']} needs ratio, how many times faster {ln['b']!r} turns")
+            continue
+        if ln["kind"] == "mesh" and frozenset((ln["a"], ln["b"])) not in contact:
+            errs.append(f"link {ln['a']!r} to {ln['b']!r}: meshing gears need a connection with the point where their teeth meet")
+            continue
+        good.append(ln)
+
+    def drive(src, dst, ln):
+        """The driven part's rate (degrees a second about its own axis) from the driver's."""
+        sa, sb = src["_spin"], dst["_spin"]
+        if ln["kind"] == "shaft":
+            return sa["rate"] * sum(sa["axis"][k] * sb["axis"][k] for k in range(3))
+        if ln["kind"] in ("chain", "belt"):
+            same = 1 if sum(sa["axis"][k] * sb["axis"][k] for k in range(3)) >= 0 else -1
+            r = ln["ratio"] if src is parts[ln["a"]] else 1 / ln["ratio"]
+            return sa["rate"] * r * same
+        c = contact[frozenset((ln["a"], ln["b"]))]
+        ra = [c[k] - sa["pivot"][k] for k in range(3)]
+        rb = [c[k] - sb["pivot"][k] for k in range(3)]
+        v = _cross3([x * sa["rate"] for x in sa["axis"]], ra)            # how the driver's surface moves at the contact point
+        bxr = _cross3(sb["axis"], rb)
+        den = sum(x * x for x in bxr)
+        if den < 1e-9 or sum(x * x for x in _cross3(sa["axis"], ra)) < 1e-9:
+            raise ValueError(f"link {ln['a']!r} to {ln['b']!r}: the contact point lies on the axis of one of the gears; put it where their teeth meet, at the rims")
+        rate = sum(v[k] * bxr[k] for k in range(3)) / den              # the driven surface must move the same way there
+        if _num(ln.get("ratio")) and ln["ratio"] > 0 and abs(rate) > 1e-9:
+            r = ln["ratio"] if src is parts[ln["a"]] else 1 / ln["ratio"]
+            rate = abs(sa["rate"]) * r * (1 if rate > 0 else -1)
+        return rate
+
+    train, changed = {}, True
+    for pid, p in parts.items():
+        if p.get("_spin") and p["_spin"]["rate"] is not None:
+            train[pid] = pid
+    while changed:
+        changed = False
+        for ln in good:
+            for src_id, dst_id in ((ln["a"], ln["b"]), (ln["b"], ln["a"])):
+                src, dst = parts[src_id], parts[dst_id]
+                if src["_spin"]["rate"] is None or src_id not in train:
+                    continue
+                try:
+                    rate = drive(src, dst, ln)
+                except ValueError as e:
+                    errs.append(str(e))
+                    good.remove(ln)
+                    changed = True
+                    break
+                if dst["_spin"]["rate"] is None:
+                    dst["_spin"]["rate"] = rate
+                    train[dst_id] = train[src_id]
+                    changed = True
+                elif abs(dst["_spin"]["rate"] - rate) > 0.1 * max(abs(rate), 1e-6) and dst_id != train[src_id]:
+                    errs.append(f"link {ln['a']!r} to {ln['b']!r}: {dst_id!r} is given its own speed, but {src_id!r} drives it at a different one; give period_s and dir "
+                                f"only to the part that drives the others")
+                    good.remove(ln)
+                    changed = True
+                    break
+            if changed:
+                break
+    for pid, p in parts.items():
+        if p.get("_spin"):
+            if p["_spin"]["rate"] is None:
+                errs.append(f"component {pid!r} has a spin axis but nothing drives it: link it to the part that drives it, or give it period_s and dir")
+            else:
+                p["_train"] = train.get(pid, pid)
+    return errs
 
 
 VIEW_AXES = {"front": (0, 1), "side": (2, 1), "top": (0, 2)}       # which two axes of the shared frame each view shows: x and y, z and y, x and z
@@ -156,13 +264,21 @@ def _solid(p):
             p["_out"] = OUT[out]
     spin = p.get("spin")
     if spin is not None:
-        axis, per = (spin or {}).get("axis", "z") if isinstance(spin, dict) else None, (spin or {}).get("period_s") if isinstance(spin, dict) else None
-        piv = (spin or {}).get("pivot", mid) if isinstance(spin, dict) else None
-        if not (isinstance(spin, dict) and axis in AXES and _num(per) and per > 0 and _point(piv) and spin.get("dir", "cw") in ("cw", "ccw")):
-            errs.append(f"component {pid!r}: spin must be {{\"axis\": \"x|y|z\", \"pivot\": [x, y, z], \"period_s\": seconds for one turn, \"dir\": \"cw\" or \"ccw\"}}")
+        # a part that turns: the driver (the crank a person turns, a motor) gives its real period and direction; a part it drives gives only its axis and pivot,
+        # and its speed and direction are worked out from the links (_links)
+        ok = isinstance(spin, dict) and spin.get("axis", "z") in AXES and _point(spin.get("pivot", mid))
+        per = spin.get("period_s") if isinstance(spin, dict) else None
+        if ok and per is not None and not (_num(per) and per > 0 and spin.get("dir", "cw") in ("cw", "ccw")):
+            ok = False
+        if not ok:
+            errs.append(f"component {pid!r}: spin must be {{\"axis\": \"x|y|z\", \"pivot\": [x, y, z]}} plus, only for the part that drives the others, "
+                        f"\"period_s\": seconds for one turn and \"dir\": \"cw\" or \"ccw\"")
         else:
-            p["spin_axis"] = axis
-            p["_spin"] = {"pivot": [float(x) for x in piv], "period_s": float(per), "dir": spin.get("dir", "cw")}
+            p["spin_axis"] = spin.get("axis", "z")
+            rate = None
+            if per is not None:              # clockwise seen from the positive end of the axis is a negative turn about it
+                rate = 360.0 / float(per) * (-1 if spin.get("dir", "cw") == "cw" else 1)
+            p["_spin"] = {"pivot": [float(x) for x in spin.get("pivot", mid)], "axis": AXES[spin.get("axis", "z")], "rate": rate}
     return errs
 
 

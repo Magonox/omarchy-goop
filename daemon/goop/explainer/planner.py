@@ -221,7 +221,7 @@ THE FRAME. Draw the finished object assembled, every component in its working po
 (the front). A flat thing like a watch lies with its face toward +z, centred on the origin. Use real proportions and scale the whole object so its largest dimension is about 8 units (no coordinate beyond +-10).
 
 THE SHEET:
-{{"version":1,"title":str,"parts":[component...],"connections":[connection...],"timelapse":number (optional),"steps":[step...],"recap":str,"question":str}}
+{{"version":1,"title":str,"parts":[component...],"connections":[connection...],"links":[link...] (only if parts drive each other),"timelapse":number (optional),"steps":[step...],"recap":str,"question":str}}
 
 COMPONENT: {{"id":"lowercase_id","kind":"solid","label":"up to {vocab.LIMITS['label']} characters, shown on screen","material":"default material","features":[feature...],
 "views":{{"front":[x0,x1,y0,y1],"side":[z0,z1,y0,y1],"top":[x0,x1,z0,z1]}},"out":"+x|-x|+y|-y|+z|-z|none"}} plus, only for a part that really turns, "spin":{{"axis":"x|y|z","pivot":[x,y,z],"period_s":seconds for one real turn,"dir":"cw|ccw"}}
@@ -245,8 +245,16 @@ components that hang together at one joint share its point.
 OUT is the way the component is taken out when the object is taken apart, as a person would really do it: a watch's crystal, hands and dial lift out through the front ("+z"), a chair's seat lifts up ("+y"),
 a drawer pulls forward, a wheel slides off along its axle. Components stacked on each other and leaving the same way are separated in order automatically. Give "none" to the one main body that everything else
 comes out of or off (the watch case, the chair's frame if it is one component); every other component needs a real direction that does not pass through a wall of another component.
-SPIN: for hands, wheels, rotors and the like give the real period (a watch's hour hand turns once in 43200 s, its minute hand in 3600 s, its second hand in 60 s). "dir":"cw" means clockwise as seen looking at the
-object from the positive end of the axis. "timelapse" (optional, default 1) speeds the lesson clock up so slow motions can be seen: choose it so the fastest turning part takes about 6 to 10 seconds per turn (a 60-second hand needs a timelapse of about 8).
+SPIN AND LINKS (moving parts). Exactly ONE component in each moving mechanism is the driver: the part a person turns or a motor drives. Only the driver's spin has "period_s" (its real time for one turn)
+and "dir" ("cw" means clockwise as seen looking at the object from the positive end of the axis). Every part it drives has a spin with only "axis" and "pivot", and LINKS say how it is driven:
+  {{"a":"crank_wheel","b":"pinion_left","kind":"mesh"}}   gears whose teeth touch; also give a connection between the two whose "at" is the point where the teeth meet (on both rims)
+  {{"a":"pedals","b":"rear_sprocket","kind":"chain","ratio":2.5}}   a chain or belt ("kind":"belt"): b turns the same way, ratio times as fast
+  {{"a":"rear_sprocket","b":"rear_wheel","kind":"shaft"}}   fixed together on one shaft: they turn as one
+Speeds and directions of driven parts are worked out from the links and the geometry, so draw the gears where they really are: two gears side by side turn opposite ways, and a crown wheel turns two pinions
+opposite ways only if its teeth catch them on opposite sides. Parts that turn on their own (a watch's three hands, each with its own real period) are separate drivers with no links.
+GEARS must look like gears: a disc plus a "radial" of small boxes around its rim for the teeth, so meshing can be seen. When a step explains how gears mesh, "cutaway" the component in front of them
+(a big wheel, a cover, a case) and "spin" the driver, so the teeth can be seen turning each other.
+"timelapse" (optional, default 1) changes the lesson clock so motion can be followed: choose it so the fastest turning part takes about 6 to 10 seconds per turn (above 1 speeds slow things up, below 1 slows fast things down).
 
 Think like an engineer: first list the real components of this object, how each is joined to the next and its real proportions, then write the features. Use as many features as the real component has detail
 (a chair back is several slats and rails, not one slab). Never include a person, face, hand or animal as a component. Do not repeat a component under two names.

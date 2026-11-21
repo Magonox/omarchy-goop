@@ -122,5 +122,81 @@ class Sheet(unittest.TestCase):
                     self.assertTrue(all(r < 0 for r in rates.values()))                 # clockwise
 
 
+def gear(pid, center, axis, radius, thick=0.1, period=None, direction="cw"):
+    c = list(center)
+    k = {"x": 0, "y": 1, "z": 2}[axis]
+    a, b = list(c), list(c)
+    a[k] -= thick / 2
+    b[k] += thick / 2
+    spin = {"axis": axis, "pivot": c}
+    if period:
+        spin.update(period_s=period, dir=direction)
+    return {"id": pid, "kind": "solid", "label": pid.replace("_", " ").title(), "material": "steel",
+            "features": [{"shape": "cylinder", "from": a, "to": b, "radius": radius}], "spin": spin}
+
+
+def train(parts, links, connections):
+    s = stool()
+    s["parts"] += parts
+    s["links"] = links
+    s["connections"] += connections
+    s["steps"][1]["do"].append({"spin": [parts[0]["id"]]})
+    return build.build(s)
+
+
+def rates(scene):
+    return {p["id"]: p.get("spin_rate") for p in scene["parts"] if p.get("spin_rate") is not None}
+
+
+class GearLinks(unittest.TestCase):
+    """Only the driver has a speed; the others follow from how they are linked, worked out from where the gears touch."""
+
+    def test_gears_side_by_side_turn_opposite_ways_at_the_ratio_of_their_sizes(self):
+        sc = train([gear("big", [0, 6, 0], "z", 1.0, period=6), gear("small", [1.5, 6, 0], "z", 0.5)],
+                   [{"a": "big", "b": "small", "kind": "mesh"}], [{"a": "big", "b": "small", "at": [1.0, 6, 0]}])
+        r = rates(sc)
+        self.assertAlmostEqual(r["big"], -60.0, places=2)                 # 360 degrees in 6 s, clockwise
+        self.assertAlmostEqual(r["small"], 120.0, places=1)               # half the size: twice as fast, the other way
+
+    def test_gears_at_right_angles_turn_the_way_their_contact_points_say(self):
+        # an egg beater: a crown wheel facing +z drives two pinions with upright axes, one caught at its front, one at its back
+        wheel = gear("wheel", [0, 6, 0.3], "z", 1.2, period=2)
+        left, right = gear("left", [-0.6, 4.8, 0.0], "y", 0.3), gear("right", [0.6, 4.8, 0.6], "y", 0.3)
+        sc = train([wheel, left, right], [{"a": "wheel", "b": "left", "kind": "mesh"}, {"a": "wheel", "b": "right", "kind": "mesh"}],
+                   [{"a": "wheel", "b": "left", "at": [-0.6, 4.8, 0.3]}, {"a": "wheel", "b": "right", "at": [0.6, 4.8, 0.3]}])
+        r = rates(sc)
+        self.assertLess(r["left"] * r["right"], 0)                         # opposite ways
+        self.assertAlmostEqual(abs(r["left"]), abs(r["right"]), places=1)   # the same speed
+
+    def test_a_chain_turns_the_same_way_at_its_ratio_and_a_shaft_turns_as_one(self):
+        sc = train([gear("pedals", [0, 6, 0], "z", 1.0, period=4), gear("sprocket", [3, 6, 0], "z", 0.4), gear("wheel", [3, 6, 0.3], "z", 1.5)],
+                   [{"a": "pedals", "b": "sprocket", "kind": "chain", "ratio": 2.5}, {"a": "sprocket", "b": "wheel", "kind": "shaft"}],
+                   [{"a": "sprocket", "b": "wheel", "at": [3, 6, 0.1]}])
+        r = rates(sc)
+        self.assertAlmostEqual(r["sprocket"], r["pedals"] * 2.5, places=2)
+        self.assertAlmostEqual(r["wheel"], r["sprocket"], places=2)
+
+    def test_turning_one_part_of_a_train_turns_all_of_it(self):
+        sc = train([gear("big", [0, 6, 0], "z", 1.0, period=6), gear("small", [1.5, 6, 0], "z", 0.5)],
+                   [{"a": "big", "b": "small", "kind": "mesh"}], [{"a": "big", "b": "small", "at": [1.0, 6, 0]}])
+        ev = next(e for e in sc["events"] if e["type"] == "spin")
+        self.assertEqual(sorted(ev["parts"]), ["big", "small"])
+        self.assertEqual(set(ev["rates"]), {"big", "small"})
+
+    def test_mistakes_in_a_train_are_explained(self):
+        cases = [
+            ([gear("big", [0, 6, 0], "z", 1.0, period=6), gear("small", [1.5, 6, 0], "z", 0.5)], [{"a": "big", "b": "small", "kind": "mesh"}], [], "point where their teeth meet"),
+            ([gear("big", [0, 6, 0], "z", 1.0, period=6), gear("small", [1.5, 6, 0], "z", 0.5)], [], [], "nothing drives it"),
+            ([gear("big", [0, 6, 0], "z", 1.0, period=6), gear("small", [1.5, 6, 0], "z", 0.5, period=1)], [{"a": "big", "b": "small", "kind": "mesh"}],
+             [{"a": "big", "b": "small", "at": [1.0, 6, 0]}], "only to the part that drives"),
+            ([gear("big", [0, 6, 0], "z", 1.0, period=6), gear("small", [1.5, 6, 0], "z", 0.5)], [{"a": "big", "b": "small", "kind": "chain"}], [], "needs ratio"),
+        ]
+        for parts, links, conns, words in cases:
+            with self.subTest(words):
+                with self.assertRaises(build.StoryboardError) as cm:
+                    train(parts, links, conns)
+                self.assertIn(words, str(cm.exception))
+
+
 if __name__ == "__main__":
     unittest.main()

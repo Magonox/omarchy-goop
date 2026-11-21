@@ -31,6 +31,30 @@ def _half(p, k):
     return (sh.get("h", 2 * p["radius"]) / 2) if k == 1 else max(sh.get("r", 0), sh.get("r0", 0), sh.get("w", 0) / 2, sh.get("d", 0) / 2 if k == 2 else 0) or p["radius"]
 
 
+def _eye(target, dist, yaw, pitch):
+    """Where the lesson camera is: it orbits `target` at `dist`, turned `yaw` about the vertical and raised `pitch` (Lesson3D.qml, lesson.js project)."""
+    y, p = math.radians(yaw), math.radians(pitch)
+    return [target[0] + dist * math.cos(p) * math.sin(y), target[1] + dist * math.sin(p), target[2] + dist * math.cos(p) * math.cos(y)]
+
+
+def _segment_hits(a, b, lo, hi):
+    """Does the straight line from a to b pass through the box (lo, hi)? Slab test; a box that holds b (a body around an engine) counts."""
+    t0, t1 = 0.0, 1.0
+    for k in range(3):
+        d = b[k] - a[k]
+        if abs(d) < 1e-9:
+            if a[k] < lo[k] or a[k] > hi[k]:
+                return False
+            continue
+        u, v = (lo[k] - a[k]) / d, (hi[k] - a[k]) / d
+        if u > v:
+            u, v = v, u
+        t0, t1 = max(t0, u), min(t1, v)
+        if t0 > t1:
+            return False
+    return t1 > 0.02
+
+
 def duration(text):
     return max(5.0, round(len(text.split()) / WORDS_PER_SECOND + 1.4, 2))
 
@@ -112,6 +136,8 @@ def build(story, lay):
                 events.append({"type": "highlight", "parts": expand(arg), "t0": round(t0 + 1.0, 2), "t1": round(t1 - 0.3, 2)})
             elif name == "spin":
                 ids = expand(arg)
+                trains = {placed[i].get("train") for i in ids} - {None}      # turning one part of a gear train turns all of it
+                ids += [j for j, q in placed.items() if q.get("train") in trains and j not in ids]
                 ev = {"type": "spin", "parts": ids, "rate": 140, "t0": round(t0 + 0.9, 2)}
                 rates = {i: placed[i]["spin_rate"] for i in ids if placed[i].get("spin_rate")}       # a part with a real period turns at its own rate
                 if rates:
@@ -160,8 +186,28 @@ def build(story, lay):
             if labelled:                 # a whole-model shot with labels: room above the top parts for the label text
                 c[1] += LABEL_HEADROOM * bounds["radius"] * 0.5
                 dist = max(dist, _fit(bounds["radius"] * (1 + LABEL_HEADROOM * 0.5)))
-        camera.append({"t": round(t0 + 0.2, 2), "target": [round(x, 3) for x in c], "dist": round(dist, 2), "yaw": round(yaw0 + 5 * n, 1),
-                       "pitch": PITCH_FOR[fin["motion"]] if st.get("_finale") else pitch})
+        cam_pitch = PITCH_FOR[fin["motion"]] if st.get("_finale") else pitch
+        camera.append({"t": round(t0 + 0.2, 2), "target": [round(x, 3) for x in c], "dist": round(dist, 2), "yaw": round(yaw0 + 5 * n, 1), "pitch": cam_pitch})
+        # a part the step points at must be seen: whatever lies between the camera and it (a body around an engine, a big wheel in front of small gears) turns see-through
+        pointed = [i for a in actions if next(iter(a.items()))[0] in ("label", "highlight") for i in expand(next(iter(a.items()))[1])]
+        if pointed and not st.get("_finale"):
+            hang = teardown and n >= 1 and not st.get("_recap")
+            eye = _eye(c, dist, yaw0 + 5 * n, cam_pitch)
+            already = {i for a in actions if next(iter(a.items()))[0] == "cutaway" for i in expand(next(iter(a.items()))[1])}
+            hiders = []
+            for target in dict.fromkeys(pointed):
+                tp = placed[target]
+                goal = [tp["pos"][k] + (tp["explode"][k] if hang else 0) for k in range(3)]
+                for j, q in placed.items():
+                    if j in pointed or j in already or j in hiders or q.get("context") or q["spanning"]:
+                        continue
+                    centre = [q["pos"][k] + (q["explode"][k] if hang else 0) for k in range(3)]
+                    lo = [centre[k] - _half(q, k) * 0.95 for k in range(3)]
+                    hi = [centre[k] + _half(q, k) * 0.95 for k in range(3)]
+                    if _segment_hits(eye, goal, lo, hi):
+                        hiders.append(j)
+            if hiders:
+                events.append({"type": "cutaway", "parts": hiders, "t0": round(t0 + 0.4, 2), "t1": round(t1 - 0.2, 2), "alpha": 0.18, "auto": True})
         t = t1
     end = t + 2.0
     if teardown and len(step_t0) > 1:      # one long explode: out at the start of step 2, held through the explanations, back together as the finale (or the recap) begins

@@ -202,11 +202,11 @@ def bp(story):
         pl = _place(p, pid)
         pl["pos"] = _r3(c)
         pl["spin_axis"] = blueprint.spin_axis(p)
-        if p.get("_spin"):               # a part that turns about a point of its own (a watch hand about the dial centre), at its real rate (sped up by the lesson's timelapse)
-            sp = p["_spin"]
+        if p.get("_spin") and p["_spin"].get("rate") is not None:     # a part that turns about a point of its own (a watch hand, a gear), at its real rate (worked out
+            sp = p["_spin"]                                             # from what drives it, blueprint._links), sped up by the lesson's timelapse
             pl["spin_pivot"] = _r3([sp["pivot"][i] + shift_[i] - c[i] for i in range(3)])
-            rate = 360.0 / sp["period_s"] * float(story.get("timelapse", 1))
-            pl["spin_rate"] = round(-rate if sp["dir"] == "cw" else rate, 4)       # clockwise seen from the positive end of the axis is a turn the other way about it
+            pl["spin_rate"] = round(sp["rate"] * float(story.get("timelapse", 1)), 4)
+            pl["train"] = p.get("_train")
         d = [c[i] - mid[i] for i in range(3)]
         n = math.sqrt(sum(x * x for x in d))
         d = [x / n for x in d] if n > 0.25 else [0.0, 1.0, 0.0]
