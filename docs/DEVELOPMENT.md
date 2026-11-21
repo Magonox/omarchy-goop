@@ -102,3 +102,11 @@ bubble, mood, voice. Sessions resume per goop (`--resume`), so "yes, keep going"
 - Create the repo, then `git remote add origin <url> && git push -u origin main`.
 - Run `omarchy plugin validate .` (no symlinks allowed inside the plugin folder; the venv is kept outside for that reason).
 - Piper (GPL-3.0) is installed by `setup.sh` from PyPI, not bundled; voices have their own licenses.
+
+## Looking at 3D lessons (visual loop)
+`bin/goop-snap lesson.json [--times auto|5,20,45] [--out DIR]` renders a lesson to pictures plus a labelled contact sheet (`sheet.png`) without touching a real screen: it makes a
+throwaway virtual monitor with `hyprctl output create headless`, starts the real lesson window there (`GOOP_OUTPUT`, `GOOP_CLOCK_FILE` step the clock), captures only that monitor with
+`grim -o`, and removes it again. Use it after every change to the 3D code: read the sheet, fix what looks wrong, render again. `--times auto` takes the middle of each step and the finale second by second.
+The bar and wallpaper of the Omarchy shell appear on the virtual monitor too; they are not part of the lesson. Plain `qml6` with `QT_QPA_PLATFORM=offscreen` does not draw 3D (blank picture), and a second
+headless Hyprland did not start here, so this is the way. Needs Hyprland, grim, quickshell, qt6-quick3d, ImageMagick and deno.
+

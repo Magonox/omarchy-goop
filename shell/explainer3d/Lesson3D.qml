@@ -29,6 +29,13 @@ PanelWindow {
     function play() { startedAt = Date.now() - Number(Quickshell.env("GOOP_START") || 0) * 1000 / speed; t = 0; playing = true; }
     function stop() { playing = false; }
 
+    // GOOP_OUTPUT=NAME shows the lesson on that monitor instead of the focused one (daemon/snap.py renders lessons to pictures on a throwaway virtual monitor)
+    readonly property string outputName: Quickshell.env("GOOP_OUTPUT")
+    Component.onCompleted: {
+        if (outputName === "") return;
+        for (var i = 0; i < Quickshell.screens.length; i++) if (Quickshell.screens[i].name === outputName) screen = Quickshell.screens[i];
+    }
+
     visible: playing && !!scene
     implicitWidth: 1000
     implicitHeight: 640
