@@ -97,6 +97,13 @@ class Outline(unittest.TestCase):
             planner.plan_outline("t", "", model)
         self.assertEqual(len(model.calls), planner.REPAIRS + 1)
 
+    def test_prompts_teach_the_real_thing_rules(self):
+        # L10: rules taken from the `teardown` skill's review, judged better by the owner in a blind engine test (see CHANGELOG)
+        sp = planner.outline_system()
+        for word in ("START FROM THE REAL THING", "THE WORKING PART OPENS UP", "CHECK BEFORE YOU ANSWER", "state a number only when you are sure"):
+            self.assertIn(word, sp)
+        self.assertIn("BUILD THE REAL THING", planner.part_system())
+
     def test_prompts_teach_the_staged_format(self):
         sp = planner.outline_system()
         for word in ("brief", "width", "sender", "first step should reveal only"):

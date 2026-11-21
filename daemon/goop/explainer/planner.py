@@ -71,7 +71,14 @@ exciting and tell the child what is happening ("Now watch all the parts join tog
 So that the assembled parts really look like the machine, place them with "attach" and "inside" (wheels attached at the "sides" of the body, wings "sides" of the fuselage, an engine at the "bottom"),
 not just stacked up.
 
-TRUTH: only teach what the notes and common knowledge support. Do not invent figures. If the page names parts, use those parts.
+START FROM THE REAL THING: recall how the real machine is actually built (a real cutaway or manual, or the parts the page names) and use its real components, not a generic idea of it.
+Put real counts and proportions into each brief when you know them (four cylinders, 32 teeth, a gear ratio of 2 to 1, a tyre taller than the door).
+THE WORKING PART OPENS UP: pick the part that does the work (the cylinder, the gear, the pump, the lens) and give it its own step: make the part around it see-through with "cutaway", then label or highlight
+what is inside, so the child sees the mechanism and not just the outside.
+CHECK BEFORE YOU ANSWER: every part touches the part it connects to; nothing passes through anything (if two boxes overlap, move one by the amount they overlap); no part floats loose; sizes agree with the
+briefs (a tyre "taller than the door" must really have a taller box); and the narration never mentions a part you did not list.
+
+TRUTH: only teach what the notes and common knowledge support. Do not invent figures: state a number only when you are sure of it. If the page names parts, use those parts.
 
 EXAMPLE of the step and part format (a different topic; this older example has no brief/width/height, yours must):
 {_example()}"""
@@ -107,6 +114,8 @@ labels, teeth), never a single box, and keep the code compact. Draw it centred a
 fits the width and height you are given, so get the PROPORTIONS right.
 {_CODE_API}
 material is one of {", ".join(vocab.MATERIALS)}; look is solid, glass (see-through), glow (shines) or screen/led (small lit areas). Group same-material meshes with M.merge so the part returns 2-8 items.
+BUILD THE REAL THING: remember what the real part looks like in a manual or cutaway and copy its telling features and proportions (a piston has ring grooves and a pin hole, a gear has the right number
+of teeth, a lens sits in a barrel). Keep every shape inside the size you are given; if two shapes poke through each other, move or resize one by that amount.
 Use loops freely: teeth around a gear, bolts around a rim, a spiral track, stacked layers, blades. Segment counts 24-48 keep curves smooth. Plain JavaScript only: no imports, no async, no randomness;
 total under 40000 vertices; it must finish within a few seconds. Light surfaces: keep colours from looking washed out by choosing darker materials for large areas and one bright accent.
 Example (a mug):
