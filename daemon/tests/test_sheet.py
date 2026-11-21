@@ -148,6 +148,17 @@ def rates(scene):
     return {p["id"]: p.get("spin_rate") for p in scene["parts"] if p.get("spin_rate") is not None}
 
 
+class SavedEggBeater(unittest.TestCase):
+    def test_the_two_whisks_turn_opposite_ways_and_the_whole_train_turns_together(self):
+        here = os.path.join(os.path.dirname(os.path.abspath(__file__)), "fixtures", "lessons", "egg-beater-sheet.json")
+        scene = build.build(json.load(open(here)))
+        r = {p["id"]: p["spin_rate"] for p in scene["parts"] if p.get("spin_rate")}
+        self.assertLess(r["beater_left"] * r["beater_right"], 0)
+        self.assertGreater(abs(r["beater_left"]), abs(r["crank_wheel"]))            # the small gears turn faster than the big one
+        ev = next(e for e in scene["events"] if e["type"] == "spin")
+        self.assertTrue({"crank_wheel", "pinion_left", "pinion_right", "beater_left", "beater_right"} <= set(ev["parts"]))
+
+
 class GearLinks(unittest.TestCase):
     """Only the driver has a speed; the others follow from how they are linked, worked out from where the gears touch."""
 
