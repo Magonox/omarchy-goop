@@ -23,6 +23,10 @@ class PlanError(Exception):
     pass
 
 
+class NotAnObject(Exception):
+    """The sheet model says the topic is not a physical object it can draw (a process, signals, a living thing, an idea): use the outline method instead."""
+
+
 def _example():
     here = os.path.dirname(os.path.abspath(__file__))
     with open(os.path.join(here, "lessons", "wifi.json")) as f:
@@ -254,7 +258,11 @@ comparison for the hard parts, {vocab.LIMITS['say'][0]}-{vocab.LIMITS['say'][1]}
 components one at a time (label, highlight, zoom to the part), and ends with the whole object assembled again. The explanation must only mention components you drew.
 "recap" is one sentence to remember; "question" is one friendly question inviting the child to ask more.
 
-TRUTH: only teach what common knowledge supports; do not invent figures."""
+TRUTH: only teach what common knowledge supports; do not invent figures.
+
+WHEN NOT TO DRAW: a model sheet is for a physical object or machine that can be drawn assembled and taken apart (a watch, an engine, an aeroplane, a chair, a camera, a bicycle).
+If the topic is something else (a process like digestion or recycling, signals like wifi or radio, a living thing like a cell or the heart, a place, an idea), do not draw it: output only
+{{"route":"diagram","why":"one short reason"}}."""
 
 
 def sheet_user(topic, notes=""):
@@ -273,6 +281,8 @@ def plan_sheet(topic, notes, run, repairs=REPAIRS):
             story = extract_json(reply)
             if not isinstance(story, dict):
                 raise ValueError("the reply was not a JSON object")
+            if story.get("route") == "diagram":                 # the router: not something to draw as an object
+                raise NotAnObject(str(story.get("why") or "not a physical object")[:200])
             story["version"] = 1
             story["layout"] = {"template": "blueprint", "explode": "free"}
             scene = build.build(story)

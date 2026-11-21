@@ -288,9 +288,9 @@ class Tool(unittest.TestCase):
                     tools.call("explain_in_3d", "0xabc", {"topic": topic})
 
     def test_missing_sandbox_or_a_lesson_already_building_is_explained(self):
-        with mock.patch.object(tools.codegen, "available", return_value=False):
+        with mock.patch.object(tools.codegen, "available", return_value=False):          # only the outline method runs shape code; a model sheet needs no deno
             with self.assertRaises(tools.ToolError) as cm:
-                self.call(explainers="auto")
+                self.call(explainers="auto", explain_method="outline")
         self.assertIn("deno", str(cm.exception))
         with mock.patch.object(tools, "_builder_running", return_value=True):
             with self.assertRaises(tools.ToolError) as cm:

@@ -18,6 +18,7 @@ DEFAULTS = {
     "explainers": "offer",      # 3D lessons: "offer" (a card asks first), "auto" (just build it), "never"; see access.py
     "explain_outline_effort": "medium",   # how hard the model thinks while planning a lesson (low|medium|high); thinking is most of the waiting
     "explain_part_effort": "low",         # ... and while drawing each part
+    "explain_method": "auto",   # 3D lessons: "auto" draws a model sheet of the whole object and falls back to the outline method for things that are not objects; "outline" always uses the outline method
     "explain_model": "opus",    # the model that plans a lesson; a strong one writes better lessons than the quick-reply model
     "stt": {                    # voice input; all on-device, the microphone is only open while the ask box is listening
         "enabled": True,

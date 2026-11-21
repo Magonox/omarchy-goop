@@ -79,7 +79,7 @@ primitives, placement by relations, motion from laws, checks by numbers. Prove i
 | F7 | Prompt and schema for storyboard v2 (primitives, anchors, relations, laws) | todo | After F1 to F4. |
 | F8 | Proof lessons: bicycle without a rider, balloon, submarine; blind side-by-side against the old ones | todo | Success: validator clean, owner prefers the new one, build time near a minute, no more model calls. |
 | F9 | Optional render-and-review pass with a vision model | idea | Only if F6 leaves visible faults. |
-| F10 | Model sheet: the AI draws an assembled, connected multi-view sheet, code builds and checks it | prototype done, not in the app | Branch `l11-geometry-validator`. `solids.py`, `blueprint.resolve` (solid kind, views, connections, spin), `plan_sheet` in `planner.py`, `plan_lesson.py --sheet`. Chair and watch pass. To do: wire into `explain_run.py` and the tool, a router to choose sheet or outline by topic, section views for internals, more topics (crane, engine, camera), a vision check. |
+| F10 | Model sheet: the AI draws an assembled, connected multi-view sheet, code builds and checks it | in the app (router in the sheet prompt) | Branch `l11-geometry-validator`. `solids.py`, `blueprint.resolve` (solid kind, views, connections, spin), `plan_sheet` in `planner.py`, `plan_lesson.py --sheet`. Chair and watch pass. Wired into `explain_run.py` with the router (2026-11-21). To do: moving connections (hinge, slider, gears, chain, crank), section views for internals, a 10-20 topic test, early start while the sheet is checked, a vision check. |
 
 ## 3D explainers (owner idea 2026-10-30; research in `docs/design/3d-explainer.md`)
 
