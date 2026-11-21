@@ -18,9 +18,16 @@ MATERIALS = {   # name -> color, metalness, roughness, emissive strength
     "concrete": {"color": [186, 186, 192], "metal": 0.0, "rough": 0.9, "emissive": 0},
     "glass": {"color": [170, 210, 255], "metal": 0.0, "rough": 0.08, "emissive": 0, "alpha": 0.2},
     "flame": {"color": [255, 150, 60], "metal": 0.0, "rough": 0.5, "emissive": 1.0},
+    "wood": {"color": [176, 128, 78], "metal": 0.0, "rough": 0.7, "emissive": 0},
+    "dark_wood": {"color": [104, 70, 42], "metal": 0.0, "rough": 0.65, "emissive": 0},
+    "black": {"color": [30, 32, 38], "metal": 0.2, "rough": 0.5, "emissive": 0},
+    "leather": {"color": [72, 44, 36], "metal": 0.0, "rough": 0.8, "emissive": 0},
+    "cream": {"color": [240, 232, 210], "metal": 0.0, "rough": 0.6, "emissive": 0},
 }
 
 KINDS = {
+    # a component of a model sheet: a list of features (solids.py) in the shared frame of the whole object
+    "solid": {"type": "mesh", "material": "steel"},
     # a tube, rod or bar between two named joints (blueprint lessons: frames, forks, bars, towers); its mesh is made from the joints, not by the model
     "member": {"type": "mesh", "material": "steel"},
     # a jet engine and other things in a row

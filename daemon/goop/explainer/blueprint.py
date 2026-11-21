@@ -6,7 +6,7 @@ centres), and its code only draws ONE copy filling the box.
 This module checks a blueprint the way an engineer would: parts that pass through each other and parts floating loose are errors with numbers in them, so the model can fix them."""
 import copy, math, re
 
-from . import members
+from . import members, solids
 
 LIMITS = {"coord": 10.0, "size": (0.1, 10.0), "copies": (1, 8), "overlap": 0.35, "radius": (0.03, 0.6), "joints": 40}
 _NAME = re.compile(r"^[a-z][a-z0-9_]{0,23}$")
@@ -86,6 +86,9 @@ def resolve(story):
                 else:
                     new.append(c)
             p["at"] = new
+        if p.get("kind") == "solid":
+            errs += _solid(p)
+            continue
         if p.get("kind") != "member":
             continue
         a, b, r = clean.get(p.get("from")), clean.get(p.get("to")), p.get("radius", 0.08)
@@ -107,7 +110,92 @@ def resolve(story):
         p["_meshes"] = [{"look": "solid", "material": p.get("material", "steel"), **mesh}]
         p["size"] = [round(max(LIMITS["size"][0], abs(a[k] - b[k]) + 2 * r), 4) for k in range(3)]
         p["at"] = [[mid[0], mid[1], mid[2] + z] for z in zs]
+    errs += _connections(out)
     return out, errs
+
+
+VIEW_AXES = {"front": (0, 1), "side": (2, 1), "top": (0, 2)}       # which two axes of the shared frame each view shows: x and y, z and y, x and z
+
+
+def _solid(p):
+    """Build a sheet component from its features: its meshes (around its own centre), its box and place, its spin; and check what the sheet claims about it. Returns error sentences."""
+    pid, errs = p.get("id"), []
+    try:
+        meshes = solids.compile_component(p.get("features"), p.get("material", "steel"))
+    except ValueError as e:
+        return [f"component {pid!r}: {e}"]
+    lo, hi = solids.bounds(meshes)
+    mid = [(lo[k] + hi[k]) / 2 for k in range(3)]
+    for m in meshes:
+        for k in range(len(m["p"])):
+            m["p"][k] = round(m["p"][k] - mid[k % 3], 4)
+    p["_meshes"] = meshes
+    p["size"] = [round(max(LIMITS["size"][0], hi[k] - lo[k]), 4) for k in range(3)]
+    p["at"] = [[round(x, 4) for x in mid]]
+    p["_span"] = [lo, hi]
+    extent = max(hi[k] - lo[k] for k in range(3))
+    views = p.get("views")
+    if views is not None:
+        if not isinstance(views, dict) or any(k not in VIEW_AXES for k in views):
+            errs.append(f"component {pid!r}: views may hold front [x0, x1, y0, y1], side [z0, z1, y0, y1] and top [x0, x1, z0, z1] only")
+        else:
+            for name, v in views.items():
+                if not (isinstance(v, list) and len(v) == 4 and all(_num(x) for x in v)):
+                    errs.append(f"component {pid!r}: the {name} view must be four numbers {VIEW_AXES_TEXT[name]}")
+                    continue
+                for axis, (want_lo, want_hi) in zip(VIEW_AXES[name], ((v[0], v[1]), (v[2], v[3]))):
+                    tol = max(0.12, 0.08 * extent)
+                    if abs(lo[axis] - want_lo) > tol or abs(hi[axis] - want_hi) > tol:
+                        errs.append(f"component {pid!r}: your {name} view says it spans {'xyz'[axis]} {want_lo:g} to {want_hi:g}, but its features span {'xyz'[axis]} {lo[axis]:.2f} to {hi[axis]:.2f}: "
+                                    f"fix the features or the view so they agree")
+    spin = p.get("spin")
+    if spin is not None:
+        axis, per = (spin or {}).get("axis", "z") if isinstance(spin, dict) else None, (spin or {}).get("period_s") if isinstance(spin, dict) else None
+        piv = (spin or {}).get("pivot", mid) if isinstance(spin, dict) else None
+        if not (isinstance(spin, dict) and axis in AXES and _num(per) and per > 0 and _point(piv) and spin.get("dir", "cw") in ("cw", "ccw")):
+            errs.append(f"component {pid!r}: spin must be {{\"axis\": \"x|y|z\", \"pivot\": [x, y, z], \"period_s\": seconds for one turn, \"dir\": \"cw\" or \"ccw\"}}")
+        else:
+            p["spin_axis"] = axis
+            p["_spin"] = {"pivot": [float(x) for x in piv], "period_s": float(per), "dir": spin.get("dir", "cw")}
+    return errs
+
+
+VIEW_AXES_TEXT = {"front": "[x0, x1, y0, y1]", "side": "[z0, z1, y0, y1]", "top": "[x0, x1, z0, z1]"}
+
+
+def _span_of(p):
+    """(lo, hi) of a part in the shared frame (all its copies), or None."""
+    if p.get("_span"):
+        return p["_span"]
+    if isinstance(p.get("size"), list) and isinstance(p.get("at"), list) and p["at"]:
+        lo = [min(c[k] - p["size"][k] / 2 for c in p["at"]) for k in range(3)]
+        hi = [max(c[k] + p["size"][k] / 2 for c in p["at"]) for k in range(3)]
+        return lo, hi
+    return None
+
+
+def _connections(story):
+    """Errors for a sheet's `connections`: [{"a": id, "b": id, "at": [x, y, z]}]. Each point must lie on both components (within a small margin)."""
+    conns = story.get("connections")
+    if conns is None:
+        return []
+    errs, parts = [], {p.get("id"): p for p in story.get("parts", []) if isinstance(p, dict)}
+    if not isinstance(conns, list) or len(conns) > 80:
+        return ["connections must be a list of up to 80 items like {\"a\": \"seat\", \"b\": \"leg\", \"at\": [x, y, z]}"]
+    for n, c in enumerate(conns, 1):
+        if not (isinstance(c, dict) and c.get("a") in parts and c.get("b") in parts and _point(c.get("at"))):
+            errs.append(f"connection {n}: needs a and b (ids of components) and at (the point [x, y, z] where they meet)")
+            continue
+        for who in (c["a"], c["b"]):
+            span = _span_of(parts[who])
+            if not span:
+                continue
+            extent = max(span[1][k] - span[0][k] for k in range(3))
+            tol = max(0.12, 0.05 * extent)
+            d = math.sqrt(sum(max(span[0][k] - c["at"][k], 0, c["at"][k] - span[1][k]) ** 2 for k in range(3)))
+            if d > tol:
+                errs.append(f"connection {c['a']!r} to {c['b']!r}: the point {c['at']} is {d:.2f} units from {who!r}, so they do not meet there; move the point or the component")
+    return errs
 
 
 def instances(p):
@@ -164,6 +252,48 @@ def check(parts):
         if not near and len(items) > 1:
             errs.append(f"part {pa!r} floats away from the rest of the machine; move its box so it touches the part it attaches to")
     return errs[:8]
+
+
+def shift(parts):
+    """The shift `place` applies to every part (centres the machine left-right and front-back and stands it on y = 0)."""
+    items = [(p, pid, c, s) for p in parts for pid, c, s in instances(p)]
+    lo = [min(c[i] - s[i] / 2 for _, _, c, s in items) for i in range(3)]
+    hi = [max(c[i] + s[i] / 2 for _, _, c, s in items) for i in range(3)]
+    return [-(lo[0] + hi[0]) / 2, -lo[1], -(lo[2] + hi[2]) / 2]
+
+
+_DIRS = ([0, 1, 0], [0, -1, 0], [1, 0, 0], [-1, 0, 0], [0, 0, 1], [0, 0, -1])
+
+
+def free_directions(items):
+    """{instance id: unit direction}: for every component, the way it can be pulled out of the assembly with the fewest others in its path. Its box is slid along each of the six axis
+    directions (by its own length along that axis) and the other boxes it would pass through are counted (boxes are shrunk a little, since joined components touch). Ties go to the direction
+    pointing away from the middle of the whole, then to up."""
+    boxes = [(pid, c, s) for _, pid, c, s in items]
+    mid = [sum(c[i] for _, c, _ in boxes) / len(boxes) for i in range(3)]
+    out = {}
+    for pid, c, s in boxes:
+        best = None
+        for rank, d in enumerate(_DIRS):
+            axis = next(k for k in range(3) if d[k])
+            lo = [c[k] - s[k] / 2 for k in range(3)]
+            hi = [c[k] + s[k] / 2 for k in range(3)]
+            if d[axis] > 0:
+                hi[axis] += s[axis] * 1.2
+            else:
+                lo[axis] -= s[axis] * 1.2
+            blocked = 0
+            for qid, qc, qs in boxes:
+                if qid == pid:
+                    continue
+                if all(min(hi[k], qc[k] + qs[k] * 0.45) > max(lo[k], qc[k] - qs[k] * 0.45) for k in range(3)):
+                    blocked += 1
+            away = sum((c[k] - mid[k]) * d[k] for k in range(3))
+            key = (blocked, -away, rank)
+            if best is None or key < best[0]:
+                best = (key, d)
+        out[pid] = [float(x) for x in best[1]]
+    return out
 
 
 def place(parts):

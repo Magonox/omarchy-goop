@@ -24,10 +24,26 @@ def main():
     ap.add_argument("--part-effort", default="low")
     ap.add_argument("--workers", type=int, default=planner.WORKERS)
     ap.add_argument("--out")
+    ap.add_argument("--sheet", action="store_true", help="draw a model sheet (one call, no per-part shape code) instead of an outline and parts")
     ap.add_argument("--no-refit", action="store_true", help="skip laying the lesson out again with the sizes the parts really came out at")
     a = ap.parse_args()
     notes = open(a.notes_file).read() if a.notes_file else a.notes
     run, part_run, t0 = planner.claude_runner(a.model, a.outline_effort), planner.claude_runner(a.model, a.part_effort), time.time()
+    if a.sheet:
+        try:
+            story = planner.plan_sheet(a.topic, notes, run)
+        except planner.PlanError as e:
+            sys.exit(f"failed: {e}")
+        print(f"sheet: {time.time() - t0:.0f}s, {len(story['parts'])} components", file=sys.stderr)
+        scene = build.build(story)
+        report("model sheet", validate.check(scene, story))
+        path = a.out or play.save(story)
+        if a.out:
+            with open(path, "w") as f:
+                json.dump(story, f, indent=2)
+        print(path)
+        print(f"total {time.time() - t0:.0f}s", file=sys.stderr)
+        return
     try:
         story = planner.plan_outline(a.topic, notes, run)
         print(f"outline: {time.time() - t0:.0f}s, {len(story['parts'])} parts", file=sys.stderr)

@@ -29,7 +29,7 @@ def validate(story, outline=False):
     if template == "blueprint":                 # joints named in `at` and member parts become boxes in the machine frame before anything is checked
         story, joint_errs = blueprint.resolve(story)
         errs += joint_errs
-    elif story.get("joints") is not None or any(isinstance(q, dict) and q.get("kind") == "member" for q in story.get("parts") or []):
+    elif story.get("joints") is not None or any(isinstance(q, dict) and q.get("kind") in ("member", "solid") for q in story.get("parts") or []):
         errs.append("joints and member parts are for the blueprint template (a machine in one shared frame)")
     parts = story.get("parts")
     ids = {}
@@ -113,8 +113,8 @@ def validate(story, outline=False):
                         errs.append(f"part {pid!r}: attach.count must be 1-8")
             if p.get("inside") is not None:
                 known(p.get("inside"), f"part {pid!r} inside")
-    if template == "blueprint" and not errs and parts:
-        errs += blueprint.check(parts)
+    if template == "blueprint" and not errs and parts and not any(isinstance(q, dict) and q.get("kind") == "solid" for q in parts):
+        errs += blueprint.check(parts)         # boxes that pass through each other: for boxes the model placed itself; a sheet is checked from its real shapes (views, connections, floating parts)
     if template == "network" and not any(vocab.is_sender(p) for p in ids.values()):
         errs.append("a network lesson needs a sender: one part with \"sender\": true (the thing the signal spreads from)")
 

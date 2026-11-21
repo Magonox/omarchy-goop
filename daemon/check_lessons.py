@@ -9,7 +9,8 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, HERE)
 from goop.explainer import build, invariants  # noqa: E402
 
-COUPLINGS = {"bicycle-v2": [{"a": "crank", "b": "rear_wheel", "kind": "chain", "ratio": 2.75}]}      # the plan has no links yet (F4): the bicycle's chain, by hand
+COUPLINGS = {"watch-sheet": [{"a": "hour_hand", "b": "minute_hand", "kind": "chain", "ratio": 12}, {"a": "minute_hand", "b": "second_hand", "kind": "chain", "ratio": 60}],
+             "bicycle-v2": [{"a": "crank", "b": "rear_wheel", "kind": "chain", "ratio": 2.75}]}      # the plan has no links yet (F4): the bicycle's chain, by hand
 
 
 def lessons():

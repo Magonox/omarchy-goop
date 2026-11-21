@@ -119,8 +119,11 @@ KNOWN = {
     "jet_engine": [],
     "spacecraft": ["camera_frames_subject", "effects_scale"],
     "wifi": [],
+    "chair-sheet": [],
+    "watch-sheet": [],
 }
-COUPLINGS = {"bicycle-v2": [{"a": "crank", "b": "rear_wheel", "kind": "chain", "ratio": 2.75}]}      # the plan has no links yet (F4): the bicycle's chain, by hand
+COUPLINGS = {"watch-sheet": [{"a": "hour_hand", "b": "minute_hand", "kind": "chain", "ratio": 12}, {"a": "minute_hand", "b": "second_hand", "kind": "chain", "ratio": 60}],
+             "bicycle-v2": [{"a": "crank", "b": "rear_wheel", "kind": "chain", "ratio": 2.75}]}      # the plan has no links yet (F4): the bicycle's chain, by hand
 
 
 def lesson_paths():

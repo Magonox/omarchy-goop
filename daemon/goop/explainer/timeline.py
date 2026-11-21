@@ -107,7 +107,12 @@ def build(story, lay):
             elif name == "highlight":
                 events.append({"type": "highlight", "parts": expand(arg), "t0": round(t0 + 1.0, 2), "t1": round(t1 - 0.3, 2)})
             elif name == "spin":
-                events.append({"type": "spin", "parts": expand(arg), "rate": 140, "t0": round(t0 + 0.9, 2)})
+                ids = expand(arg)
+                ev = {"type": "spin", "parts": ids, "rate": 140, "t0": round(t0 + 0.9, 2)}
+                rates = {i: placed[i]["spin_rate"] for i in ids if placed[i].get("spin_rate")}       # a part with a real period turns at its own rate
+                if rates:
+                    ev["rates"] = rates
+                events.append(ev)
             elif name == "cutaway":
                 events.append({"type": "cutaway", "parts": expand(arg), "t0": round(t0 + 0.4, 2), "t1": round(t1 - 0.2, 2), "alpha": 0.18})
             elif name == "explode":

@@ -12,7 +12,7 @@ def _shape(part):
     shape = {k: (round(v * f, 3) if k in ("r", "h", "w", "d", "t", "r0", "r1") else v) for k, v in kind.items() if k != "material"}
     if part["kind"] == "device":
         shape["variant"] = part.get("variant", "laptop")
-    if part["kind"] == "member":            # a tube between two joints: its box and mesh came from the joints (blueprint.resolve)
+    if part["kind"] in ("member", "solid"):  # a tube between two joints, or a sheet component: its box and mesh were made in blueprint.resolve
         shape |= {"type": "mesh", "r": round(max(part["size"][0], part["size"][2]) / 2, 3), "h": round(part["size"][1], 3), "scale": 1.0, "meshes": part["_meshes"]}
     if part["kind"] == "code":
         if blueprint.is_box(part):          # a blueprint box in the machine frame: the mesh is scaled to fill it, so the parts fit together by construction
@@ -192,6 +192,8 @@ def bp(story):
     """The blueprint template: every part sits exactly in its own box of the shared machine frame; the parts fly apart radially and come back to the same boxes."""
     placed, instances = {}, {}
     items = blueprint.place(story["parts"])
+    shift_ = blueprint.shift(story["parts"])
+    free = blueprint.free_directions(items) if story.get("layout", {}).get("explode") == "free" else {}
     lo = [min(c[i] - s[i] / 2 for _, _, c, s in items) for i in range(3)]
     hi = [max(c[i] + s[i] / 2 for _, _, c, s in items) for i in range(3)]
     mid = [(a + b) / 2 for a, b in zip(lo, hi)]
@@ -200,9 +202,16 @@ def bp(story):
         pl = _place(p, pid)
         pl["pos"] = _r3(c)
         pl["spin_axis"] = blueprint.spin_axis(p)
+        if p.get("_spin"):               # a part that turns about a point of its own (a watch hand about the dial centre), at its real rate (sped up by the lesson's timelapse)
+            sp = p["_spin"]
+            pl["spin_pivot"] = _r3([sp["pivot"][i] + shift_[i] - c[i] for i in range(3)])
+            rate = 360.0 / sp["period_s"] * float(story.get("timelapse", 1))
+            pl["spin_rate"] = round(-rate if sp["dir"] == "cw" else rate, 4)       # clockwise seen from the positive end of the axis is a turn the other way about it
         d = [c[i] - mid[i] for i in range(3)]
         n = math.sqrt(sum(x * x for x in d))
         d = [x / n for x in d] if n > 0.25 else [0.0, 1.0, 0.0]
+        if pid in free:                  # a sheet lesson: the way out that is least blocked by the other components
+            d = free[pid]
         pl["explode"] = _r3([x * (0.55 * reach + 0.5) for x in d])
         placed[pid] = pl
         instances.setdefault(p["id"], []).append(pid)
