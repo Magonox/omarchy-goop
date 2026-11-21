@@ -43,6 +43,7 @@ function prepare(scene) {
             (e.parts || []).forEach(function (id) { set[C.idx[id]] = true; });
             var copy = {}; for (var k in e) copy[k] = e[k];
             copy.set = set;
+            if (e.rates) { copy.rates_i = {}; for (var rid in e.rates) copy.rates_i[C.idx[rid]] = e.rates[rid]; }       // a part with its own rate (degrees a second)
             C.ev[e.type].push(copy);
         }
     });
@@ -93,7 +94,8 @@ function state(C, t) {
         ev.spin.forEach(function (e) {
             if (!e.set[i]) return;
             var age = Math.min(t, C.finale ? C.finale.t0 : t) - e.t0;      // a demonstration spin stops when the finale begins, so rolling is the only turning left
-            if (age > 0) s.spin += e.rate * (age < 1.5 ? age * age / 3 : age - 0.75);
+            var rate = e.rates_i && e.rates_i[i] !== undefined ? e.rates_i[i] : e.rate;
+            if (age > 0) s.spin += rate * (age < 1.5 ? age * age / 3 : age - 0.75);
         });
         ev.explode.forEach(function (e) {
             if (!e.set[i]) return;

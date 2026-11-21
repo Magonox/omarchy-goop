@@ -102,7 +102,10 @@ PanelWindow {
                     }
                 }
                 Node {
-                    // spinning turns the part about its own axis: a wheel about its axle, a rotor about the vertical
+                    // spinning turns the part about its own axis: a wheel about its axle, a rotor about the vertical; a part with a pivot of its own (a watch hand) turns about that point
+                    readonly property var pv: pn.part.spin_pivot || [0, 0, 0]
+                    pivot: Qt.vector3d(pv[0], pv[1], pv[2])
+                    position: Qt.vector3d(pv[0], pv[1], pv[2])
                     eulerRotation: { var ax = pn.part.spin_axis || [0, 1, 0]; return Qt.vector3d(ax[0] * pn.s.spin, ax[1] * pn.s.spin, ax[2] * pn.s.spin); }
                     Repeater3D {
                         model: pn.subs.length
