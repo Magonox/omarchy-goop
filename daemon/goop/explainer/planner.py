@@ -71,6 +71,8 @@ exciting and tell the child what is happening ("Now watch all the parts join tog
 So that the assembled parts really look like the machine, place them with "attach" and "inside" (wheels attached at the "sides" of the body, wings "sides" of the fuselage, an engine at the "bottom"),
 not just stacked up.
 
+NO PEOPLE: the lesson shows the machine or the thing itself and nothing else. Never add a person, rider, driver, pilot, passenger, character, animal or mascot as a part, and never write a step that needs one;
+explain the mechanism on its own (a bicycle without a rider, a balloon without passengers).
 START FROM THE REAL THING: recall how the real machine is actually built (a real cutaway or manual, or the parts the page names) and use its real components, not a generic idea of it.
 Put real counts and proportions into each brief when you know them (four cylinders, 32 teeth, a gear ratio of 2 to 1, a tyre taller than the door).
 THE WORKING PART OPENS UP: pick the part that does the work (the cylinder, the gear, the pump, the lens) and give it its own step: make the part around it see-through with "cutaway", then label or highlight
@@ -114,6 +116,7 @@ labels, teeth), never a single box, and keep the code compact. Draw it centred a
 fits the width and height you are given, so get the PROPORTIONS right.
 {_CODE_API}
 material is one of {", ".join(vocab.MATERIALS)}; look is solid, glass (see-through), glow (shines) or screen/led (small lit areas). Group same-material meshes with M.merge so the part returns 2-8 items.
+Never draw a person, face, hand, animal or character, even if the brief mentions one: draw only the machine or object itself.
 BUILD THE REAL THING: remember what the real part looks like in a manual or cutaway and copy its telling features and proportions (a piston has ring grooves and a pin hole, a gear has the right number
 of teeth, a lens sits in a barrel). Keep every shape inside the size you are given; if two shapes poke through each other, move or resize one by that amount.
 Use loops freely: teeth around a gear, bolts around a rim, a spiral track, stacked layers, blades. Segment counts 24-48 keep curves smooth. Plain JavaScript only: no imports, no async, no randomness;

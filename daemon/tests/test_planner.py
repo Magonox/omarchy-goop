@@ -104,6 +104,11 @@ class Outline(unittest.TestCase):
             self.assertIn(word, sp)
         self.assertIn("BUILD THE REAL THING", planner.part_system())
 
+    def test_prompts_keep_people_out_of_lessons(self):
+        # owner decision 2026-11-21: a rider placed wrongly on a bicycle seat; lessons show the machine alone
+        self.assertIn("NO PEOPLE", planner.outline_system())
+        self.assertIn("Never draw a person", planner.part_system())
+
     def test_prompts_teach_the_staged_format(self):
         sp = planner.outline_system()
         for word in ("brief", "width", "sender", "first step should reveal only"):
