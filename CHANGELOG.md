@@ -6,6 +6,7 @@ Work is planned in [`docs/BACKLOG.md`](docs/BACKLOG.md).
 ## [Unreleased]
 
 ### Added
+- L11 (prototype, not wired into the planner yet): **geometry validator** (`daemon/goop/explainer/validate.py`, 10 tests). Reads a built scene and reports, in sentences with numbers, parts that float, cut partly into each other, sit outside the part the plan put them inside, are not attached where the plan said, came out the wrong size, sit below the ground, or are people. About half a second per lesson. On four saved lessons it found a hot-air part 4.3 units away from its envelope, an envelope 2.9 units off its burner, and the bicycle rider.
 - S3: **Turn off Goop.** A "Turn off Goop" / "Turn on Goop" button at the top of the bar popup (the popup now scrolls when taller than the screen), and `goopctl on|off|toggle`, set the new `enabled` config key. Off hides every goop and stops the voice, microphone, cursor and window-state processes; the agent refuses to run. The bar button stays, so it can be turned back on.
 
 ### Security
