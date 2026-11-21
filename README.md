@@ -24,15 +24,15 @@ An [Omarchy](https://omarchy.org) plugin: a Quickshell overlay and a small Pytho
 
 <table>
   <tr>
-    <td width="50%"><img src="docs/media/talk.jpg" alt="Click a goop, press Talk and ask a question out loud"><br><b>Say it, don't type it.</b> Click a goop, press Talk and speak.</td>
-    <td width="50%"><img src="docs/media/voice.jpg" alt="The goop answers in its own voice after reading the project files"><br><b>It talks back.</b> It read the real project files to answer.</td>
+    <td width="50%"><img src="docs/media/talk.gif" alt="Click a goop, press Talk and ask a question out loud"><br><b>Say it, don't type it.</b> Click a goop, press Talk and speak.</td>
+    <td width="50%"><img src="docs/media/voice.gif" alt="The goop answers in its own voice after reading the project files"><br><b>It talks back.</b> It read the real project files to answer.</td>
   </tr>
   <tr>
-    <td width="50%"><img src="docs/media/peel.jpg" alt="Dragging a goop onto another window peels off a copy"><br><b>Drag it, now there are two.</b> One goop per window, each with its own voice.</td>
-    <td width="50%"><img src="docs/media/threed.jpg" alt="A 3D model of a monster truck built for a lesson"><br><b>Ask for it in 3D.</b> A card asks first, then the lesson builds and plays.</td>
+    <td width="50%"><img src="docs/media/drag.gif" alt="Dragging a goop onto another window peels off a copy"><br><b>Drag it, now there are two.</b> One goop per window, each with its own voice.</td>
+    <td width="50%"><img src="docs/media/threed.gif" alt="A 3D model of a monster truck built for a lesson"><br><b>Ask for it in 3D.</b> A card asks first, then the lesson builds and plays.</td>
   </tr>
   <tr>
-    <td width="50%"><img src="docs/media/approve.jpg" alt="A card shows the files Goop wants to move, with Deny and Approve buttons"><br><b>Nothing moves until you say so.</b> Every action asks first and can be undone.</td>
+    <td width="50%"><img src="docs/media/approve.gif" alt="A card shows the files Goop wants to move, with Deny and Approve buttons"><br><b>Nothing moves until you say so.</b> Every action asks first and can be undone.</td>
     <td width="50%"><img src="docs/media/setup-4.png" alt="The setup card: how careful should Goop be, and 3D lessons"><br><b>You choose how careful it is</b> in the setup card (see Install).</td>
   </tr>
 </table>
