@@ -69,6 +69,7 @@ primitives, placement by relations, motion from laws, checks by numbers. Prove i
 |---|---|---|---|
 | L10 | Planner prompts follow the real machine; no people | done locally, push later | Branch `l10-planner-prompts` (`3a3f6b2`, `b7168bf`). Engine pair preferred in a blind test; balloon pair not judged. Wait for the marketplace review of #13859 before pushing. |
 | L11 | Geometry validator prototype | done locally, push later | Branch `l11-geometry-validator` (`b610f72`), 10 tests, about 0.5 s per lesson. Not wired into the planner. |
+| L12 | Scene invariants suite | done locally, push later | Branch `l11-geometry-validator`. `invariants.py`, `check_lessons.py`, `test_scene_invariants.py` (10 saved lessons, about 20 s, needs node and deno). The KNOWN list in the test is the baseline: each fix in track F removes entries. |
 | F1 | Units: the model gives real sizes in metres; one display scale; plausible-range tables per primitive and material | todo | Fixes size ratios by construction. |
 | F2 | Physical primitives (box, cylinder, tube, sphere, cone, torus, wheel, gear, pulley, spring, tank) with derived quantities | todo | Formulas in the design doc; unit tests check them. Partly reverses E5c (ready-made shapes), now parametric and physical. |
 | F3 | Relations and a solver (tangent, concentric, coincident anchors, mesh, inside, above or hang, hinge, slider) | todo | Tree-shaped machines first; closed loops later. Replaces `attach` and numeric `at`; version 1 lessons keep playing. |

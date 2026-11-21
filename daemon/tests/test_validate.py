@@ -78,5 +78,31 @@ class Validate(unittest.TestCase):
         self.assertRegex(str(validate.check(s)[0]), r"^\[floating\] .*\d")
 
 
+class Layout(unittest.TestCase):
+    def test_inside_parts_follow_the_part_they_are_inside_even_when_it_is_attached_later(self):
+        from goop.explainer import layout
+        parts = [
+            {"id": "basket", "kind": "code", "label": "Basket", "width": 1.0, "height": 1.0},
+            {"id": "hot_air", "kind": "code", "label": "Hot air", "width": 3.0, "height": 4.0, "inside": "envelope"},
+            {"id": "burner", "kind": "code", "label": "Burner", "width": 0.8, "height": 0.6, "attach": {"to": "basket", "at": "top"}},
+            {"id": "envelope", "kind": "code", "label": "Envelope", "width": 4.0, "height": 5.0, "attach": {"to": "burner", "at": "top"}},
+        ]
+        placed, _ = layout.assembly({"parts": parts})
+        self.assertEqual(placed["hot_air"]["pos"], placed["envelope"]["pos"])
+        self.assertGreater(placed["envelope"]["pos"][1], placed["burner"]["pos"][1])
+
+    def test_refit_uses_the_size_a_part_really_came_out_at(self):
+        import json, tempfile
+        from goop.explainer import planner
+        with tempfile.TemporaryDirectory() as d:
+            json.dump({"meshes": [box(2, 1, 2)], "scale": 0.5}, open(os.path.join(d, "a.json"), "w"))
+            story = {"layout": {"template": "assembly"}, "parts": [{"id": "a", "kind": "code", "width": 3, "height": 3}, {"id": "b", "kind": "code", "width": 3, "height": 3}]}
+            out = planner.refit(story, d)
+            self.assertEqual((out["parts"][0]["width"], out["parts"][0]["height"]), (1.0, 0.5))
+            self.assertEqual((out["parts"][1]["width"], out["parts"][1]["height"]), (3, 3))      # no geometry yet: unchanged
+            self.assertEqual(story["parts"][0]["width"], 3)                                      # the caller's outline is not modified
+            self.assertIs(planner.refit({"layout": {"template": "blueprint"}, "parts": []}, d).get("layout")["template"], "blueprint")
+
+
 if __name__ == "__main__":
     unittest.main()

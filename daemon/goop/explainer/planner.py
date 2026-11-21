@@ -211,6 +211,39 @@ def make_part(story, part, topic, run, repairs=REPAIRS):
     raise PlanError(f"part {part['id']!r}: {last}")
 
 
+def measured_size(parts_dir, pid):
+    """(width, height) a finished part really has in the scene (its widest side across, and tall), or None while its geometry is not there yet."""
+    path = os.path.join(parts_dir, pid + ".json")
+    try:
+        with open(path) as f:
+            data = json.load(f)
+    except (OSError, ValueError):
+        return None
+    pts = [m.get("p") or [] for m in data.get("meshes") or []]
+    if not any(pts):
+        return None
+    k = data.get("scale") or 1
+    lo = [min(p[a::3]) for p in pts if p for a in range(3)]
+    hi = [max(p[a::3]) for p in pts if p for a in range(3)]
+    ext = [(max(hi[a::3]) - min(lo[a::3])) * k for a in range(3)]
+    return max(ext[0], ext[2]), ext[1]
+
+
+def refit(story, parts_dir):
+    """A copy of the outline whose parts have the size they really came out at. A part is drawn to fit its planned box on the tightest side, so on the other side it
+    is smaller, and everything placed against it (an envelope on a burner) then stood off by that difference. Laying the lesson out again with the real sizes closes the gaps.
+    Only the `assembly` template places parts against each other's sizes; other templates are returned unchanged."""
+    if story.get("layout", {}).get("template") != "assembly":
+        return story
+    out = json.loads(json.dumps(story))
+    for p in out["parts"]:
+        if p.get("kind") == "code" and "width" in p:
+            got = measured_size(parts_dir, p["id"])
+            if got:
+                p["width"], p["height"] = (round(min(8.0, max(0.2, v)), 3) for v in got)
+    return out
+
+
 def stand_in(part):
     """A plain translucent block the size of the part, used when its code could not be made to work, so the lesson still plays."""
     code = "function build(M){ return [{material:'steel', look:'glass', mesh: M.box(1,1,1,-0.5)}]; }"

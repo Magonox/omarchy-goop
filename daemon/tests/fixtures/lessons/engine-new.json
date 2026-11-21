@@ -1,0 +1,387 @@
+{
+  "version": 1,
+  "title": "How a four-stroke car engine works",
+  "layout": {
+    "template": "blueprint"
+  },
+  "parts": [
+    {
+      "id": "crankcase",
+      "kind": "code",
+      "label": "Crankcase",
+      "brief": "A wide, rounded metal box at the bottom of the engine that holds the crankshaft and the oil. It is dark grey cast aluminium with a ribbed oil pan underneath, a row of small bolts around its top edge and a drain plug at the bottom.",
+      "size": [
+        3,
+        1.6,
+        2.4
+      ],
+      "at": [
+        [
+          0,
+          0.8,
+          0
+        ]
+      ],
+      "code": "function build(M) {\n  const upper = M.box(2.9, 0.75, 2.3, 0.75);\n  const flange = M.box(3, 0.1, 2.4, 1.5);\n  const pan = M.T(M.lathe([[0, 0], [0.92, 0], [1, 0.12], [1, 0.75], [0, 0.75]], 40), {s: [1.35, 1, 1.05]});\n  const bear = [];\n  for (const z of [-1.16, 1.16]) {\n    bear.push(M.T(M.cyl(0.38, 0.04, 32, 0), {pos: [0, 1.1, z], rx: 90}));\n  }\n  const ribs = [];\n  for (let i = -4; i <= 4; i++) ribs.push(M.box(0.05, 0.5, 2.24, 0.12, i * 0.28));\n  const bolts = [];\n  for (let i = 0; i < 10; i++) {\n    const x = -1.35 + i * 0.3;\n    bolts.push(M.cyl(0.05, 0.05, 12, 1.6).length ? null : M.T(M.cyl(0.05, 0.05, 12, 0), {pos: [x, 1.55, 1.1]}));\n  }\n  const bl = [];\n  for (let i = 0; i < 10; i++) {\n    const x = -1.35 + i * 0.3;\n    bl.push(M.T(M.cyl(0.05, 0.05, 12, 0), {pos: [x, 1.55, 1.08]}));\n    bl.push(M.T(M.cyl(0.05, 0.05, 12, 0), {pos: [x, 1.55, -1.08]}));\n  }\n  const drain = M.T(M.cyl(0.1, 0.06, 6, 0), {pos: [0.6, 0.06, 0], rx: 180});\n  return [\n    {material: \"dark_steel\", look: \"solid\", mesh: M.merge([upper, pan])},\n    {material: \"steel\", look: \"solid\", mesh: M.merge([flange, ...bear, ...ribs])},\n    {material: \"gold\", look: \"solid\", mesh: M.merge([...bl, drain])}\n  ];\n}"
+    },
+    {
+      "id": "crankshaft",
+      "kind": "code",
+      "label": "Crankshaft",
+      "brief": "A shiny steel shaft running left to right with a zig-zag bend in the middle called a crank throw, plus two heavy half-moon counterweights. Its ends are round polished journals, and a small toothed gear sits on one end.",
+      "size": [
+        1.2,
+        1.6,
+        2
+      ],
+      "at": [
+        [
+          0,
+          0.8,
+          0
+        ]
+      ],
+      "inside": "crankcase",
+      "code": "function build(M) {\n  const R = 90;\n  const main = M.merge([\n    M.T(M.cyl(0.16, 0.5, 32, -0.25), {pos: [0, 0, -0.75], rx: R}),\n    M.T(M.cyl(0.16, 0.5, 32, -0.25), {pos: [0, 0, 0.75], rx: R}),\n    M.T(M.cyl(0.13, 0.3, 32, -0.15), {pos: [0, 0.4, 0], rx: R}),\n    M.T(M.cyl(0.2, 0.06, 32, -0.03), {pos: [0, 0, -0.98], rx: R})\n  ]);\n  const web = [[-0.22, -0.05], [0.22, -0.05], [0.18, 0.5], [-0.18, 0.5]];\n  const cw = [];\n  for (let i = 0; i <= 12; i++) {\n    const a = Math.PI + i * Math.PI / 12;\n    cw.push([0.55 * Math.cos(a), 0.55 * Math.sin(a) * 0.95]);\n  }\n  const webs = [];\n  [-0.27, 0.27].forEach(z => {\n    webs.push(M.prism(web, z - 0.06, z + 0.06));\n    webs.push(M.prism(cw, z - 0.06, z + 0.06));\n  });\n  const teeth = [];\n  for (let i = 0; i < 18; i++) {\n    const a = i * 360 / 18;\n    teeth.push(M.T(M.box(0.06, 0.08, 0.1, 0.28), {pos: [0, 0, 0], rz: 0, ry: 0}));\n    teeth[i] = M.T(teeth[i], {rz: a});\n  }\n  const gear = M.T(M.merge([M.T(M.cyl(0.3, 0.1, 36, -0.05), {rx: R}), ...teeth.map(t => M.T(t, {pos: [0, 0, 0]}))]), {pos: [0, 0, 0.88]});\n  const gearFix = M.T(M.merge([M.T(M.cyl(0.29, 0.1, 36, -0.05), {rx: R}), ...Array.from({length: 18}, (_, i) => M.T(M.box(0.07, 0.07, 0.1, 0.28, 0), {rz: i * 20}))]), {pos: [0, 0, 0.9]});\n  return [\n    {material: \"steel\", look: \"solid\", mesh: main},\n    {material: \"dark_steel\", look: \"solid\", mesh: M.merge(webs)},\n    {material: \"copper\", look: \"solid\", mesh: gearFix}\n  ];\n}"
+    },
+    {
+      "id": "cylinder_block",
+      "kind": "code",
+      "label": "Cylinder",
+      "brief": "A tall, chunky block of grey cast iron with a smooth round tube bored through its middle, where the piston slides. The outside has cooling channels and fins, and bolt holes at the four top corners.",
+      "size": [
+        2.4,
+        3,
+        2.2
+      ],
+      "at": [
+        [
+          0,
+          3.1,
+          0
+        ]
+      ],
+      "code": "function build(M) {\n  const H = 3, W = 2.4, D = 2.2, R = 0.72;\n  const parts = [];\n  const prof = [[R,0],[1.0,0],[1.0,0.12],[R+0.08,0.12]];\n  const body = M.lathe([[R,0],[0.98,0],[0.98,H],[R,H]], 40);\n  parts.push(body);\n  parts.push(M.box(W, 0.25, D, 0));\n  parts.push(M.box(W, 0.25, D, H-0.25));\n  for (let i = 0; i < 6; i++) {\n    const y = 0.45 + i*0.36;\n    parts.push(M.box(W-0.1, 0.08, D-0.1, y));\n  }\n  for (const sx of [-1,1]) for (const sz of [-1,1]) {\n    parts.push(M.cyl(0.18, H, 20, 0, 0), );\n    parts[parts.length-1] = M.T(parts[parts.length-1], {pos:[sx*(W/2-0.22),0,sz*(D/2-0.22)]});\n  }\n  const iron = M.merge(parts);\n  const bore = M.tube(R, H, 40);\n  const boreM = M.T(bore, {pos:[0,H/2,0]});\n  const bolts = [];\n  for (const sx of [-1,1]) for (const sz of [-1,1]) {\n    bolts.push(M.T(M.cyl(0.09, 0.04, 16, H), {pos:[sx*(W/2-0.22),0,sz*(D/2-0.22)]}));\n    bolts.push(M.T(M.cyl(0.09, 0.04, 16, -0.04), {pos:[sx*(W/2-0.22),0,sz*(D/2-0.22)]}));\n  }\n  const rim = M.merge([M.T(M.torus(R+0.02, 0.03, 40, 8), {pos:[0,H+0.01,0]}), M.T(M.torus(R+0.02,0.03,40,8),{pos:[0,-0.01,0]})]);\n  const ports = M.merge([M.T(M.pipe([W/2-0.02,2.2,0.45],[W/2+0.0,2.2,0.45],0.15,20),{}), M.T(M.pipe([W/2-0.02,2.2,-0.45],[W/2,2.2,-0.45],0.15,20),{})]);\n  return [\n    {material:\"dark_steel\", look:\"solid\", mesh: iron},\n    {material:\"steel\", look:\"solid\", mesh: boreM},\n    {material:\"black\" === \"x\" ? \"steel\" : \"steel\", look:\"solid\", mesh: M.merge([...bolts])},\n    {material:\"copper\", look:\"solid\", mesh: rim},\n    {material:\"blue\", look:\"solid\", mesh: ports}\n  ];\n}"
+    },
+    {
+      "id": "piston",
+      "kind": "code",
+      "label": "Piston",
+      "brief": "A short, round silver aluminium cup that slides up and down inside the cylinder, with a flat top. Three thin dark piston rings wrap around its upper side, and a steel pin crosses through its skirt to hold the connecting rod.",
+      "size": [
+        1.4,
+        1,
+        1.4
+      ],
+      "at": [
+        [
+          0,
+          3.6,
+          0
+        ]
+      ],
+      "inside": "cylinder_block",
+      "code": "function build(M) {\n  const R = 0.7, H = 1.0;\n  const body = M.lathe([[0,0.08],[0.62,0.08],[0.62,0],[0.66,0],[0.66,0.6],[0.68,0.6],[0.68,0.97],[0.66,1.0],[0,1.0]], 48);\n  const crown = M.cyl(0.6, 0.004, 48, 1.0);\n  const rings = [];\n  for (let i = 0; i < 3; i++) rings.push(M.T(M.torus(0.68, 0.018, 48, 8), {pos: [0, 0.9 - i * 0.09, 0]}));\n  const pin = M.pipe([0, 0.35, -0.7], [0, 0.35, 0.7], 0.12, 32);\n  const bosses = [];\n  for (const z of [-1, 1]) bosses.push(M.T(M.cyl(0.18, 0.04, 32, 0), {pos: [0, 0.35, z * 0.65], rx: 90}));\n  return [\n    {material: \"steel\", look: \"solid\", mesh: M.merge([body, crown])},\n    {material: \"dark_steel\", look: \"solid\", mesh: M.merge(rings)},\n    {material: \"steel\", look: \"solid\", mesh: M.merge(bosses)},\n    {material: \"copper\", look: \"solid\", mesh: pin}\n  ];\n}"
+    },
+    {
+      "id": "connecting_rod",
+      "kind": "code",
+      "label": "Connecting rod",
+      "brief": "A strong steel rod shaped like a long bone, with a small round eye at the top for the piston pin and a big round split end at the bottom that clamps around the crankshaft with two bolts. It is dull grey steel.",
+      "size": [
+        0.3,
+        1.5,
+        0.3
+      ],
+      "at": [
+        [
+          0,
+          2.35,
+          0
+        ]
+      ],
+      "inside": "cylinder_block",
+      "code": "function build(M) {\n  const H = 1.5, cy = -0.55, ty = 0.6;\n  const big = M.T(M.lathe([[0.09,-0.06],[0.15,-0.06],[0.15,0.06],[0.09,0.06],[0.09,-0.06]], 36), {pos:[0,cy,0], rx:90});\n  const small = M.T(M.lathe([[0.04,-0.05],[0.075,-0.05],[0.075,0.05],[0.04,0.05],[0.04,-0.05]], 32), {pos:[0,ty,0], rx:90});\n  const beam = M.prism([[-0.05,cy+0.12],[0.05,cy+0.12],[0.03,ty-0.06],[-0.03,ty-0.06]], -0.035, 0.035);\n  const flangeA = M.prism([[-0.07,cy+0.1],[-0.045,cy+0.1],[-0.025,ty-0.06],[-0.04,ty-0.06]], -0.05, 0.05);\n  const flangeB = M.prism([[0.045,cy+0.1],[0.07,cy+0.1],[0.04,ty-0.06],[0.025,ty-0.06]], -0.05, 0.05);\n  const pads = M.merge([M.box(0.08,0.04,0.12,cy-0.02,-0.14), M.box(0.08,0.04,0.12,cy-0.02,0.14)]);\n  const bolts = [], nuts = [];\n  for (const x of [-0.14,0.14]) {\n    bolts.push(M.pipe([x,cy-0.13,0],[x,cy+0.1,0],0.018,16));\n    nuts.push(M.T(M.cyl(0.03,0.035,6,0),{pos:[x,cy-0.165,0]}));\n  }\n  const bush = M.T(M.tube(0.04,0.1,28),{pos:[0,ty,0],rx:90});\n  const shell = M.T(M.tube(0.09,0.12,32),{pos:[0,cy,0],rx:90});\n  return [\n    {material:\"steel\",look:\"solid\",mesh:M.merge([big,small,beam,flangeA,flangeB,pads])},\n    {material:\"dark_steel\",look:\"solid\",mesh:M.merge([...bolts,...nuts])},\n    {material:\"copper\",look:\"solid\",mesh:M.merge([bush,shell])}\n  ];\n}"
+    },
+    {
+      "id": "cylinder_head",
+      "kind": "code",
+      "label": "Cylinder head",
+      "brief": "A flat, heavy lid of aluminium bolted on top of the cylinder, painted silver with a black valve cover on top. It has two round ports on the sides for the pipes, and a threaded hole in the middle for the spark plug.",
+      "size": [
+        2.4,
+        1,
+        2.2
+      ],
+      "at": [
+        [
+          0,
+          5.1,
+          0
+        ]
+      ],
+      "code": "function build(M) {\n  const head = M.box(2.4, 0.5, 2.2, -0.5);\n  const deck = M.box(2.3, 0.06, 2.1, 0.0);\n  const fins = [];\n  for (let i = 0; i < 5; i++) fins.push(M.box(0.05, 0.36, 2.24, -0.44, -1.0 + i * 0.5));\n  const portL = M.T(M.tube(0.2, 0.1, 32), {pos: [0.45, -0.25, 1.05], rx: 90});\n  const portR = M.T(M.tube(0.2, 0.1, 32), {pos: [-0.45, -0.25, -1.05], rx: 90});\n  const portRimL = M.T(M.torus(0.2, 0.03, 32, 8), {pos: [0.45, -0.25, 1.07], rx: 90});\n  const portRimR = M.T(M.torus(0.2, 0.03, 32, 8), {pos: [-0.45, -0.25, -1.07], rx: 90});\n  const portInL = M.T(M.cyl(0.17, 0.02, 32, 0), {pos: [0.45, -0.25, 1.04], rx: 90});\n  const portInR = M.T(M.cyl(0.17, 0.02, 32, 0), {pos: [-0.45, -0.25, -1.04], rx: 90});\n  const cover = M.box(1.9, 0.36, 1.4, 0.06);\n  const coverRim = M.box(2.0, 0.05, 1.5, 0.06);\n  const ribs = [];\n  for (let i = -2; i <= 2; i++) ribs.push(M.box(0.04, 0.04, 1.2, 0.42, i * 0.32));\n  const bolts = [];\n  for (const x of [-1.08, -0.36, 0.36, 1.08]) for (const z of [-0.95, 0.95]) bolts.push(M.T(M.cyl(0.07, 0.08, 16, 0.06), {pos: [x, 0, z]}));\n  const plugBoss = M.cyl(0.18, 0.08, 32, 0.42);\n  const plugHole = M.T(M.tube(0.1, 0.06, 24), {pos: [0, 0.53, 0]});\n  const threads = [];\n  for (let i = 0; i < 3; i++) threads.push(M.T(M.torus(0.1, 0.012, 24, 6), {pos: [0, 0.51 + i * 0.02, 0]}));\n  return [\n    {material: \"steel\", look: \"solid\", mesh: M.merge([head, deck, ...fins, portL, portR, portRimL, portRimR, plugBoss])},\n    {material: \"dark_steel\", look: \"solid\", mesh: M.merge([cover, coverRim, ...ribs, portInL, portInR])},\n    {material: \"gold\", look: \"solid\", mesh: M.merge([...bolts, plugHole, ...threads])}\n  ];\n}"
+    },
+    {
+      "id": "intake_valve",
+      "kind": "code",
+      "label": "Intake valve",
+      "brief": "A thin steel stem with a round mushroom-shaped head at the bottom that opens and closes the air inlet. A coiled spring wraps around the top of the stem. Give it a blue tint so kids can tell it apart from the exhaust valve.",
+      "size": [
+        0.3,
+        0.9,
+        0.3
+      ],
+      "at": [
+        [
+          -0.5,
+          5.1,
+          0
+        ]
+      ],
+      "inside": "cylinder_head",
+      "code": "function build(M) {\n  const head = M.lathe([[0,0],[0.15,0],[0.15,0.025],[0.11,0.05],[0.04,0.12],[0.025,0.18],[0,0.18]], 40);\n  const stem = M.cyl(0.022, 0.7, 20, 0.16);\n  const tip = M.cyl(0.026, 0.04, 20, 0.86);\n  const keeper = M.frustum(0.045, 0.06, 0.05, 24, 0.79);\n  const steel = M.merge([head, stem, tip, keeper]);\n  const coils = [];\n  const turns = 6, n = turns * 24, R = 0.085, r = 0.014, y0 = 0.44, y1 = 0.78;\n  let prev = null;\n  for (let i = 0; i <= n; i++) {\n    const a = i / 24 * Math.PI * 2, y = y0 + (y1 - y0) * i / n;\n    const p = [R * Math.cos(a), y, R * Math.sin(a)];\n    if (prev) coils.push(M.pipe(prev, p, r, 8));\n    prev = p;\n  }\n  const seatBot = M.cyl(0.1, 0.02, 32, 0.42);\n  const retainer = M.cyl(0.1, 0.02, 32, 0.78);\n  return [\n    {material: \"steel\", look: \"solid\", mesh: steel},\n    {material: \"blue\", look: \"solid\", mesh: M.merge(coils)},\n    {material: \"dark_steel\", look: \"solid\", mesh: M.merge([seatBot, retainer])}\n  ];\n}"
+    },
+    {
+      "id": "exhaust_valve",
+      "kind": "code",
+      "label": "Exhaust valve",
+      "brief": "A thin steel stem with a round mushroom-shaped head at the bottom that opens and closes the exhaust outlet. A coiled spring wraps around its top. Give it a reddish, heat-darkened tint.",
+      "size": [
+        0.3,
+        0.9,
+        0.3
+      ],
+      "at": [
+        [
+          0.5,
+          5.1,
+          0
+        ]
+      ],
+      "inside": "cylinder_head",
+      "code": "function build(M) {\n  const head = M.lathe([[0,0],[0.15,0],[0.15,0.02],[0.12,0.05],[0.04,0.11],[0.025,0.16],[0,0.16]], 40);\n  const stem = M.cyl(0.022, 0.7, 20, 0.15);\n  const valve = M.merge([M.T(head,{pos:[0,-0.45,0]}), M.T(stem,{pos:[0,-0.45,0]})]);\n  const coils = [];\n  for (let i = 0; i < 9; i++) coils.push(M.T(M.torus(0.085, 0.012, 28, 8), {pos:[0,0.05+i*0.035,0], rx:4}));\n  const spring = M.merge(coils);\n  const retainer = M.merge([M.frustum(0.05,0.1,0.03,32,0.36), M.T(M.cyl(0.1,0.015,32,0),{pos:[0,0.39,0]})]);\n  const seat = M.cyl(0.1,0.012,32,0.03);\n  const keepers = M.merge([M.cyl(0.03,0.04,20,0.405), M.torus(0.024,0.006,20,6)]);\n  return [\n    {material:\"copper\", look:\"solid\", mesh: valve},\n    {material:\"steel\", look:\"solid\", mesh: spring},\n    {material:\"dark_steel\", look:\"solid\", mesh: M.merge([retainer, seat])},\n    {material:\"red\", look:\"solid\", mesh: M.T(keepers,{pos:[0,0,0]})}\n  ];\n}"
+    },
+    {
+      "id": "spark_plug",
+      "kind": "code",
+      "label": "Spark plug",
+      "brief": "A small plug standing on top of the head: a white ceramic body with ribs, a six-sided silver nut in the middle and a threaded tip with a tiny metal hook electrode. A black cap with a wire sits on its top.",
+      "size": [
+        0.3,
+        0.8,
+        0.3
+      ],
+      "at": [
+        [
+          0,
+          6,
+          0
+        ]
+      ],
+      "code": "function build(M) {\n  const seg = 32;\n  const thread = [];\n  for (let i = 0; i < 8; i++) thread.push(M.T(M.torus(0.075, 0.012, 24, 6), {pos: [0, 0.03 + i * 0.022, 0]}));\n  const core = M.cyl(0.07, 0.19, seg, 0.0);\n  const nut = M.cyl(0.13, 0.08, 6, 0.2);\n  const washer = M.cyl(0.1, 0.012, seg, 0.19);\n  const hook = M.merge([M.pipe([0.07, 0.0, 0], [0.07, -0.04, 0], 0.012, 8), M.pipe([0.07, -0.04, 0], [0, -0.04, 0], 0.012, 8), M.cyl(0.012, 0.03, 8, -0.03)]);\n  const metal = M.merge([core, nut, washer, hook].concat(thread));\n  const ceramic = M.lathe([[0.001, 0.28], [0.1, 0.28], [0.095, 0.32], [0.075, 0.36], [0.07, 0.56], [0.001, 0.56]], seg);\n  const ribs = [];\n  for (let i = 0; i < 5; i++) ribs.push(M.T(M.torus(0.072, 0.012, 24, 8), {pos: [0, 0.39 + i * 0.035, 0]}));\n  const cap = M.merge([M.lathe([[0.001, 0.54], [0.085, 0.54], [0.09, 0.6], [0.075, 0.68], [0.001, 0.7]], seg), M.pipe([0, 0.68, 0], [-0.13, 0.74, 0], 0.03, 12)]);\n  return [\n    {material: \"steel\", look: \"solid\", mesh: metal},\n    {material: \"white\", look: \"solid\", mesh: M.merge([ceramic].concat(ribs))},\n    {material: \"dark_steel\", look: \"solid\", mesh: cap}\n  ];\n}"
+    },
+    {
+      "id": "intake_pipe",
+      "kind": "code",
+      "label": "Air intake",
+      "brief": "A short, round black pipe leading fresh air into the back of the cylinder head, with a flange and two bolts where it joins. A small silver fuel injector nozzle pokes into its side.",
+      "size": [
+        1,
+        0.5,
+        0.6
+      ],
+      "at": [
+        [
+          -1.7,
+          5.1,
+          0
+        ]
+      ],
+      "code": "function build(M) {\n  const r = 0.17;\n  const pipe = M.T(M.cyl(r, 0.78, 36, -0.39), {pos: [-0.07, 0.24, 0], rz: 90});\n  const bellRim = M.T(M.torus(r + 0.01, 0.03, 36, 10), {pos: [-0.46, 0.24, 0], rz: 90});\n  const bell = M.T(M.frustum(r, 0.22, 0.04, 36, 0), {pos: [-0.46, 0.24, 0], rz: 90});\n  const flange = M.T(M.box(0.04, 0.46, 0.58, -0.23), {pos: [0.48, 0.24, 0], rz: 0});\n  const flangeT = M.T(M.cyl(0.22, 0.05, 36, -0.025), {pos: [0.46, 0.24, 0], rz: 90});\n  const bolts = [];\n  for (const z of [-0.23, 0.23]) {\n    bolts.push(M.T(M.cyl(0.04, 0.04, 6, 0), {pos: [0.42, 0.24, z], rz: 90}));\n  }\n  const injBody = M.T(M.cyl(0.04, 0.16, 20, 0), {pos: [0.15, 0.36, 0.08], rx: 25});\n  const injTip = M.T(M.frustum(0.025, 0.012, 0.06, 16, -0.06), {pos: [0.15, 0.37, 0.08], rx: 25});\n  const injCap = M.T(M.cyl(0.05, 0.05, 20, 0.14), {pos: [0.15, 0.36, 0.08], rx: 25});\n  return [\n    {material: \"dark_steel\", look: \"solid\", mesh: M.merge([pipe, bell, bellRim])},\n    {material: \"steel\", look: \"solid\", mesh: M.merge([flange, flangeT, injBody, injTip])},\n    {material: \"gold\", look: \"solid\", mesh: M.merge(bolts)},\n    {material: \"orange\", look: \"solid\", mesh: injCap}\n  ];\n}"
+    },
+    {
+      "id": "exhaust_pipe",
+      "kind": "code",
+      "label": "Exhaust pipe",
+      "brief": "A short, round metal pipe leading out of the front of the cylinder head, bolted on with a flange. It is rusty brown and heat-blued, like a real exhaust manifold.",
+      "size": [
+        1,
+        0.5,
+        0.6
+      ],
+      "at": [
+        [
+          1.7,
+          5.1,
+          0
+        ]
+      ],
+      "code": "function build(M) {\n  const flange = M.T(M.box(0.06, 0.48, 0.56, -0.24), {pos: [-0.47, 0, 0]});\n  const bolts = [];\n  for (const [y, z] of [[0.17, 0.2], [0.17, -0.2], [-0.17, 0.2], [-0.17, -0.2]]) {\n    bolts.push(M.T(M.cyl(0.035, 0.05, 6, 0), {pos: [-0.44, y, z], rz: -90}));\n  }\n  const pipe = M.pipe([-0.44, 0, 0], [0.2, 0, 0], 0.13, 32);\n  const bend = M.pipe([0.18, 0, 0], [0.42, -0.08, 0], 0.13, 32);\n  const rim = M.T(M.torus(0.13, 0.025, 32, 10), {pos: [0.0, 0, 0], rz: 90});\n  const outFlange = M.T(M.cyl(0.18, 0.05, 32, 0), {pos: [0.42, -0.08, 0], rz: -90});\n  const bore = M.T(M.cyl(0.09, 0.01, 24, 0), {pos: [0.475, -0.08, 0], rz: -90});\n  const heat = M.T(M.tube(0.135, 0.12, 32), {pos: [-0.3, 0, 0], rz: 90});\n  return [\n    {material: \"copper\", look: \"solid\", mesh: M.merge([pipe, bend])},\n    {material: \"dark_steel\", look: \"solid\", mesh: M.merge([flange, outFlange, rim])},\n    {material: \"steel\", look: \"solid\", mesh: M.merge(bolts)},\n    {material: \"blue\", look: \"solid\", mesh: heat},\n    {material: \"flame\", look: \"glow\", mesh: bore}\n  ];\n}"
+    }
+  ],
+  "steps": [
+    {
+      "say": "This is a car engine! It turns lots of tiny bursts of burning fuel into spinning, and that spinning turns the car's wheels.",
+      "do": [
+        {
+          "reveal": [
+            "crankcase",
+            "cylinder_block",
+            "cylinder_head"
+          ]
+        },
+        {
+          "zoom": "all"
+        }
+      ]
+    },
+    {
+      "say": "Let's look inside the cylinder. The piston slides up and down in it, like a plunger in a syringe. It does four moves, called strokes: suck, squeeze, bang, blow!",
+      "do": [
+        {
+          "cutaway": [
+            "cylinder_block"
+          ]
+        },
+        {
+          "reveal": [
+            "piston"
+          ]
+        },
+        {
+          "label": [
+            "cylinder_block",
+            "piston"
+          ]
+        },
+        {
+          "zoom": "cylinder_block"
+        }
+      ]
+    },
+    {
+      "say": "Stroke one is suck. The intake valve opens and the piston slides down. That pulls air and a little fuel in, just like pulling back a syringe.",
+      "do": [
+        {
+          "reveal": [
+            "intake_pipe",
+            "intake_valve"
+          ]
+        },
+        {
+          "label": [
+            "intake_valve"
+          ]
+        },
+        {
+          "flow": {
+            "from": "intake_pipe",
+            "to": "cylinder_block",
+            "medium": "air"
+          }
+        }
+      ]
+    },
+    {
+      "say": "Stroke two is squeeze. The valve shuts and the piston pushes back up, squashing the air and fuel into a tiny space, like squeezing a balloon in your fist.",
+      "do": [
+        {
+          "highlight": [
+            "piston"
+          ]
+        },
+        {
+          "zoom": "piston"
+        }
+      ]
+    },
+    {
+      "say": "Stroke three is bang! The spark plug makes a tiny spark. The squashed fuel burns in a flash, and the hot gas shoves the piston down hard. This is the stroke that gives the power.",
+      "do": [
+        {
+          "reveal": [
+            "spark_plug"
+          ]
+        },
+        {
+          "label": [
+            "spark_plug"
+          ]
+        },
+        {
+          "pulse": "spark_plug"
+        },
+        {
+          "highlight": [
+            "piston"
+          ]
+        }
+      ]
+    },
+    {
+      "say": "Stroke four is blow. The exhaust valve opens and the piston rises, pushing the used, smoky gas out of the exhaust pipe. Then it starts again!",
+      "do": [
+        {
+          "reveal": [
+            "exhaust_valve",
+            "exhaust_pipe"
+          ]
+        },
+        {
+          "label": [
+            "exhaust_valve",
+            "exhaust_pipe"
+          ]
+        },
+        {
+          "flow": {
+            "from": "cylinder_block",
+            "to": "exhaust_pipe",
+            "medium": "exhaust"
+          }
+        }
+      ]
+    },
+    {
+      "say": "The connecting rod links the piston to the bendy crankshaft. Up-and-down turns into round-and-round, just like your legs pushing bike pedals in a circle.",
+      "do": [
+        {
+          "reveal": [
+            "connecting_rod",
+            "crankshaft"
+          ]
+        },
+        {
+          "label": [
+            "connecting_rod",
+            "crankshaft"
+          ]
+        },
+        {
+          "spin": [
+            "crankshaft"
+          ]
+        },
+        {
+          "zoom": "crankshaft"
+        }
+      ]
+    },
+    {
+      "say": "Here's the whole engine back together. Most cars have four of these cylinders taking turns, so the crankshaft keeps spinning smoothly!",
+      "do": [
+        {
+          "zoom": "all"
+        },
+        {
+          "spin": [
+            "crankshaft"
+          ]
+        }
+      ]
+    }
+  ],
+  "recap": "A car engine repeats four strokes, suck, squeeze, bang, blow, and the crankshaft turns the piston's up-and-down push into spinning.",
+  "question": "What do you think would happen if the spark plug never sparked?"
+}

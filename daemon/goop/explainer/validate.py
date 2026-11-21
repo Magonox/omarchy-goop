@@ -43,7 +43,7 @@ def _meshes(part):
     if path and os.path.exists(path):
         with open(path) as f:
             data = json.load(f)
-        return data.get("meshes") or [], shape.get("scale", data.get("scale", 1)) or 1
+        return data.get("meshes") or [], data.get("scale") or shape.get("scale", 1) or 1     # the part file's own scale is the one the renderer uses
     return [], 1
 
 
@@ -97,14 +97,17 @@ def _box_gap(ba, bb):
     return math.sqrt(sum(max(0.0, max(ba[0][i] - bb[1][i], bb[0][i] - ba[1][i])) ** 2 for i in range(3)))
 
 
-def _gap(a, b):
-    """Smallest distance between two point clouds (brute force on the thinned samples)."""
-    best = math.inf
+def _gap(a, b, stop=0.0):
+    """Smallest distance between two point clouds (brute force on the thinned samples). With `stop`, gives up as soon as a pair closer than that is found (the exact value
+    does not matter once two parts are known to touch)."""
+    best, limit = math.inf, stop * stop
     for p in a:
         for q in b:
             d = (p[0] - q[0]) ** 2 + (p[1] - q[1]) ** 2 + (p[2] - q[2]) ** 2
             if d < best:
                 best = d
+                if best <= limit:
+                    return math.sqrt(best)
     return math.sqrt(best)
 
 
@@ -164,7 +167,7 @@ def check(scene, story=None, gap_tolerance=0.04, overlap_limit=0.35):
                 findings.append(Finding("overlap", (ids[ai], ids[bi]),
                                         f"'{a[0].get('label') or ids[ai]}' and '{b[0].get('label') or ids[bi]}' cut into each other by {ov[0]:.2f} units "
                                         f"({ov[1] * 100:.0f}% of the smaller part's box): move one by about that much"))
-            if ov or (_box_gap(a[2], b[2]) <= tol and _gap(a[1], b[1]) <= tol):
+            if ov or (_box_gap(a[2], b[2]) <= tol and _gap(a[1], b[1], tol) <= tol):
                 touching[ids[ai]].add(ids[bi])
                 touching[ids[bi]].add(ids[ai])
 
@@ -187,8 +190,9 @@ def check(scene, story=None, gap_tolerance=0.04, overlap_limit=0.35):
         for comp in groups[1:]:
             names = ", ".join(f"'{data[c][0].get('label') or c}'" for c in comp)
             nearest = min(((_box_gap(data[c][2], data[m][2]), c, m) for c in comp for m in main), key=lambda t: t[0])
+            nearest = (_gap(data[nearest[1]][1], data[nearest[2]][1]), nearest[1], nearest[2])      # the surfaces, not just the boxes (a wheel's box can overlap a frame it never touches)
             findings.append(Finding("floating", tuple(comp), f"{names} touch{'es' if len(comp) == 1 else ''} nothing else: the nearest part is "
-                                    f"'{data[nearest[2]][0].get('label') or nearest[2]}', about {nearest[0]:.2f} units away; place it so it meets that part"))
+                                    f"'{data[nearest[2]][0].get('label') or nearest[2]}', {nearest[0]:.2f} units away; place it so it meets that part"))
 
     for q in (story or {}).get("parts", []):
         pid = q.get("id")
@@ -204,7 +208,7 @@ def check(scene, story=None, gap_tolerance=0.04, overlap_limit=0.35):
         att = q.get("attach")
         if isinstance(att, dict) and att.get("to") in data:   # attached to another part: the two must touch
             other = data[att["to"]]
-            gap = 0.0 if _overlap(data[pid][2], other[2]) else (_box_gap(data[pid][2], other[2]) and _gap(data[pid][1], other[1]))
+            gap = 0.0 if _overlap(data[pid][2], other[2]) else (_box_gap(data[pid][2], other[2]) and _gap(data[pid][1], other[1], tol))
             if gap > tol:
                 findings.append(Finding("attach", (pid, att["to"]), f"'{label}' is attached to '{other[0].get('label') or att['to']}' ({att.get('at', 'somewhere')}) "
                                         f"but there is a {gap:.2f} unit gap between them"))

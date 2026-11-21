@@ -1,0 +1,386 @@
+{
+  "version": 1,
+  "title": "How a bicycle stays upright",
+  "layout": {
+    "template": "blueprint"
+  },
+  "parts": [
+    {
+      "id": "front_wheel",
+      "kind": "code",
+      "label": "Front wheel",
+      "brief": "A tall thin bicycle wheel standing on its edge with its axle along z: a black rubber tyre with knobbly tread around a shiny silver metal rim. Many thin silver spokes run from the rim to a small round hub in the middle, with a little quick-release lever on the hub.",
+      "size": [
+        2.8,
+        2.8,
+        0.25
+      ],
+      "at": [
+        [
+          2.2,
+          1.4,
+          0
+        ]
+      ],
+      "code": "function build(M) {\n  const R = 1.4;\n  const tyre = M.T(M.torus(1.3, 0.1, 64, 14), {rx: 90});\n  const knobs = [];\n  for (let i = 0; i < 48; i++) {\n    const a = i / 48 * Math.PI * 2;\n    knobs.push(M.T(M.box(0.06, 0.04, 0.16, -0.02), {pos: [Math.cos(a) * 1.38, Math.sin(a) * 1.38, 0], rz: a * 180 / Math.PI - 90}));\n  }\n  const rim = M.T(M.lathe([[1.16, -0.05], [1.2, -0.06], [1.2, 0.06], [1.16, 0.05], [1.14, 0]], 64), {rx: 90});\n  const spokes = [];\n  for (let i = 0; i < 32; i++) {\n    const a = i / 32 * Math.PI * 2;\n    const side = i % 2 ? 0.08 : -0.08;\n    const a2 = a + (i % 4 < 2 ? 0.25 : -0.25);\n    spokes.push(M.pipe([Math.cos(a2) * 0.07, Math.sin(a2) * 0.07, side], [Math.cos(a) * 1.15, Math.sin(a) * 1.15, side * 0.2], 0.008, 4));\n  }\n  const hub = M.T(M.lathe([[0.03, -0.11], [0.09, -0.1], [0.09, -0.07], [0.05, -0.05], [0.05, 0.05], [0.09, 0.07], [0.09, 0.1], [0.03, 0.11]], 24), {rx: 90});\n  const axle = M.T(M.cyl(0.02, 0.25, 12, -0.125), {rx: 90});\n  const lever = M.merge([\n    M.T(M.cyl(0.035, 0.02, 16, 0), {rx: 90, pos: [0, 0, 0.125]}),\n    M.pipe([0, 0, 0.13], [0.2, 0.05, 0.12], 0.015, 8)\n  ]);\n  return [\n    {material: \"dark_steel\", look: \"solid\", mesh: M.merge([tyre].concat(knobs))},\n    {material: \"steel\", look: \"solid\", mesh: M.merge([rim, hub, axle].concat(spokes))},\n    {material: \"red\", look: \"solid\", mesh: lever}\n  ];\n}"
+    },
+    {
+      "id": "rear_wheel",
+      "kind": "code",
+      "label": "Back wheel",
+      "brief": "A wheel the same size as the front one, standing on its edge with its axle along z: black knobbly tyre, silver rim and thin silver spokes. Its hub is a bit wider and carries a small stack of toothed gear cogs on one side.",
+      "size": [
+        2.8,
+        2.8,
+        0.25
+      ],
+      "at": [
+        [
+          -2,
+          1.4,
+          0
+        ]
+      ],
+      "code": "function build(M) {\n  const R = 1.4, z = 0.125;\n  const tyre = M.T(M.torus(1.3, 0.1, 48, 12), {rx: 90});\n  const knobs = [];\n  for (let i = 0; i < 48; i++) {\n    const a = i * 7.5;\n    knobs.push(M.T(M.box(0.06, 0.04, 0.16, 0), {pos: [Math.cos(a * Math.PI / 180) * 1.37, Math.sin(a * Math.PI / 180) * 1.37, 0], rz: a - 90}));\n  }\n  const rim = M.T(M.lathe([[1.16, -0.06], [1.22, -0.06], [1.22, 0.06], [1.16, 0.06], [1.16, -0.06]], 48), {rx: 90});\n  const spokes = [];\n  for (let i = 0; i < 32; i++) {\n    const a = i * Math.PI * 2 / 32, side = i % 2 ? 0.07 : -0.07;\n    spokes.push(M.pipe([0, 0, side], [Math.cos(a) * 1.16, Math.sin(a) * 1.16, 0], 0.008, 4));\n  }\n  const hub = M.T(M.cyl(0.07, 0.2, 24, -0.1), {rx: 90});\n  const flanges = [M.T(M.cyl(0.12, 0.015, 24, 0.06), {rx: 90}), M.T(M.cyl(0.12, 0.015, 24, -0.075), {rx: 90})];\n  const axle = M.T(M.cyl(0.025, 0.25, 12, -0.125), {rx: 90});\n  const cogs = [];\n  for (let k = 0; k < 4; k++) {\n    const r = 0.26 - k * 0.04, n = Math.round(r * 110), pts = [];\n    for (let i = 0; i < n * 2; i++) {\n      const a = i * Math.PI / n, rr = i % 2 ? r : r - 0.025;\n      pts.push([Math.cos(a) * rr, Math.sin(a) * rr]);\n    }\n    cogs.push(M.T(M.extrude(pts, 0.012), {rx: 90, pos: [0, 0, -0.08 - k * 0.012]}));\n  }\n  return [\n    {material: \"dark_steel\", look: \"solid\", mesh: M.merge([tyre, ...knobs])},\n    {material: \"steel\", look: \"solid\", mesh: M.merge([rim, ...spokes, hub, ...flanges, axle])},\n    {material: \"gold\", look: \"solid\", mesh: M.merge(cogs)}\n  ];\n}"
+    },
+    {
+      "id": "frame",
+      "kind": "code",
+      "label": "Frame",
+      "brief": "The bright red metal heart of the bike: a seat tube rising almost straight up and a down tube slanting forward, both round painted tubes meeting at a short bottom bracket shell at the bottom. Smooth welds, a small white brand sticker and a bottle cage with two screws on the down tube.",
+      "size": [
+        1.4,
+        1.7,
+        0.3
+      ],
+      "at": [
+        [
+          0.1,
+          2.95,
+          0
+        ]
+      ],
+      "code": "function build(M) {\n  const r = 0.05;\n  const bb = [-0.4, -0.7, 0];\n  const seatTop = [-0.6, 0.85, 0];\n  const headLow = [0.65, 0.6, 0];\n  const seat = M.pipe(bb, seatTop, r, 28);\n  const down = M.pipe(bb, headLow, r * 1.15, 28);\n  const shell = M.T(M.cyl(0.09, 0.22, 32, -0.11), {pos: bb, rx: 90});\n  const weld1 = M.T(M.sphere(0.075, 20, 12), {pos: [-0.42, -0.6, 0]});\n  const weld2 = M.T(M.sphere(0.08, 20, 12), {pos: [-0.31, -0.62, 0]});\n  const collar = M.T(M.cyl(0.065, 0.08, 28, 0), {pos: [-0.595, 0.78, 0], rz: 7.3});\n  const headStub = M.T(M.cyl(0.075, 0.12, 28, -0.06), {pos: headLow, rz: 40});\n  const ang = Math.atan2(1.3, 1.05) * 180 / Math.PI;\n  const mid = (t) => [bb[0] + 1.05 * t, bb[1] + 1.3 * t, 0];\n  const sticker = M.T(M.box(0.3, 0.012, 0.11, 0), {pos: mid(0.62), rz: ang - 90 + 180, ry: 0});\n  const stk = M.T(M.box(0.012, 0.28, 0.08, 0), {pos: [mid(0.62)[0], mid(0.62)[1] - 0.14, 0.055], rz: -(90 - ang)});\n  const cage = [];\n  const cp = mid(0.35);\n  const rot = -(90 - ang);\n  cage.push(M.T(M.box(0.06, 0.32, 0.01, -0.16), {pos: [cp[0] + 0.06, cp[1], 0], rz: rot}));\n  cage.push(M.T(M.tube(0.06, 0.3, 20), {pos: [cp[0] + 0.12, cp[1] - 0.05, 0], rz: rot, s: [1, 1, 0.8]}));\n  const screws = [];\n  for (const t of [0.28, 0.42]) {\n    const p = mid(t);\n    screws.push(M.T(M.cyl(0.018, 0.03, 12, 0), {pos: [p[0] + 0.04, p[1] - 0.03, 0], rz: rot - 90}));\n  }\n  return [\n    {material: \"red\", look: \"solid\", mesh: M.merge([seat, down, weld1, weld2, collar, headStub])},\n    {material: \"dark_steel\", look: \"solid\", mesh: M.merge([shell, ...cage])},\n    {material: \"steel\", look: \"solid\", mesh: M.merge(screws)},\n    {material: \"white\", look: \"solid\", mesh: M.merge([stk])}\n  ];\n}"
+    },
+    {
+      "id": "rear_stays",
+      "kind": "code",
+      "label": "Back stays",
+      "brief": "Two matching pairs of thin red tubes, one pair on each side of the back wheel. Each pair forms a skinny triangle: one tube runs low and level back to the wheel axle, the other slants down from the top of the seat tube to the axle. They end in small slotted metal dropouts that hold the axle.",
+      "size": [
+        2,
+        1.8,
+        0.1
+      ],
+      "at": [
+        [
+          -1.6,
+          2.3,
+          -0.175
+        ],
+        [
+          -1.6,
+          2.3,
+          0.175
+        ]
+      ],
+      "code": "function build(M) {\n  const r = 0.035;\n  const ax = [-0.92, -0.82, 0];\n  const chain = M.pipe(ax, [0.98, -0.78, 0], r, 20);\n  const seat = M.pipe(ax, [0.9, 0.86, 0], r, 20);\n  const bridge = M.pipe([-0.3, -0.8, 0], [-0.15, 0.08, 0], r * 0.7, 16);\n  const capA = M.T(M.sphere(r * 1.3, 16, 10), {pos: [0.98, -0.78, 0]});\n  const capB = M.T(M.sphere(r * 1.3, 16, 10), {pos: [0.9, 0.86, 0]});\n  const plate = M.extrude([[-1, -0.9], [-0.78, -0.9], [-0.74, -0.74], [-0.86, -0.68], [-1, -0.74]], 0.04);\n  const drop = M.T(plate, {rx: 90, pos: [0, 0, 0]});\n  const slot = M.T(M.cyl(0.03, 0.06, 20, -0.03), {rx: 90, pos: [-0.92, -0.82, 0]});\n  const bolt = M.T(M.cyl(0.018, 0.08, 6, -0.04), {rx: 90, pos: [-0.8, -0.72, 0]});\n  return [\n    {material: \"red\", look: \"solid\", mesh: M.merge([chain, seat, bridge, capA, capB])},\n    {material: \"steel\", look: \"solid\", mesh: M.merge([drop, bolt])},\n    {material: \"dark_steel\", look: \"solid\", mesh: slot}\n  ];\n}"
+    },
+    {
+      "id": "top_tube",
+      "kind": "code",
+      "label": "Top tube",
+      "brief": "A straight red round tube running level from the top of the seat tube forward to the steering column. Same red paint as the frame, with a thin grey brake cable clipped along its top.",
+      "size": [
+        1.2,
+        0.3,
+        0.2
+      ],
+      "at": [
+        [
+          1.4,
+          3.65,
+          0
+        ]
+      ],
+      "code": "function build(M) {\n  const r = 0.08;\n  const tube = M.pipe([-0.56, 0, 0], [0.56, 0, 0], r, 32);\n  const lugs = M.merge([\n    M.pipe([-0.6, 0, 0], [-0.5, 0, 0], r + 0.015, 32),\n    M.pipe([0.5, 0, 0], [0.6, 0, 0], r + 0.015, 32)\n  ]);\n  const cable = M.pipe([-0.55, r + 0.02, 0], [0.55, r + 0.02, 0], 0.012, 12);\n  const clips = [];\n  for (const x of [-0.3, 0, 0.3]) {\n    clips.push(M.T(M.torus(r + 0.005, 0.01, 24, 8), {pos: [x, 0, 0], rz: 90}));\n    clips.push(M.box(0.04, 0.03, 0.04, r - 0.005, x));\n  }\n  const ends = M.merge([\n    M.T(M.cyl(0.02, 0.04, 12, 0), {pos: [-0.57, r + 0.02, 0], rz: 90}),\n    M.T(M.cyl(0.02, 0.04, 12, 0), {pos: [0.61, r + 0.02, 0], rz: 90})\n  ]);\n  return [\n    {material: \"red\", look: \"solid\", mesh: tube},\n    {material: \"red\", look: \"solid\", mesh: lugs},\n    {material: \"dark_steel\", look: \"solid\", mesh: M.merge([cable, ends])},\n    {material: \"steel\", look: \"solid\", mesh: M.merge(clips)}\n  ];\n}"
+    },
+    {
+      "id": "head_tube",
+      "kind": "code",
+      "label": "Steering column",
+      "brief": "A short, fat red tube at the front of the frame, tilted back slightly like a leaning pole. It has silver bearing cups pressed into its top and bottom ends, with a ring of small steel balls in each cup so the front can turn smoothly.",
+      "size": [
+        0.4,
+        0.6,
+        0.45
+      ],
+      "at": [
+        [
+          2.2,
+          3.5,
+          0
+        ]
+      ],
+      "code": "function build(M) {\n  const tilt = {rz: 18};\n  const tube = M.T(M.lathe([[0.13,-0.24],[0.13,0.24],[0.11,0.24],[0.11,-0.24]], 40), tilt);\n  const lugs = M.merge([\n    M.T(M.torus(0.135,0.02,40,10), {pos:[0,0.21,0], rz:18}),\n    M.T(M.torus(0.135,0.02,40,10), {pos:[0,-0.21,0], rz:18}),\n    M.T(M.pipe([0,0.1,0],[-0.2,0.12,0],0.05,20), {rz:18}),\n    M.T(M.pipe([0,-0.1,0],[-0.2,-0.2,0],0.055,20), {rz:18})\n  ]);\n  const cupT = M.lathe([[0.06,0.24],[0.15,0.24],[0.15,0.3],[0.06,0.3]], 40);\n  const cupB = M.lathe([[0.06,-0.3],[0.15,-0.3],[0.15,-0.24],[0.06,-0.24]], 40);\n  const cups = M.T(M.merge([cupT, cupB]), tilt);\n  const balls = [];\n  for (let i = 0; i < 14; i++) {\n    const a = i / 14 * Math.PI * 2;\n    for (const y of [0.315, -0.315]) balls.push(M.T(M.sphere(0.018,10,8), {pos:[Math.cos(a)*0.1, y, Math.sin(a)*0.1]}));\n  }\n  const ballM = M.T(M.merge(balls), tilt);\n  const bore = M.T(M.tube(0.06, 0.6, 32), tilt);\n  return [\n    {material:\"red\", look:\"solid\", mesh: M.merge([tube, lugs])},\n    {material:\"steel\", look:\"solid\", mesh: cups},\n    {material:\"dark_steel\", look:\"solid\", mesh: M.merge([ballM, bore])}\n  ];\n}"
+    },
+    {
+      "id": "steerer",
+      "kind": "code",
+      "label": "Steering pivot",
+      "brief": "A thin silver metal rod hidden inside the steering column, tilted back at the same angle. It is the pivot the whole front end turns around, with a threaded top, a locknut and a ring of shiny steel ball bearings at each end.",
+      "size": [
+        0.15,
+        0.6,
+        0.15
+      ],
+      "at": [
+        [
+          2.2,
+          3.5,
+          0
+        ]
+      ],
+      "inside": "head_tube",
+      "code": "function build(M) {\n  const tilt = -18;\n  const steel = [];\n  const dark = [];\n  steel.push(M.cyl(0.025, 0.5, 24, -0.25));\n  for (let i = 0; i < 6; i++) dark.push(M.torus(0.026, 0.004, 24, 6), M.T(M.torus(0.026, 0.004, 24, 6), {pos: [0, 0.12 + i * 0.018, 0]}));\n  dark.push(M.T(M.cyl(0.04, 0.03, 6, 0), {pos: [0, 0.2, 0]}));\n  dark.push(M.T(M.cyl(0.035, 0.02, 6, 0), {pos: [0, -0.25, 0]}));\n  const balls = [];\n  for (const y of [0.17, -0.2]) {\n    balls.push(M.T(M.torus(0.045, 0.006, 32, 8), {pos: [0, y - 0.012, 0]}));\n    balls.push(M.T(M.torus(0.045, 0.006, 32, 8), {pos: [0, y + 0.012, 0]}));\n    for (let k = 0; k < 12; k++) {\n      const a = k / 12 * Math.PI * 2;\n      steel.push(M.T(M.sphere(0.01, 10, 8), {pos: [Math.cos(a) * 0.045, y, Math.sin(a) * 0.045]}));\n    }\n  }\n  const t = m => M.T(m, {rz: tilt});\n  return [\n    {material: \"steel\", look: \"solid\", mesh: t(M.merge(steel))},\n    {material: \"dark_steel\", look: \"solid\", mesh: t(M.merge(dark))},\n    {material: \"gold\", look: \"solid\", mesh: t(M.merge(balls))}\n  ];\n}"
+    },
+    {
+      "id": "fork",
+      "kind": "code",
+      "label": "Front fork",
+      "brief": "Two slim red fork blades, one on each side of the front wheel, joined at the top under the steering column. The blades lean back and then curve forward near the bottom, so the wheel axle sits a little in front of the steering line. Each blade ends in a small slotted dropout holding the axle.",
+      "size": [
+        0.4,
+        1.8,
+        0.1
+      ],
+      "at": [
+        [
+          2.2,
+          2.3,
+          -0.175
+        ],
+        [
+          2.2,
+          2.3,
+          0.175
+        ]
+      ],
+      "code": "function build(M) {\n  const red = [], steel = [], dark = [];\n  const zs = [-0.04, 0.04];\n  // fork crown at top\n  red.push(M.box(0.16, 0.08, 0.1, 0.72, -0.1));\n  steel.push(M.cyl(0.035, 0.18, 24, 0.8));\n  steel.push(M.T(M.cyl(0.035, 0.18, 24, 0), {pos: [-0.1, 0.8, 0]}));\n  for (const z of zs) {\n    // blade: segments leaning, then curving forward\n    const pts = [];\n    for (let i = 0; i <= 10; i++) {\n      const t = i / 10;\n      const y = 0.74 - t * 1.55;\n      const x = -0.12 + 0.08 * t + 0.16 * Math.pow(t, 3);\n      pts.push([x, y, z]);\n    }\n    for (let i = 0; i < 10; i++) {\n      const r = 0.018 - i * 0.0008;\n      red.push(M.pipe(pts[i], pts[i + 1], r, 16));\n      red.push(M.T(M.sphere(r, 12, 8), {pos: pts[i + 1]}));\n    }\n    // dropout\n    const e = pts[10];\n    dark.push(M.T(M.box(0.07, 0.06, 0.012, 0, 0), {pos: [e[0] + 0.02, e[1] - 0.06, z]}));\n    steel.push(M.T(M.cyl(0.012, 0.02, 16, -0.01), {pos: [e[0] + 0.04, e[1] - 0.045, z], rx: 90}));\n  }\n  return [\n    {material: \"red\", look: \"solid\", mesh: M.merge(red)},\n    {material: \"steel\", look: \"solid\", mesh: M.merge(steel)},\n    {material: \"dark_steel\", look: \"solid\", mesh: M.merge(dark)}\n  ];\n}"
+    },
+    {
+      "id": "handlebars",
+      "kind": "code",
+      "label": "Handlebars",
+      "brief": "A wide silver metal bar running left to right across the top of the steering column, held by a short stem with two bolts. Black foam grips cover both ends, and a brake lever with a thin cable sits near each grip.",
+      "size": [
+        0.4,
+        0.2,
+        2
+      ],
+      "at": [
+        [
+          2.2,
+          3.9,
+          0
+        ]
+      ],
+      "code": "function build(M) {\n  const bar = M.pipe([0, 0.12, -0.72], [0, 0.12, 0.72], 0.035, 24);\n  const bendL = M.pipe([0, 0.12, -0.72], [-0.08, 0.12, -0.98], 0.035, 24);\n  const bendR = M.pipe([0, 0.12, 0.72], [-0.08, 0.12, 0.98], 0.035, 24);\n  const clamp = M.T(M.cyl(0.06, 0.16, 24, -0.08), {pos: [0, 0.12, 0], rx: 90});\n  const stem = M.pipe([-0.16, 0.02, 0], [0, 0.12, 0], 0.04, 24);\n  const stemCap = M.T(M.cyl(0.05, 0.08, 24, 0), {pos: [-0.16, -0.06, 0]});\n  const metal = M.merge([bar, bendL, bendR, clamp, stem, stemCap]);\n  const bolts = [];\n  for (const z of [-0.05, 0.05]) bolts.push(M.T(M.cyl(0.015, 0.03, 12, 0), {pos: [0.055, 0.12, z], rz: -90}));\n  const gripL = M.T(M.cyl(0.05, 0.22, 24, -0.11), {pos: [-0.06, 0.12, -0.88], rx: 90, ry: -17});\n  const gripR = M.T(M.cyl(0.05, 0.22, 24, -0.11), {pos: [-0.06, 0.12, 0.88], rx: 90, ry: 17});\n  const levers = [], cables = [];\n  for (const s of [-1, 1]) {\n    levers.push(M.T(M.box(0.04, 0.03, 0.06, -0.015), {pos: [0.03, 0.12, s * 0.7]}));\n    levers.push(M.pipe([0.05, 0.12, s * 0.7], [0.18, 0.06, s * 0.82], 0.012, 12));\n    cables.push(M.pipe([0.02, 0.14, s * 0.68], [-0.1, 0.18, s * 0.4], 0.008, 8));\n    cables.push(M.pipe([-0.1, 0.18, s * 0.4], [-0.18, 0.0, s * 0.1], 0.008, 8));\n  }\n  return [\n    {material: \"steel\", look: \"solid\", mesh: metal},\n    {material: \"dark_steel\", look: \"solid\", mesh: M.merge([...bolts, gripL, gripR])},\n    {material: \"red\", look: \"solid\", mesh: M.merge(levers)},\n    {material: \"dark_steel\", look: \"solid\", mesh: M.merge(cables)}\n  ];\n}"
+    },
+    {
+      "id": "crank",
+      "kind": "code",
+      "label": "Pedals and chainring",
+      "brief": "A round silver chainring with sharp teeth around its edge, fixed to two black crank arms pointing opposite ways. A flat black pedal with grippy studs sits on the end of each arm, and a greasy silver chain loops from the chainring back toward the rear cogs.",
+      "size": [
+        1,
+        1,
+        0.5
+      ],
+      "at": [
+        [
+          0.1,
+          1.6,
+          0
+        ]
+      ],
+      "code": "function build(M) {\n  const R = 0.3, th = 0.03;\n  const out = [];\n  const N = 40;\n  for (let i = 0; i < N; i++) {\n    const a0 = (i / N) * Math.PI * 2, a1 = ((i + 0.5) / N) * Math.PI * 2, a2 = ((i + 1) / N) * Math.PI * 2;\n    out.push([Math.cos(a0) * R, Math.sin(a0) * R], [Math.cos(a1) * (R + 0.03), Math.sin(a1) * (R + 0.03)]);\n  }\n  const ring = M.T(M.extrude(out, th), { rx: 90, pos: [0, 0, 0.06] });\n  const hole = M.T(M.torus(0.2, 0.012, 40, 8), { rx: 90, pos: [0, 0, 0.08] });\n  const bolts = [];\n  for (let i = 0; i < 5; i++) {\n    const a = i / 5 * Math.PI * 2;\n    bolts.push(M.T(M.cyl(0.018, 0.02, 16, 0), { rx: 90, pos: [Math.cos(a) * 0.17, Math.sin(a) * 0.17, 0.085] }));\n  }\n  bolts.push(M.T(M.cyl(0.05, 0.2, 24, -0.1), { rx: 90 }));\n  const L = 0.32, ca = 70 * Math.PI / 180;\n  const cx = Math.cos(ca) * L, cy = Math.sin(ca) * L;\n  const arms = M.merge([\n    M.pipe([0, 0, 0.1], [cx, cy, 0.1], 0.025, 16),\n    M.pipe([0, 0, -0.1], [-cx, -cy, -0.1], 0.025, 16),\n    M.pipe([cx, cy, 0.1], [cx, cy, 0.14], 0.012, 12),\n    M.pipe([-cx, -cy, -0.1], [-cx, -cy, -0.14], 0.012, 12)\n  ]);\n  const pedals = [], studs = [];\n  [[cx, cy, 0.19], [-cx, -cy, -0.19]].forEach(p => {\n    pedals.push(M.box(0.18, 0.025, 0.1, p[1] - 0.0125, p[0]));\n    pedals[pedals.length - 1] = M.T(pedals[pedals.length - 1], { pos: [0, 0, p[2]] });\n    for (let i = -1; i <= 1; i += 2) for (let j = -1; j <= 1; j += 2)\n      studs.push(M.T(M.cyl(0.008, 0.015, 8, 0), { pos: [p[0] + i * 0.07, p[1] + 0.0125, p[2] + j * 0.035] }));\n  });\n  const links = [];\n  const top = R + 0.01;\n  for (let k = 0; k < 9; k++) {\n    const x = -0.05 - k * 0.05;\n    links.push(M.box(0.045, 0.02, 0.02, top - 0.01, x));\n    links.push(M.box(0.045, 0.02, 0.02, -top - 0.01, x));\n  }\n  for (let k = 0; k < 10; k++) {\n    const a = Math.PI / 2 + k / 9 * Math.PI;\n    links.push(M.T(M.box(0.045, 0.02, 0.02, -0.01), { pos: [0, 0, 0], rz: 0 }));\n    links[links.length - 1] = M.T(M.box(0.02, 0.045, 0.02, -0.0225), { pos: [-0.5 + Math.cos(a) * top * 0.4 + 0.12, Math.sin(a) * top, 0] });\n  }\n  const chain = M.T(M.merge(links), { pos: [0, 0, 0.06] });\n  return [\n    { material: \"steel\", look: \"solid\", mesh: M.merge([ring, hole]) },\n    { material: \"dark_steel\", look: \"solid\", mesh: M.merge([arms, M.merge(pedals)]) },\n    { material: \"gold\", look: \"solid\", mesh: M.merge(bolts) },\n    { material: \"steel\", look: \"solid\", mesh: M.merge(studs) },\n    { material: \"dark_steel\", look: \"solid\", mesh: chain }\n  ];\n}"
+    },
+    {
+      "id": "seat",
+      "kind": "code",
+      "label": "Saddle",
+      "brief": "A narrow black padded saddle, wide at the back and pointed at the front, sitting on top of the seat tube. Underneath are two silver rails and a clamp bolt holding it to the seat post.",
+      "size": [
+        1,
+        0.3,
+        0.5
+      ],
+      "at": [
+        [
+          -0.3,
+          3.95,
+          0
+        ]
+      ],
+      "code": "function build(M) {\n  const outline = [];\n  for (let i = 0; i <= 24; i++) {\n    const t = i / 24, x = -0.5 + t;\n    const w = 0.25 * (t < 0.35 ? Math.sqrt(Math.sin((t / 0.35) * Math.PI / 2) * 0.9 + 0.1) : (1 - (t - 0.35) / 0.65 * 0.75));\n    outline.push([x, w]);\n  }\n  for (let i = 24; i >= 0; i--) outline.push([outline[i][0], -outline[i][1]]);\n  const pad = M.T(M.extrude(outline, 0.08), {pos: [0, 0.24, 0]});\n  const shell = M.T(M.extrude(outline, 0.03), {pos: [0, 0.185, 0], s: [0.97, 1, 0.95]});\n  const nose = M.T(M.sphere(0.05, 16, 8, Math.PI / 2), {pos: [0.44, 0.2, 0], s: [1.2, 0.8, 1]});\n  const rails = [];\n  for (const z of [-0.07, 0.07]) {\n    rails.push(M.pipe([-0.3, 0.17, z * 1.6], [-0.2, 0.12, z], 0.012, 12));\n    rails.push(M.pipe([-0.2, 0.12, z], [0.25, 0.12, z * 0.6], 0.012, 12));\n    rails.push(M.pipe([0.25, 0.12, z * 0.6], [0.38, 0.17, 0], 0.012, 12));\n  }\n  const post = M.cyl(0.035, 0.1, 24, 0);\n  const clamp = M.box(0.12, 0.04, 0.18, 0.09);\n  const bolt = M.T(M.cyl(0.018, 0.22, 16, -0.11), {pos: [0, 0.11, 0], rx: 90});\n  const label = M.T(M.box(0.12, 0.005, 0.06, 0.32), {pos: [-0.3, 0, 0]});\n  return [\n    {material: \"dark_steel\", look: \"solid\", mesh: M.merge([pad, shell, nose])},\n    {material: \"steel\", look: \"solid\", mesh: M.merge([...rails, post, bolt])},\n    {material: \"dark_steel\", look: \"solid\", mesh: clamp},\n    {material: \"red\", look: \"solid\", mesh: label}\n  ];\n}"
+    }
+  ],
+  "steps": [
+    {
+      "say": "This is a bicycle! It only has two skinny wheels, yet once it is rolling it can stay up without falling over. How does it do that trick? Let's take it apart and find out.",
+      "do": [
+        {
+          "reveal": [
+            "frame",
+            "front_wheel",
+            "rear_wheel"
+          ]
+        },
+        {
+          "zoom": "all"
+        }
+      ]
+    },
+    {
+      "say": "Look at the wheels. Each one touches the ground in just one tiny spot. Standing still, that is like trying to balance a coin on its edge. Give it a tiny nudge and it tips over.",
+      "do": [
+        {
+          "label": [
+            "front_wheel",
+            "rear_wheel"
+          ]
+        },
+        {
+          "highlight": [
+            "front_wheel",
+            "rear_wheel"
+          ]
+        },
+        {
+          "zoom": "front_wheel"
+        }
+      ]
+    },
+    {
+      "say": "The pedals and chain turn the back wheel and push the bike forward. Moving forward is the secret ingredient. A rolling bike can catch itself, just like you balance a broom on your hand by moving your hand under it.",
+      "do": [
+        {
+          "reveal": [
+            "crank",
+            "rear_stays",
+            "top_tube",
+            "seat"
+          ]
+        },
+        {
+          "label": [
+            "crank"
+          ]
+        },
+        {
+          "flow": {
+            "from": "crank",
+            "to": "rear_wheel",
+            "medium": "power"
+          }
+        },
+        {
+          "spin": [
+            "rear_wheel",
+            "crank"
+          ]
+        }
+      ]
+    },
+    {
+      "say": "Here is the clever front end. The front fork leans back, so the spot where the tyre touches the ground trails a little behind the steering line, like the wheel on a shopping trolley that swings to follow.",
+      "do": [
+        {
+          "reveal": [
+            "fork",
+            "head_tube",
+            "handlebars"
+          ]
+        },
+        {
+          "label": [
+            "fork",
+            "handlebars"
+          ]
+        },
+        {
+          "highlight": [
+            "fork"
+          ]
+        },
+        {
+          "zoom": "fork"
+        }
+      ]
+    },
+    {
+      "say": "Let's look inside the steering column. This pivot lets the front wheel swing. When the bike starts to lean left, the leaning fork makes the wheel turn left all by itself, so the wheels roll back underneath the bike and it stands up again.",
+      "do": [
+        {
+          "cutaway": [
+            "head_tube"
+          ]
+        },
+        {
+          "reveal": [
+            "steerer"
+          ]
+        },
+        {
+          "label": [
+            "steerer",
+            "head_tube"
+          ]
+        },
+        {
+          "highlight": [
+            "steerer"
+          ]
+        },
+        {
+          "zoom": "head_tube"
+        }
+      ]
+    },
+    {
+      "say": "The spinning wheels help a little bit too, a bit like a spinning top that wants to stay up. But the steering is the real hero. That's why a bike rolling fast enough can even stay up for a while with nobody on it!",
+      "do": [
+        {
+          "spin": [
+            "front_wheel",
+            "rear_wheel"
+          ]
+        },
+        {
+          "highlight": [
+            "front_wheel"
+          ]
+        }
+      ]
+    },
+    {
+      "say": "Now all the parts come back together. Two wheels, a leaning fork and a swinging steering pivot: keep rolling, and the bike keeps steering itself back under its own weight.",
+      "do": [
+        {
+          "zoom": "all"
+        },
+        {
+          "highlight": [
+            "fork",
+            "steerer",
+            "front_wheel",
+            "rear_wheel"
+          ]
+        }
+      ]
+    }
+  ],
+  "recap": "A moving bike stays up because whenever it leans, its front wheel steers into the lean and rolls back underneath it.",
+  "question": "Why do you think it is so much harder to balance a bike when it is going really slowly?"
+}

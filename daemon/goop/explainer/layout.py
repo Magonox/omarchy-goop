@@ -135,15 +135,13 @@ def assembly(story):
     shift = (y - gap) / 2
     for p in spine:
         placed[p["id"]]["pos"][1] = round(placed[p["id"]]["pos"][1] - shift, 3)
-    for p in parts:
-        if p.get("inside"):
-            par = placed[p["inside"]]
-            placed[p["id"]]["pos"] = list(par["pos"])
-            placed[p["id"]]["explode"] = [0, 0, 2.8]
-    for p in parts:
-        att = p.get("attach")
-        if not att:
-            continue
+    def put_inside(p):
+        par = placed[p["inside"]]
+        placed[p["id"]]["pos"] = list(par["pos"])
+        placed[p["id"]]["explode"] = [0, 0, 2.8]
+
+    def put_attached(p):
+        att = p["attach"]
         par = placed[att["to"]]
         pr, ph, pp = par["shape"].get("r", 1.0), par["shape"].get("h", 1.0), par["pos"]
         base = placed.pop(p["id"])
@@ -172,6 +170,19 @@ def assembly(story):
             pl = dict(base, id=pid, pos=_r3(pos), rot=rot, explode=_r3(exp))
             placed[pid] = pl
             instances[p["id"]].append(pid)
+
+    # A part hangs on another part's position, so that part must be placed first: attached and "inside" parts are placed in order of what they depend on
+    # (an envelope on a burner, hot air inside the envelope). Declaration order alone put hot air at the origin before its envelope had been placed.
+    pending = [p for p in parts if p.get("attach") or p.get("inside")]
+    done = {p["id"] for p in parts if not (p.get("attach") or p.get("inside"))}
+    while pending:
+        ready = [p for p in pending if (p.get("attach") or {}).get("to", p.get("inside")) in done]
+        if not ready:                                 # a cycle or an unknown target: keep the declared order rather than loop forever
+            ready = pending[:1]
+        for p in ready:
+            put_attached(p) if p.get("attach") else put_inside(p)
+            done.add(p["id"])
+        pending = [p for p in pending if p not in ready]
     return placed, instances
 
 
