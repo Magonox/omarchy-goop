@@ -4,20 +4,40 @@
 
 An [Omarchy](https://omarchy.org) plugin: a Quickshell overlay and a small Python daemon. Everything about voice runs on your machine.
 
-![Click a goop, press Talk and ask a question out loud; the goop reads the project and answers](docs/media/goop.gif)
+<p align="center">
+  <img src="docs/media/teardown.gif" alt="A goop explaining how a monster truck works: the truck comes apart, snaps back together and drives off" width="720">
+  <br><em>A 3D lesson built by Goop: it comes apart to explain each part, snaps back together and drives off.</em>
+</p>
 
-*Click a goop, press Talk, and ask. It read the real project files to answer. Recorded from the real thing.*
+## What Goop can do
 
-![A goop explaining how a monster truck works: the truck comes apart, snaps back together and drives off](docs/media/teardown.gif)
+| | |
+|---|---|
+| **Talk or type** | Click a goop, then press **Talk** (microphone) or **Type** (pencil). Your words show for a moment before they are sent, so you can fix them. |
+| **Understand the window** | A terminal (shell, project, git state), a file manager (folder and files), a web page in Chromium (the real text) or anything else (a screenshot it takes itself). |
+| **Build 3D lessons** | Reading about how something works? Goop builds a narrated 3D model, takes it apart one part at a time, and puts it back together. About a minute to build. |
+| **Act only with your OK** | Typing a command or moving files shows a card with exactly what will happen, and moves can be undone. You choose how careful it is. |
+| **Speak** | An on-device voice, a different one for each goop. Nothing is recorded or sent anywhere. |
+| **Live on every window** | Drag a goop onto another window to peel off a copy. The overlay follows the monitor you are using. |
 
-*A 3D lesson built by Goop: it comes apart to explain each part, snaps back together, and drives off. Recorded from the real thing.*
+## See it
 
-- **Talk or type.** Click a goop and two buttons appear beside it: **Talk** (microphone) and **Type** (pencil). Speak, pause, and your words show on screen for a moment before they are sent, so you can fix them.
-- **It understands the window.** A terminal (which shell, which project, git state), a file manager (which folder, what is in it), a web page in Chromium (the actual text, not a screenshot), anything else (a screenshot it takes itself).
-- **3D lessons.** Reading about how something works? Goop offers to build a narrated 3D model: the finished machine appears, comes apart while each part is explained, then snaps back together and does what it is for (a truck drives off, a balloon floats away, a rocket lifts off). About a minute to build.
-- **Acts only with your OK.** Typing a command, moving files (undoable): each shows a card with exactly what will happen. You choose how careful it is.
-- **Speaks.** An on-device voice, a different one for each goop, with a small wave bar for a mouth.
-- **Lives on every window and every monitor.** Drag a goop onto another window to peel off a copy. The overlay follows the monitor you are using.
+<table>
+  <tr>
+    <td width="50%"><img src="docs/media/talk.jpg" alt="Click a goop, press Talk and ask a question out loud"><br><b>Say it, don't type it.</b> Click a goop, press Talk and speak.</td>
+    <td width="50%"><img src="docs/media/voice.jpg" alt="The goop answers in its own voice after reading the project files"><br><b>It talks back.</b> It read the real project files to answer.</td>
+  </tr>
+  <tr>
+    <td width="50%"><img src="docs/media/peel.jpg" alt="Dragging a goop onto another window peels off a copy"><br><b>Drag it, now there are two.</b> One goop per window, each with its own voice.</td>
+    <td width="50%"><img src="docs/media/threed.jpg" alt="A 3D model of a monster truck built for a lesson"><br><b>Ask for it in 3D.</b> A card asks first, then the lesson builds and plays.</td>
+  </tr>
+  <tr>
+    <td width="50%"><img src="docs/media/approve.jpg" alt="A card shows the files Goop wants to move, with Deny and Approve buttons"><br><b>Nothing moves until you say so.</b> Every action asks first and can be undone.</td>
+    <td width="50%"><img src="docs/media/setup-4.png" alt="The setup card: how careful should Goop be, and 3D lessons"><br><b>You choose how careful it is</b> in the setup card (see Install).</td>
+  </tr>
+</table>
+
+*Recorded from the real thing.*
 
 ## Install
 
@@ -26,6 +46,15 @@ omarchy plugin add https://github.com/Magonox/omarchy-goop.git --enable
 ```
 
 The **setup card opens by itself** the first time a goop appears. It checks what you have, installs the voice with one button, and lets you choose how careful Goop is. Skip it any time, and run it again from the ghost icon in the bar (**Run setup again**).
+
+<table>
+  <tr>
+    <td width="50%"><img src="docs/media/setup-1.png" alt="Setup card, step 1: Meet Goop. Your voice stays on your computer, nothing happens without your OK, it only looks when you ask"><br><b>Step 1.</b> What Goop is, and three promises.</td>
+    <td width="50%"><img src="docs/media/setup-4.png" alt="Setup card, step 4: Ask first, Ask for everything or Look only, and 3D lessons on, automatic or off"><br><b>Step 4.</b> How careful Goop is, and 3D lessons.</td>
+  </tr>
+</table>
+
+The five steps are: meet Goop, check your setup (one-click installs), the voice, safety and 3D lessons, and a first try.
 
 ### What it needs
 
