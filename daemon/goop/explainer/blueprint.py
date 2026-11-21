@@ -148,6 +148,12 @@ def _solid(p):
                     if abs(lo[axis] - want_lo) > tol or abs(hi[axis] - want_hi) > tol:
                         errs.append(f"component {pid!r}: your {name} view says it spans {'xyz'[axis]} {want_lo:g} to {want_hi:g}, but its features span {'xyz'[axis]} {lo[axis]:.2f} to {hi[axis]:.2f}: "
                                     f"fix the features or the view so they agree")
+    out = p.get("out")
+    if out is not None:                 # the way this component is taken out of the assembly, stated by the sheet (a dial leaves a watch through the front, not through the case wall)
+        if out not in OUT:
+            errs.append(f"component {pid!r}: out must be one of {', '.join(OUT)} (the direction it is taken out of the assembly; none for the body everything else comes out of)")
+        else:
+            p["_out"] = OUT[out]
     spin = p.get("spin")
     if spin is not None:
         axis, per = (spin or {}).get("axis", "z") if isinstance(spin, dict) else None, (spin or {}).get("period_s") if isinstance(spin, dict) else None
@@ -160,6 +166,7 @@ def _solid(p):
     return errs
 
 
+OUT = {"+x": [1.0, 0.0, 0.0], "-x": [-1.0, 0.0, 0.0], "+y": [0.0, 1.0, 0.0], "-y": [0.0, -1.0, 0.0], "+z": [0.0, 0.0, 1.0], "-z": [0.0, 0.0, -1.0], "none": [0.0, 0.0, 0.0]}
 VIEW_AXES_TEXT = {"front": "[x0, x1, y0, y1]", "side": "[z0, z1, y0, y1]", "top": "[x0, x1, z0, z1]"}
 
 
@@ -271,8 +278,12 @@ def free_directions(items):
     pointing away from the middle of the whole, then to up."""
     boxes = [(pid, c, s) for _, pid, c, s in items]
     mid = [sum(c[i] for _, c, _ in boxes) / len(boxes) for i in range(3)]
+    stated = {pid: p["_out"] for p, pid, _, _ in items if p.get("_out") is not None}
     out = {}
     for pid, c, s in boxes:
+        if pid in stated:               # the sheet said which way it comes out
+            out[pid] = list(stated[pid])
+            continue
         best = None
         for rank, d in enumerate(_DIRS):
             axis = next(k for k in range(3) if d[k])

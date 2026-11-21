@@ -158,12 +158,14 @@ def check(scene, story=None, gap_tolerance=0.04, overlap_limit=0.35):
     tol = gap_tolerance * size
 
     ids = list(data)
+    # components the plan joins may reach into each other (a crown's stem in the case, a tenon in its mortise): that is a joint, not a collision
+    joined = {frozenset((c.get("a"), c.get("b"))) for c in (story or {}).get("connections") or [] if isinstance(c, dict)}
     touching = {i: set() for i in ids}
     for ai in range(len(ids)):
         for bi in range(ai + 1, len(ids)):
             a, b = data[ids[ai]], data[ids[bi]]
             ov = _overlap(a[2], b[2])
-            if ov and not _inside(a[0], b[0]) and ov[1] > overlap_limit and ov[0] > tol and not (_contains(a[2], b[2], tol) or _contains(b[2], a[2], tol)):
+            if ov and not _inside(a[0], b[0]) and frozenset((ids[ai], ids[bi])) not in joined and ov[1] > overlap_limit and ov[0] > tol and not (_contains(a[2], b[2], tol) or _contains(b[2], a[2], tol)):
                 findings.append(Finding("overlap", (ids[ai], ids[bi]),
                                         f"'{a[0].get('label') or ids[ai]}' and '{b[0].get('label') or ids[bi]}' cut into each other by {ov[0]:.2f} units "
                                         f"({ov[1] * 100:.0f}% of the smaller part's box): move one by about that much"))

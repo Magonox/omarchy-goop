@@ -67,7 +67,7 @@ function material(part, role, dyn) {
     case "accent": c = c.map(function (x) { return x * 0.62; }); break;
     case "dark": c = [90, 98, 116]; metal = 0.25; rough = 0.45; break;
     case "blade": c = c.map(function (x) { return Math.min(255, x * 1.2 + 24); }); metal = 0.3; rough = 0.35; break;
-    case "glass": a = 0.3; c = c.map(function (x) { return Math.min(255, x * 0.55 + 100); }); metal = 0; rough = 0.08; break;
+    case "glass": a = 0.16; c = c.map(function (x) { return Math.min(255, x * 0.75 + 40); }); metal = 0; rough = 0.08; break;      // clear enough to see what is behind it (both faces are drawn)
     case "glow": c = [255, 150, 60]; em = [0.9, 0.4, 0.1]; a = 0.88; metal = 0; break;
     case "screen": c = [40, 72, 116]; em = [0.12, 0.34, 0.8]; metal = 0.1; rough = 0.2; break;
     case "led": c = [60, 220, 110]; em = [0.08, 0.8, 0.25]; break;
@@ -173,15 +173,26 @@ function state(C, t) {
         }
     });
 
-    var rings = [], pu = C.pulse;
-    if (pu && !(C.finale && t >= C.finale.t0)) {            // the ripples stop when the finale begins
-        var src = scene.parts[C.idx[pu.source]], first = Math.max(0, Math.floor((t - pu.t0 - WAVE_LIFE) / WAVE_EVERY)), last = Math.floor((t - pu.t0) / WAVE_EVERY);
+    var rings = [];
+    ev.pulse.forEach(function (pu, n) {
+        if (C.finale && t >= C.finale.t0) return;            // the ripples stop when the finale begins
+        var burst = pu.t1 !== undefined;
+        if (!burst && n > 0) return;                         // a signal lesson has one sender
+        var si = C.idx[pu.source], src = scene.parts[si], ps = parts[si];
+        var life = burst ? 1.6 : WAVE_LIFE, every = burst ? 0.5 : WAVE_EVERY, bx = C.box[si] || plannedBox(src);
+        var size = Math.max(bx.hi[0] - bx.lo[0], bx.hi[1] - bx.lo[1], bx.hi[2] - bx.lo[2]);
+        var until = burst ? Math.min(t, pu.t1 - life) : t;
+        var first = Math.max(0, Math.floor((t - pu.t0 - life) / every)), last = Math.floor((until - pu.t0) / every);
         for (var n2 = first; n2 <= last; n2++) {
-            var age = t - pu.t0 - n2 * WAVE_EVERY;
-            if (age < 0 || age > WAVE_LIFE) continue;
-            rings.push({ x: src.pos[0], y: 0.08, z: src.pos[2], radius: 0.3 + WAVE_SPEED * age, a: Math.pow(1 - age / WAVE_LIFE, 1.3) * 0.8 });
+            var age = t - pu.t0 - n2 * every;
+            if (age < 0 || age > life) continue;
+            if (burst)        // small rings around the part itself, where it is now
+                rings.push({ x: src.pos[0] + ps.dx, y: src.pos[1] + ps.dy, z: src.pos[2] + ps.dz, radius: size * (0.4 + 1.1 * age / life), a: Math.pow(1 - age / life, 1.3) * 0.8 });
+            else
+                rings.push({ x: src.pos[0], y: 0.08, z: src.pos[2], radius: 0.3 + WAVE_SPEED * age, a: Math.pow(1 - age / WAVE_LIFE, 1.3) * 0.8 });
         }
-    }
+    });
+    var pu = C.pulse;
 
     var bars = C.bars.map(function (b) {
         var p = scene.parts[b.part], s = parts[b.part], h = 0.1 + 0.09 * b.k;

@@ -15,7 +15,7 @@ PITCH_FOR = {"launch": 5, "drive": 9, "sink": 4, "fly": 9}
 
 
 CAMERA_SETTLE = 2.0           # a label appears once the camera has arrived (the shot eases in over about 1.8 s), so it is never drawn where the picture is not yet looking
-LABEL_HEADROOM = 0.15         # a label's text sits above its dot: shots with labels aim a little above the middle of the parts to leave room
+LABEL_HEADROOM = 0.28         # a label's text sits above its dot: shots with labels aim a little above the middle of the parts to leave room
 FOCUS_CONTEXT = 0.6           # a shot on some parts is at least this share of the way out to the whole-model shot
 TAN_FOV = math.tan(math.radians(34) / 2)       # the lesson camera looks with a 34 degree vertical field of view; the picture is wider than tall, so the vertical limit decides
 
@@ -39,6 +39,10 @@ def build(story, lay):
     placed, instances, bounds = lay["placed"], lay["instances"], lay["bounds"]
     template = story["layout"]["template"]
     yaw0, pitch = TEMPLATE_VIEW[template]
+    if template == "blueprint":        # parts that come out toward the viewer (z) would hide each other seen from the front: turn the view further round, by how much of the take-apart is along z
+        total = sum(math.dist(p["explode"], (0, 0, 0)) for p in placed.values()) or 1.0
+        toward = sum(abs(p["explode"][2]) for p in placed.values()) / total
+        yaw0, pitch = yaw0 - 24 * toward, pitch + 6 * toward
     movable = [i for i, p in placed.items() if not p["spanning"] and not p.get("context")]
 
     def expand(ids):
@@ -120,7 +124,10 @@ def build(story, lay):
                 if ids:
                     events.append({"type": "explode", "parts": ids, "t0": round(t0 + 0.6, 2), "t1": round(t1 - 0.2, 2)})
             elif name == "pulse":
-                events.append({"type": "pulse", "source": instances[arg][0], "t0": round(t0 + 0.6, 2)})
+                ev = {"type": "pulse", "source": instances[arg][0], "t0": round(t0 + 0.6, 2)}
+                if template != "network":          # outside a signal lesson a pulse is a short burst from the part (a spark, a bang), over when the step is
+                    ev["t1"] = round(t1, 2)
+                events.append(ev)
             elif name == "flow":
                 a_, b_ = placed[instances[arg["from"]][0]], placed[instances[arg["to"]][0]]
                 flows += 1
@@ -149,7 +156,10 @@ def build(story, lay):
                 c[1] += LABEL_HEADROOM * reach
             dist = max(MIN_FOCUS[template], FOCUS_CONTEXT * _fit(bounds["radius"]), _fit(reach * (1 + LABEL_HEADROOM)))      # never closer than part of the way in, so the rest of the model stays in view
         else:
-            c, dist = bounds["center"], max(MIN_WIDE[template], _fit(bounds["radius"]))
+            c, dist = list(bounds["center"]), max(MIN_WIDE[template], _fit(bounds["radius"]))
+            if labelled:                 # a whole-model shot with labels: room above the top parts for the label text
+                c[1] += LABEL_HEADROOM * bounds["radius"] * 0.5
+                dist = max(dist, _fit(bounds["radius"] * (1 + LABEL_HEADROOM * 0.5)))
         camera.append({"t": round(t0 + 0.2, 2), "target": [round(x, 3) for x in c], "dist": round(dist, 2), "yaw": round(yaw0 + 5 * n, 1),
                        "pitch": PITCH_FOR[fin["motion"]] if st.get("_finale") else pitch})
         t = t1

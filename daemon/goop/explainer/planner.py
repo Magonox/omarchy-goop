@@ -220,7 +220,7 @@ THE SHEET:
 {{"version":1,"title":str,"parts":[component...],"connections":[connection...],"timelapse":number (optional),"steps":[step...],"recap":str,"question":str}}
 
 COMPONENT: {{"id":"lowercase_id","kind":"solid","label":"up to {vocab.LIMITS['label']} characters, shown on screen","material":"default material","features":[feature...],
-"views":{{"front":[x0,x1,y0,y1],"side":[z0,z1,y0,y1],"top":[x0,x1,z0,z1]}}}} plus, only for a part that really turns, "spin":{{"axis":"x|y|z","pivot":[x,y,z],"period_s":seconds for one real turn,"dir":"cw|ccw"}}
+"views":{{"front":[x0,x1,y0,y1],"side":[z0,z1,y0,y1],"top":[x0,x1,z0,z1]}},"out":"+x|-x|+y|-y|+z|-z|none"}} plus, only for a part that really turns, "spin":{{"axis":"x|y|z","pivot":[x,y,z],"period_s":seconds for one real turn,"dir":"cw|ccw"}}
 ({vocab.LIMITS['parts'][0]}-{vocab.LIMITS['parts'][1]} components; each real component of the object is its own component: a chair's four legs are four components, a watch's three hands are three).
 FEATURES are the shapes a component is built from, all in the shared frame; a component usually has several. Each may carry its own "material" (one of {", ".join(vocab.MATERIALS)}):
   box      {{"shape":"box","center":[x,y,z],"size":[w,h,d],"rot":[rx,ry,rz]}}  a block; rot is optional, in degrees, about its centre
@@ -238,6 +238,9 @@ VIEWS are your own second statement of the component's shape: the extents it spa
 your drawing, not by copying the features; they are CHECKED against the features and any disagreement is sent back to you.
 CONNECTIONS list, for every pair of components that touch, the point where they meet: {{"a":"seat","b":"leg_fl","at":[x,y,z]}}. The point must lie on both components. Every component must be connected to something;
 components that hang together at one joint share its point.
+OUT is the way the component is taken out when the object is taken apart, as a person would really do it: a watch's crystal, hands and dial lift out through the front ("+z"), a chair's seat lifts up ("+y"),
+a drawer pulls forward, a wheel slides off along its axle. Components stacked on each other and leaving the same way are separated in order automatically. Give "none" to the one main body that everything else
+comes out of or off (the watch case, the chair's frame if it is one component); every other component needs a real direction that does not pass through a wall of another component.
 SPIN: for hands, wheels, rotors and the like give the real period (a watch's hour hand turns once in 43200 s, its minute hand in 3600 s, its second hand in 60 s). "dir":"cw" means clockwise as seen looking at the
 object from the positive end of the axis. "timelapse" (optional, default 1) speeds the lesson clock up so slow motions can be seen: choose it so the fastest turning part takes about 6 to 10 seconds per turn (a 60-second hand needs a timelapse of about 8).
 

@@ -210,9 +210,10 @@ def bp(story):
         d = [c[i] - mid[i] for i in range(3)]
         n = math.sqrt(sum(x * x for x in d))
         d = [x / n for x in d] if n > 0.25 else [0.0, 1.0, 0.0]
-        if pid in free:                  # a sheet lesson: the way out that is least blocked by the other components
+        if pid in free:                  # a sheet lesson: the way out the sheet states, else the one least blocked by the other components
             d = free[pid]
-        pl["explode"] = _r3([x * (0.55 * reach + 0.5) for x in d])
+        stays = pid in free and not any(free[pid])
+        pl["explode"] = [0.0, 0.0, 0.0] if stays else _r3([x * (0.55 * reach + 0.5) for x in d])
         placed[pid] = pl
         instances.setdefault(p["id"], []).append(pid)
     return placed, instances
@@ -224,6 +225,9 @@ TEMPLATES = {"axis": axis, "network": network, "assembly": assembly, "blueprint"
 EXPLODE_OWN = 1.0           # a part pulled apart moves about its own size ...
 EXPLODE_MAX = 0.25          # ... but never more than this share of the model's radius, and never less than EXPLODE_MIN of it
 EXPLODE_MIN = 0.08
+EXPLODE_STEP = 0.14         # each layer of a stack leaving the same way moves this share of the model's radius further than the layer behind it
+EXPLODE_STACK_MAX = 0.9     # the furthest layer of a stack moves at most this share of the model's radius
+EXPLODE_LAYER_GAP = 0.004   # centres closer than this share of the radius along the way out are one layer
 
 
 def _scale_explode(placed):
@@ -234,11 +238,30 @@ def _scale_explode(placed):
         for k in range(3):
             lo[k], hi[k] = min(lo[k], pl["pos"][k] - pl["radius"]), max(hi[k], pl["pos"][k] + pl["radius"])
     R = max(b - a for a, b in zip(lo, hi)) / 2
+    groups = {}
     for pl in placed.values():
         mag = math.dist(pl["explode"], (0, 0, 0))
         if mag > 0:
+            unit = [x / mag for x in pl["explode"]]
             d = min(EXPLODE_MAX * R, max(EXPLODE_OWN * 2 * pl["radius"], EXPLODE_MIN * R))
-            pl["explode"] = _r3([x / mag * d for x in pl["explode"]])
+            pl["explode"] = _r3([x * d for x in unit])
+            groups.setdefault(tuple(round(x, 2) for x in unit), []).append((sum(pl["pos"][k] * unit[k] for k in range(3)), d, unit, pl))
+    # Components that leave the same way are staggered like an exploded-view drawing: the one furthest along goes furthest, each layer behind it a step less, so a stack
+    # (a watch's crystal, hands and dial) opens up instead of moving off together. Components side by side (two legs of a chair) share a layer.
+    for members_ in groups.values():
+        if len(members_) < 2:
+            continue
+        members_.sort(key=lambda m: m[0])
+        layer, last, layers = 0, members_[0][0], []
+        for along, d, unit, pl in members_:
+            if along - last > EXPLODE_LAYER_GAP * R:
+                layer += 1
+            last = along
+            layers.append(layer)
+        base = min(m[1] for m in members_)
+        step = min(EXPLODE_STEP * R, (EXPLODE_STACK_MAX * R - base) / layer) if layer else 0.0       # a tall stack shares the room: the furthest layer stays within sight
+        for (along, d, unit, pl), n in zip(members_, layers):
+            pl["explode"] = _r3([x * (base + n * max(step, 0.0)) for x in unit])
 
 
 def layout(story):
@@ -248,7 +271,7 @@ def layout(story):
     lo, hi = [1e9] * 3, [-1e9] * 3
     for pl in placed.values():
         for k in range(3):
-            reach = pl["radius"] + (abs(pl["explode"][k]) * 0.6)
+            reach = pl["radius"] + abs(pl["explode"][k])
             lo[k], hi[k] = min(lo[k], pl["pos"][k] - reach), max(hi[k], pl["pos"][k] + reach)
     center = [(a + b) / 2 for a, b in zip(lo, hi)]
     radius = max(b - a for a, b in zip(lo, hi)) / 2

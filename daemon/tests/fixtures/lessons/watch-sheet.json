@@ -13,33 +13,33 @@
           "base": [
             0,
             0,
-            -0.3
+            -0.4
           ],
           "axis": "z",
           "profile": [
             [
-              0,
-              0
-            ],
-            [
               1.65,
               0
             ],
             [
+              1.9,
+              0
+            ],
+            [
+              1.95,
+              0.4
+            ],
+            [
+              1.9,
+              0.8
+            ],
+            [
               1.65,
-              0.6
+              0.8
             ],
             [
-              1.5,
-              0.6
-            ],
-            [
-              1.5,
-              0.1
-            ],
-            [
-              0,
-              0.1
+              1.65,
+              0
             ]
           ],
           "closed": true
@@ -48,12 +48,12 @@
           "shape": "box",
           "center": [
             0.75,
-            1.8,
-            0
+            2.05,
+            -0.1
           ],
           "size": [
             0.3,
-            0.5,
+            0.7,
             0.4
           ]
         },
@@ -61,12 +61,12 @@
           "shape": "box",
           "center": [
             -0.75,
-            1.8,
-            0
+            2.05,
+            -0.1
           ],
           "size": [
             0.3,
-            0.5,
+            0.7,
             0.4
           ]
         },
@@ -74,12 +74,12 @@
           "shape": "box",
           "center": [
             0.75,
-            -1.8,
-            0
+            -2.05,
+            -0.1
           ],
           "size": [
             0.3,
-            0.5,
+            0.7,
             0.4
           ]
         },
@@ -87,164 +87,225 @@
           "shape": "box",
           "center": [
             -0.75,
-            -1.8,
-            0
+            -2.05,
+            -0.1
           ],
           "size": [
             0.3,
-            0.5,
+            0.7,
             0.4
           ]
         }
       ],
       "views": {
         "front": [
-          -1.65,
-          1.65,
-          -2.05,
-          2.05
+          -1.95,
+          1.95,
+          -2.4,
+          2.4
         ],
         "side": [
-          -0.3,
-          0.3,
-          -2.05,
-          2.05
+          -0.4,
+          0.4,
+          -2.4,
+          2.4
         ],
         "top": [
-          -1.65,
-          1.65,
-          -0.3,
-          0.3
+          -1.95,
+          1.95,
+          -0.4,
+          0.4
         ]
-      }
+      },
+      "out": "none"
     },
     {
-      "id": "movement",
+      "id": "case_back",
       "kind": "solid",
-      "label": "Movement (gears)",
-      "material": "gold",
+      "label": "Case Back",
+      "material": "steel",
       "features": [
         {
           "shape": "cylinder",
           "from": [
             0,
             0,
-            -0.2
+            -0.5
           ],
           "to": [
             0,
             0,
-            -0.1
+            -0.4
           ],
-          "radius": 1.45,
-          "material": "dark_steel"
-        },
-        {
-          "shape": "cylinder",
-          "from": [
-            0.5,
-            0.4,
-            -0.1
-          ],
-          "to": [
-            0.5,
-            0.4,
-            -0.04
-          ],
-          "radius": 0.45,
-          "material": "gold"
-        },
-        {
-          "shape": "cylinder",
-          "from": [
-            -0.5,
-            -0.4,
-            -0.1
-          ],
-          "to": [
-            -0.5,
-            -0.4,
-            -0.04
-          ],
-          "radius": 0.35,
-          "material": "copper"
-        },
-        {
-          "shape": "cylinder",
-          "from": [
-            0.4,
-            -0.6,
-            -0.1
-          ],
-          "to": [
-            0.4,
-            -0.6,
-            -0.04
-          ],
-          "radius": 0.25,
-          "material": "gold"
-        },
-        {
-          "shape": "ring",
-          "center": [
-            -0.4,
-            0.6,
-            -0.07
-          ],
-          "axis": "z",
-          "radius": 0.35,
-          "tube": 0.03,
-          "material": "gold"
+          "radius": 1.85
         }
       ],
       "views": {
         "front": [
-          -1.45,
-          1.45,
-          -1.45,
-          1.45
+          -1.85,
+          1.85,
+          -1.85,
+          1.85
         ],
         "side": [
-          -0.2,
-          -0.04,
-          -1.45,
-          1.45
+          -0.5,
+          -0.4,
+          -1.85,
+          1.85
         ],
         "top": [
-          -1.45,
-          1.45,
-          -0.2,
-          -0.04
+          -1.85,
+          1.85,
+          -0.5,
+          -0.4
         ]
-      }
+      },
+      "out": "-z"
     },
     {
-      "id": "dial",
+      "id": "movement",
       "kind": "solid",
-      "label": "Dial",
-      "material": "cream",
+      "label": "Movement (Gears)",
+      "material": "dark_steel",
       "features": [
         {
           "shape": "cylinder",
           "from": [
             0,
             0,
-            -0.04
+            -0.4
+          ],
+          "to": [
+            0,
+            0,
+            -0.1
+          ],
+          "radius": 1.65
+        },
+        {
+          "shape": "cylinder",
+          "from": [
+            0,
+            0,
+            -0.1
           ],
           "to": [
             0,
             0,
             0
           ],
-          "radius": 1.5,
-          "material": "cream"
+          "radius": 0.6,
+          "material": "gold"
+        },
+        {
+          "shape": "cylinder",
+          "from": [
+            0.9,
+            0.5,
+            -0.1
+          ],
+          "to": [
+            0.9,
+            0.5,
+            0
+          ],
+          "radius": 0.4,
+          "material": "gold"
+        },
+        {
+          "shape": "cylinder",
+          "from": [
+            -0.8,
+            -0.6,
+            -0.1
+          ],
+          "to": [
+            -0.8,
+            -0.6,
+            0
+          ],
+          "radius": 0.45,
+          "material": "copper"
+        },
+        {
+          "shape": "cylinder",
+          "from": [
+            0.6,
+            -0.9,
+            -0.1
+          ],
+          "to": [
+            0.6,
+            -0.9,
+            0
+          ],
+          "radius": 0.4,
+          "material": "steel"
+        },
+        {
+          "shape": "cylinder",
+          "from": [
+            0,
+            0,
+            0
+          ],
+          "to": [
+            0,
+            0,
+            0.3
+          ],
+          "radius": 0.05,
+          "material": "steel"
+        }
+      ],
+      "views": {
+        "front": [
+          -1.65,
+          1.65,
+          -1.65,
+          1.65
+        ],
+        "side": [
+          -0.4,
+          0.3,
+          -1.65,
+          1.65
+        ],
+        "top": [
+          -1.65,
+          1.65,
+          -0.4,
+          0.3
+        ]
+      },
+      "out": "-z"
+    },
+    {
+      "id": "dial",
+      "kind": "solid",
+      "label": "Dial",
+      "material": "white",
+      "features": [
+        {
+          "shape": "cylinder",
+          "from": [
+            0,
+            0,
+            0
+          ],
+          "to": [
+            0,
+            0,
+            0.05
+          ],
+          "radius": 1.65
         },
         {
           "shape": "radial",
           "center": [
             0,
             0,
-            0
+            0.06
           ],
           "axis": "z",
           "count": 12,
@@ -252,12 +313,12 @@
             "shape": "box",
             "center": [
               0,
-              1.25,
-              0.01
+              1.4,
+              0.06
             ],
             "size": [
-              0.06,
-              0.2,
+              0.08,
+              0.25,
               0.02
             ],
             "material": "black"
@@ -266,128 +327,88 @@
       ],
       "views": {
         "front": [
-          -1.5,
-          1.5,
-          -1.5,
-          1.5
-        ],
-        "side": [
-          -0.04,
-          0.02,
-          -1.5,
-          1.5
-        ],
-        "top": [
-          -1.5,
-          1.5,
-          -0.04,
-          0.02
-        ]
-      }
-    },
-    {
-      "id": "hand_post",
-      "kind": "solid",
-      "label": "Center post",
-      "material": "steel",
-      "features": [
-        {
-          "shape": "cylinder",
-          "from": [
-            0,
-            0,
-            0
-          ],
-          "to": [
-            0,
-            0,
-            0.16
-          ],
-          "radius": 0.04
-        }
-      ],
-      "views": {
-        "front": [
-          -0.04,
-          0.04,
-          -0.04,
-          0.04
+          -1.65,
+          1.65,
+          -1.65,
+          1.65
         ],
         "side": [
           0,
-          0.16,
-          -0.04,
-          0.04
+          0.07,
+          -1.65,
+          1.65
         ],
         "top": [
-          -0.04,
-          0.04,
+          -1.65,
+          1.65,
           0,
-          0.16
+          0.07
         ]
-      }
+      },
+      "out": "+z"
     },
     {
       "id": "hour_hand",
       "kind": "solid",
-      "label": "Hour hand",
+      "label": "Hour Hand",
       "material": "black",
       "features": [
-        {
-          "shape": "cylinder",
-          "from": [
-            0,
-            0,
-            0.04
-          ],
-          "to": [
-            0,
-            0,
-            0.06
-          ],
-          "radius": 0.1
-        },
         {
           "shape": "beam",
           "from": [
             0,
             0,
-            0.05
+            0.12
           ],
           "to": [
-            -0.693,
-            0.4,
-            0.05
+            -0.78,
+            0.45,
+            0.12
           ],
-          "width": 0.12,
+          "width": 0.14,
           "thickness": 0.02,
           "normal": [
             0,
             0,
             1
           ]
+        },
+        {
+          "shape": "cylinder",
+          "from": [
+            0,
+            0,
+            0.11
+          ],
+          "to": [
+            0,
+            0,
+            0.13
+          ],
+          "radius": 0.1
         }
       ],
       "views": {
         "front": [
-          -0.723,
+          -0.82,
           0.1,
           -0.1,
-          0.452
+          0.51
         ],
         "side": [
-          0.04,
-          0.06,
+          0.11,
+          0.13,
           -0.1,
-          0.452
+          0.51
         ],
         "top": [
-          -0.723,
+          -0.82,
           0.1,
-          0.04,
-          0.06
+          0.11,
+          0.13
         ]
       },
+      "out": "+z",
       "spin": {
         "axis": "z",
         "pivot": [
@@ -402,64 +423,65 @@
     {
       "id": "minute_hand",
       "kind": "solid",
-      "label": "Minute hand",
+      "label": "Minute Hand",
       "material": "black",
       "features": [
-        {
-          "shape": "cylinder",
-          "from": [
-            0,
-            0,
-            0.08
-          ],
-          "to": [
-            0,
-            0,
-            0.1
-          ],
-          "radius": 0.08
-        },
         {
           "shape": "beam",
           "from": [
             0,
             0,
-            0.09
+            0.17
           ],
           "to": [
-            1.039,
-            0.6,
-            0.09
+            1.17,
+            0.675,
+            0.17
           ],
-          "width": 0.08,
+          "width": 0.1,
           "thickness": 0.02,
           "normal": [
             0,
             0,
             1
           ]
+        },
+        {
+          "shape": "cylinder",
+          "from": [
+            0,
+            0,
+            0.16
+          ],
+          "to": [
+            0,
+            0,
+            0.18
+          ],
+          "radius": 0.08
         }
       ],
       "views": {
         "front": [
           -0.08,
-          1.059,
+          1.2,
           -0.08,
-          0.635
+          0.72
         ],
         "side": [
-          0.08,
-          0.1,
+          0.16,
+          0.18,
           -0.08,
-          0.635
+          0.72
         ],
         "top": [
           -0.08,
-          1.059,
-          0.08,
-          0.1
+          1.2,
+          0.16,
+          0.18
         ]
       },
+      "out": "+z",
       "spin": {
         "axis": "z",
         "pivot": [
@@ -474,64 +496,65 @@
     {
       "id": "second_hand",
       "kind": "solid",
-      "label": "Second hand",
+      "label": "Second Hand",
       "material": "red",
       "features": [
-        {
-          "shape": "cylinder",
-          "from": [
-            0,
-            0,
-            0.12
-          ],
-          "to": [
-            0,
-            0,
-            0.14
-          ],
-          "radius": 0.06
-        },
         {
           "shape": "beam",
           "from": [
             0,
             0.3,
-            0.13
+            0.22
           ],
           "to": [
             0,
-            -1.35,
-            0.13
+            -1.45,
+            0.22
           ],
-          "width": 0.03,
-          "thickness": 0.02,
+          "width": 0.04,
+          "thickness": 0.01,
           "normal": [
             0,
             0,
             1
           ]
+        },
+        {
+          "shape": "cylinder",
+          "from": [
+            0,
+            0,
+            0.21
+          ],
+          "to": [
+            0,
+            0,
+            0.23
+          ],
+          "radius": 0.06
         }
       ],
       "views": {
         "front": [
           -0.06,
           0.06,
-          -1.35,
+          -1.45,
           0.3
         ],
         "side": [
-          0.12,
-          0.14,
-          -1.35,
+          0.21,
+          0.23,
+          -1.45,
           0.3
         ],
         "top": [
           -0.06,
           0.06,
-          0.12,
-          0.14
+          0.21,
+          0.23
         ]
       },
+      "out": "+z",
       "spin": {
         "axis": "z",
         "pivot": [
@@ -546,7 +569,7 @@
     {
       "id": "crystal",
       "kind": "solid",
-      "label": "Crystal (glass)",
+      "label": "Crystal",
       "material": "glass",
       "features": [
         {
@@ -559,31 +582,32 @@
           "to": [
             0,
             0,
-            0.36
+            0.4
           ],
-          "radius": 1.6
+          "radius": 1.65
         }
       ],
       "views": {
         "front": [
-          -1.6,
-          1.6,
-          -1.6,
-          1.6
+          -1.65,
+          1.65,
+          -1.65,
+          1.65
         ],
         "side": [
           0.3,
-          0.36,
-          -1.6,
-          1.6
+          0.4,
+          -1.65,
+          1.65
         ],
         "top": [
-          -1.6,
-          1.6,
+          -1.65,
+          1.65,
           0.3,
-          0.36
+          0.4
         ]
-      }
+      },
+      "out": "+z"
     },
     {
       "id": "crown",
@@ -594,43 +618,58 @@
         {
           "shape": "cylinder",
           "from": [
-            1.65,
+            1.5,
             0,
-            0
+            -0.2
           ],
           "to": [
-            2.0,
+            1.95,
             0,
-            0
+            -0.2
+          ],
+          "radius": 0.04
+        },
+        {
+          "shape": "cylinder",
+          "from": [
+            1.95,
+            0,
+            -0.2
+          ],
+          "to": [
+            2.3,
+            0,
+            -0.2
           ],
           "radius": 0.18
         }
       ],
       "views": {
         "front": [
-          1.65,
-          2.0,
+          1.5,
+          2.3,
           -0.18,
           0.18
         ],
         "side": [
-          -0.18,
-          0.18,
+          -0.38,
+          -0.02,
           -0.18,
           0.18
         ],
         "top": [
-          1.65,
-          2.0,
-          -0.18,
-          0.18
+          1.5,
+          2.3,
+          -0.38,
+          -0.02
         ]
-      }
+      },
+      "out": "+x"
     },
     {
       "id": "strap_top",
       "kind": "solid",
-      "label": "Top strap",
+      "label": "Top Strap",
       "material": "leather",
       "features": [
         {
@@ -638,59 +677,90 @@
           "points": [
             [
               0,
-              1.8,
-              0
-            ],
-            [
-              0,
-              2.6,
+              2.1,
               -0.1
             ],
             [
               0,
-              3.4,
-              -0.4
+              2.9,
+              -0.25
+            ],
+            [
+              0,
+              3.7,
+              -0.55
             ],
             [
               0,
               4.0,
-              -0.8
+              -0.9
             ]
           ],
           "width": 1.2,
-          "thickness": 0.1,
+          "thickness": 0.12,
           "normal": [
             0,
             0,
             1
           ]
+        },
+        {
+          "shape": "cylinder",
+          "from": [
+            -0.75,
+            2.1,
+            -0.1
+          ],
+          "to": [
+            0.75,
+            2.1,
+            -0.1
+          ],
+          "radius": 0.05,
+          "material": "steel"
+        },
+        {
+          "shape": "tube",
+          "from": [
+            -0.7,
+            4.0,
+            -0.9
+          ],
+          "to": [
+            0.7,
+            4.0,
+            -0.9
+          ],
+          "radius": 0.06,
+          "material": "steel"
         }
       ],
       "views": {
         "front": [
-          -0.6,
-          0.6,
-          1.8,
-          4.0
+          -0.76,
+          0.76,
+          2.05,
+          4.06
         ],
         "side": [
-          -0.85,
-          0.05,
-          1.8,
-          4.0
+          -0.97,
+          -0.04,
+          2.05,
+          4.06
         ],
         "top": [
-          -0.6,
-          0.6,
-          -0.85,
-          0.05
+          -0.76,
+          0.76,
+          -0.97,
+          -0.04
         ]
-      }
+      },
+      "out": "+y"
     },
     {
       "id": "strap_bottom",
       "kind": "solid",
-      "label": "Bottom strap",
+      "label": "Bottom Strap",
       "material": "leather",
       "features": [
         {
@@ -698,27 +768,27 @@
           "points": [
             [
               0,
-              -1.8,
-              0
-            ],
-            [
-              0,
-              -2.6,
+              -2.1,
               -0.1
             ],
             [
               0,
-              -3.4,
-              -0.4
+              -2.9,
+              -0.25
+            ],
+            [
+              0,
+              -3.7,
+              -0.55
             ],
             [
               0,
               -4.0,
-              -0.8
+              -0.9
             ]
           ],
           "width": 1.2,
-          "thickness": 0.1,
+          "thickness": 0.12,
           "normal": [
             0,
             0,
@@ -728,168 +798,172 @@
         {
           "shape": "cylinder",
           "from": [
-            0,
-            -3.0,
-            -0.31
+            -0.75,
+            -2.1,
+            -0.1
           ],
           "to": [
-            0,
-            -3.0,
-            -0.19
+            0.75,
+            -2.1,
+            -0.1
           ],
-          "radius": 0.07,
-          "material": "black"
-        },
-        {
-          "shape": "cylinder",
-          "from": [
-            0,
-            -3.6,
-            -0.59
-          ],
-          "to": [
-            0,
-            -3.6,
-            -0.47
-          ],
-          "radius": 0.07,
-          "material": "black"
+          "radius": 0.05,
+          "material": "steel"
         }
       ],
       "views": {
         "front": [
-          -0.6,
-          0.6,
+          -0.75,
+          0.75,
           -4.0,
-          -1.8
+          -2.05
         ],
         "side": [
-          -0.85,
-          0.05,
+          -0.96,
+          -0.04,
           -4.0,
-          -1.8
+          -2.05
         ],
         "top": [
-          -0.6,
-          0.6,
-          -0.85,
-          0.05
+          -0.75,
+          0.75,
+          -0.96,
+          -0.04
         ]
-      }
+      },
+      "out": "-y"
     }
   ],
   "connections": [
     {
-      "a": "case",
-      "b": "movement",
+      "a": "case_back",
+      "b": "case",
       "at": [
+        1.75,
         0,
-        0,
-        -0.2
+        -0.4
       ]
     },
     {
       "a": "movement",
-      "b": "dial",
+      "b": "case",
       "at": [
-        0.5,
-        0.4,
-        -0.04
+        1.65,
+        0,
+        -0.3
+      ]
+    },
+    {
+      "a": "movement",
+      "b": "case_back",
+      "at": [
+        0,
+        0,
+        -0.4
+      ]
+    },
+    {
+      "a": "dial",
+      "b": "movement",
+      "at": [
+        0,
+        0,
+        0
       ]
     },
     {
       "a": "dial",
       "b": "case",
       "at": [
-        1.5,
+        1.65,
         0,
-        -0.02
-      ]
-    },
-    {
-      "a": "hand_post",
-      "b": "dial",
-      "at": [
-        0,
-        0,
-        0
+        0.02
       ]
     },
     {
       "a": "hour_hand",
-      "b": "hand_post",
+      "b": "movement",
       "at": [
         0,
         0,
-        0.05
+        0.12
       ]
     },
     {
       "a": "minute_hand",
-      "b": "hand_post",
+      "b": "movement",
       "at": [
         0,
         0,
-        0.09
+        0.17
       ]
     },
     {
       "a": "second_hand",
-      "b": "hand_post",
+      "b": "movement",
       "at": [
         0,
         0,
-        0.13
+        0.22
       ]
     },
     {
       "a": "crystal",
       "b": "case",
       "at": [
-        1.55,
+        1.65,
         0,
-        0.3
+        0.35
       ]
     },
     {
       "a": "crown",
       "b": "case",
       "at": [
-        1.65,
+        1.8,
         0,
-        0
+        -0.2
+      ]
+    },
+    {
+      "a": "crown",
+      "b": "movement",
+      "at": [
+        1.55,
+        0,
+        -0.2
       ]
     },
     {
       "a": "strap_top",
       "b": "case",
       "at": [
-        0.6,
-        1.8,
-        0
+        0.7,
+        2.1,
+        -0.1
       ]
     },
     {
       "a": "strap_bottom",
       "b": "case",
       "at": [
-        0.6,
-        -1.8,
-        0
+        0.7,
+        -2.1,
+        -0.1
       ]
     }
   ],
   "timelapse": 8,
   "steps": [
     {
-      "say": "Here is an analog wristwatch, the kind with hands that sweep around a circle. Let's take it apart and see how it tells the time!",
+      "say": "Here is an analog wristwatch! Instead of showing numbers on a screen, it tells the time with hands that sweep around a circle. Let's open it up and see how it works.",
       "do": [
         {
           "reveal": [
             "case",
+            "case_back",
             "movement",
             "dial",
-            "hand_post",
             "hour_hand",
             "minute_hand",
             "second_hand",
@@ -905,72 +979,40 @@
       ]
     },
     {
-      "say": "Look at the three hands. The short one is the hour hand, the long one is the minute hand, and the thin red one is the second hand. They all sit on one little center post, stacked like pancakes.",
+      "say": "On the outside, the metal case is like a tiny safe that protects everything inside. A clear crystal covers the front like a window, and two straps hold the watch on your wrist.",
       "do": [
         {
           "explode": "all"
         },
         {
           "label": [
-            "hour_hand",
-            "minute_hand",
-            "second_hand",
-            "hand_post"
+            "case",
+            "crystal",
+            "strap_top",
+            "strap_bottom"
           ]
         },
         {
           "highlight": [
-            "hour_hand",
-            "minute_hand",
-            "second_hand"
+            "case",
+            "crystal"
           ]
         },
         {
-          "zoom": "hand_post"
+          "zoom": "all"
         }
       ]
     },
     {
-      "say": "Each hand moves at its own speed. The second hand goes all the way around in one minute. The minute hand takes a whole hour. The hour hand is the slowpoke: it goes around twice a day. We've sped them up so you can watch.",
+      "say": "Hidden behind the case back is the movement, the watch's engine. In many watches a small battery gives power, and a row of tiny gears turns, a bit like the gears on a bicycle passing motion along.",
       "do": [
         {
-          "spin": [
-            "hour_hand",
-            "minute_hand",
-            "second_hand"
-          ]
+          "explode": "all"
         },
-        {
-          "highlight": [
-            "second_hand"
-          ]
-        }
-      ]
-    },
-    {
-      "say": "The dial is the face. Its marks split the circle into twelve hours, like slices of a pizza. Where the short hand points tells the hour, and the long hand tells the minutes.",
-      "do": [
         {
           "label": [
-            "dial"
-          ]
-        },
-        {
-          "highlight": [
-            "dial"
-          ]
-        },
-        {
-          "zoom": "dial"
-        }
-      ]
-    },
-    {
-      "say": "Hidden under the dial is the movement, the watch's engine. A wound-up spring or a tiny battery gives it power, and its gears pass the turning along, slowing it down from one hand to the next, like bicycle gears.",
-      "do": [
-        {
-          "label": [
-            "movement"
+            "movement",
+            "case_back"
           ]
         },
         {
@@ -984,11 +1026,72 @@
       ]
     },
     {
-      "say": "The metal case holds everything safely, and the clear crystal on top keeps dust and fingers off the hands. The little knob on the side is the crown: you pull and turn it to set the right time. The straps hold it on your wrist.",
+      "say": "All three hands sit on one little post in the middle. The thin red second hand goes all the way around in one minute. The long minute hand takes a whole hour, and the short hour hand takes twelve hours!",
       "do": [
         {
+          "explode": "all"
+        },
+        {
           "label": [
+            "second_hand",
+            "minute_hand",
+            "hour_hand"
+          ]
+        },
+        {
+          "highlight": [
+            "second_hand",
+            "minute_hand",
+            "hour_hand"
+          ]
+        },
+        {
+          "spin": [
+            "second_hand",
+            "minute_hand",
+            "hour_hand"
+          ]
+        },
+        {
+          "zoom": "dial"
+        }
+      ]
+    },
+    {
+      "say": "The hands point to marks on the dial, the watch's face. Twelve marks stand for the twelve hours. The crown on the side is a little knob you pull and turn to set the hands to the right time.",
+      "do": [
+        {
+          "explode": "all"
+        },
+        {
+          "label": [
+            "dial",
+            "crown"
+          ]
+        },
+        {
+          "highlight": [
+            "dial",
+            "crown"
+          ]
+        },
+        {
+          "zoom": "crown"
+        }
+      ]
+    },
+    {
+      "say": "Put it all back together, and the gears keep the hands turning at just the right speeds, day and night. Look at where the short and long hands point, and you can read the time!",
+      "do": [
+        {
+          "reveal": [
             "case",
+            "case_back",
+            "movement",
+            "dial",
+            "hour_hand",
+            "minute_hand",
+            "second_hand",
             "crystal",
             "crown",
             "strap_top",
@@ -996,36 +1099,20 @@
           ]
         },
         {
-          "highlight": [
-            "crown"
+          "spin": [
+            "second_hand",
+            "minute_hand",
+            "hour_hand"
           ]
-        },
-        {
-          "zoom": "case"
-        }
-      ]
-    },
-    {
-      "say": "Now let's put it all back together. Power turns the gears, the gears turn the hands at just the right speeds, and the dial tells you what time it is!",
-      "do": [
-        {
-          "explode": []
         },
         {
           "zoom": "all"
-        },
-        {
-          "spin": [
-            "hour_hand",
-            "minute_hand",
-            "second_hand"
-          ]
         }
       ]
     }
   ],
-  "recap": "Inside a watch, gears turn three hands at different speeds, so the second, minute and hour hands point to the time on the dial.",
-  "question": "Would you like to find out how the tiny gears inside know exactly how fast to turn?",
+  "recap": "Inside a watch, tiny gears turn three hands at different speeds, so the short hand shows the hour, the long hand shows the minutes and the thin hand counts the seconds.",
+  "question": "Would you like to find out how the gears make each hand turn at a different speed?",
   "layout": {
     "template": "blueprint",
     "explode": "free"
