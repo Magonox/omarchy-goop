@@ -21,6 +21,8 @@ MATERIALS = {   # name -> color, metalness, roughness, emissive strength
 }
 
 KINDS = {
+    # a tube, rod or bar between two named joints (blueprint lessons: frames, forks, bars, towers); its mesh is made from the joints, not by the model
+    "member": {"type": "mesh", "material": "steel"},
     # a jet engine and other things in a row
     "fan": {"type": "fan", "r": 1.35, "h": 0.5, "blades": 12, "axial": True, "material": "steel"},
     "compressor": {"type": "stages", "r0": 1.2, "r1": 0.8, "h": 1.7, "n": 3, "blades": 10, "axial": True, "material": "steel"},
@@ -79,4 +81,4 @@ MEDIA = {"air": [200, 230, 255], "fuel": [255, 190, 90], "exhaust": [255, 140, 6
 ATTACH_AT = ("top", "bottom", "left", "right", "sides", "front", "back", "ring")
 RESERVED_IDS = ("floor",)
 DISTANCES = {"near": 3.4, "medium": 6.2, "far": 9.0}
-LIMITS = {"parts": (2, 14), "steps": (2, 12), "say": (10, 420), "label": 24, "title": 80, "analogy": 220, "duration": 170}
+LIMITS = {"parts": (2, 24), "steps": (2, 12), "say": (10, 420), "label": 24, "title": 80, "analogy": 220, "duration": 170}

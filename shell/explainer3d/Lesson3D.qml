@@ -24,6 +24,7 @@ PanelWindow {
     readonly property var st: ctx ? L.state(ctx, t) : null
     readonly property var subs: scene ? scene.parts.map(function (p) { return S.build(p.shape); }) : []
     readonly property var ringMesh: M.torus(1.0, 0.012, 64, 6)
+    readonly property var pills: st ? L.spreadLabels(st.labels, st.cam, v3.width, v3.height) : []      // where each label's pill goes, lifted clear of the others
 
     // GOOP_START=95 starts the lesson 95 seconds in (for testing the ending)
     function play() { startedAt = Date.now() - Number(Quickshell.env("GOOP_START") || 0) * 1000 / speed; t = 0; playing = true; }
@@ -219,18 +220,19 @@ PanelWindow {
             id: lab
             required property int index
             readonly property var l: ex.st.labels[index]
-            readonly property var p: { var dep = ex.t; return v3.mapFrom3DScene(Qt.vector3d(l.at[0], l.at[1], l.at[2])); }
+            readonly property var p: L.project(ex.st.cam, l.at, v3.width, v3.height) || ({ x: -1000, y: -1000 })
             opacity: l.a
+            readonly property real lift: ex.pills[index] ? ex.pills[index].lift : 0
             Rectangle {
                 id: pill
                 x: lab.p.x - width / 2
-                y: lab.p.y - 52 - height / 2
+                y: lab.p.y - 52 - lab.lift - height / 2
                 width: txt.implicitWidth + 24; height: 28; radius: 14
                 color: "#e6141822"
                 border.color: "#55ffffff"; border.width: 1
                 Text { id: txt; anchors.centerIn: parent; text: lab.l.text; color: "white"; font.pixelSize: 14; font.weight: Font.DemiBold }
             }
-            Rectangle { x: lab.p.x - 0.5; y: lab.p.y - 38; width: 1; height: 38; color: "#99ffffff" }
+            Rectangle { x: lab.p.x - 0.5; y: lab.p.y - 38 - lab.lift; width: 1; height: 38 + lab.lift; color: "#99ffffff" }
             Rectangle { x: lab.p.x - 4; y: lab.p.y - 4; width: 8; height: 8; radius: 4; color: "white"; border.color: "#88000000"; border.width: 1 }
         }
     }

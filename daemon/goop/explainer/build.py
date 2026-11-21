@@ -1,7 +1,7 @@
 """storyboard (what the model writes) -> resolved scene (what the renderer plays): validate, lay out, schedule."""
 import copy, json, os
 
-from . import codegen, layout, schema, timeline, vocab
+from . import blueprint, codegen, layout, schema, timeline, vocab
 
 
 class StoryboardError(ValueError):
@@ -17,6 +17,8 @@ def build(story, parts_dir=None):
     if errors:
         raise StoryboardError(errors)
     story = copy.deepcopy(story)                 # code parts get their sandbox results attached; the caller's storyboard stays clean
+    if story["layout"]["template"] == "blueprint":
+        story, _ = blueprint.resolve(story)     # joints become points, member parts become boxes with their tube meshes
     if parts_dir is not None:
         for p in story["parts"]:
             if p["kind"] == "code":

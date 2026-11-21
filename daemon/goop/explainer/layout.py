@@ -12,6 +12,8 @@ def _shape(part):
     shape = {k: (round(v * f, 3) if k in ("r", "h", "w", "d", "t", "r0", "r1") else v) for k, v in kind.items() if k != "material"}
     if part["kind"] == "device":
         shape["variant"] = part.get("variant", "laptop")
+    if part["kind"] == "member":            # a tube between two joints: its box and mesh came from the joints (blueprint.resolve)
+        shape |= {"type": "mesh", "r": round(max(part["size"][0], part["size"][2]) / 2, 3), "h": round(part["size"][1], 3), "scale": 1.0, "meshes": part["_meshes"]}
     if part["kind"] == "code":
         if blueprint.is_box(part):          # a blueprint box in the machine frame: the mesh is scaled to fill it, so the parts fit together by construction
             shape |= {"type": "mesh", "r": round(max(part["size"][0], part["size"][2]) / 2, 3), "h": round(part["size"][1], 3), "scale": part.get("_scale", 1.0)}

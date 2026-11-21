@@ -111,6 +111,7 @@ KNOWN = {
     "balloon-base": ["connections", "sizes_match_plan", "camera_frames_subject", "effects_scale"],
     "balloon-v2": ["connections", "sizes_match_plan", "mesh_integrity", "camera_frames_subject", "effects_scale"],
     "bicycle-v2": ["connections", "sizes_match_plan", "coupled_motion"],
+    "bicycle-joints": ["sizes_match_plan"],
     "engine-base": ["sizes_match_plan"],
     "engine-new": ["sizes_match_plan"],
     "submarine-v2": ["connections", "sizes_match_plan", "mesh_integrity"],

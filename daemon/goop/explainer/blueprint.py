@@ -4,9 +4,12 @@ drives and flies toward +x), y is up with the ground at y = 0, z is left to righ
 centres), and its code only draws ONE copy filling the box.
 
 This module checks a blueprint the way an engineer would: parts that pass through each other and parts floating loose are errors with numbers in them, so the model can fix them."""
-import math
+import copy, math, re
 
-LIMITS = {"coord": 10.0, "size": (0.1, 10.0), "copies": (1, 8), "overlap": 0.35}
+from . import members
+
+LIMITS = {"coord": 10.0, "size": (0.1, 10.0), "copies": (1, 8), "overlap": 0.35, "radius": (0.03, 0.6), "joints": 40}
+_NAME = re.compile(r"^[a-z][a-z0-9_]{0,23}$")
 
 
 def _num(v):
@@ -48,6 +51,65 @@ def validate_part(p, pid):
     return errs
 
 
+def _point(c):
+    return isinstance(c, list) and len(c) == 3 and all(_num(v) and abs(v) <= LIMITS["coord"] for v in c)
+
+
+def resolve(story):
+    """(story, errors): a copy of a blueprint storyboard with its joints resolved. A part's `at` may name a joint instead of giving a point, and a `member` part (a tube from one
+    joint to another) becomes an ordinary box in the machine frame with its mesh attached, so the rest of the pipeline treats it like any other part. Errors are written for the model."""
+    out, errs = copy.deepcopy(story), []
+    joints = out.get("joints")
+    clean = {}
+    if joints is not None:
+        if not isinstance(joints, dict) or len(joints) > LIMITS["joints"]:
+            errs.append(f"joints must be an object of up to {LIMITS['joints']} named points like {{\"bottom_bracket\": [0, 1, 0]}}")
+        else:
+            for name, c in joints.items():
+                if not _NAME.match(str(name)) or not _point(c):
+                    errs.append(f"joint {name!r}: the name must be lowercase letters, digits or _ and the point [x, y, z] with each coordinate within +-{LIMITS['coord']:g}")
+                else:
+                    clean[name] = [float(v) for v in c]
+    for p in out.get("parts", []) if isinstance(out.get("parts"), list) else []:
+        if not isinstance(p, dict):
+            continue
+        pid = p.get("id")
+        if isinstance(p.get("at"), list):
+            new = []
+            for c in p["at"]:
+                if isinstance(c, str):
+                    if c in clean:
+                        new.append(list(clean[c]))
+                    else:
+                        errs.append(f"part {pid!r}: at names a joint {c!r} that is not in joints")
+                        new.append([0, 0, 0])
+                else:
+                    new.append(c)
+            p["at"] = new
+        if p.get("kind") != "member":
+            continue
+        a, b, r = clean.get(p.get("from")), clean.get(p.get("to")), p.get("radius", 0.08)
+        zs = p.get("z", [0])
+        bad = []
+        if a is None or b is None:
+            bad.append(f"from and to must be names of joints (known: {', '.join(clean) or 'none'})")
+        elif a == b:
+            bad.append("from and to are the same joint")
+        if not (_num(r) and LIMITS["radius"][0] <= r <= LIMITS["radius"][1]):
+            bad.append(f"radius must be a number between {LIMITS['radius'][0]:g} and {LIMITS['radius'][1]:g}")
+        if not (isinstance(zs, list) and 1 <= len(zs) <= 4 and all(_num(v) and abs(v) <= LIMITS["coord"] for v in zs)):
+            bad.append("z must be a list of up to 4 offsets across the machine, like [-0.2, 0.2], for a copy on each side")
+        if bad:
+            errs.append(f"member {pid!r}: " + "; ".join(bad))
+            continue
+        mid = [round((a[k] + b[k]) / 2, 4) for k in range(3)]
+        mesh = members.tube([a[k] - mid[k] for k in range(3)], [b[k] - mid[k] for k in range(3)], r)
+        p["_meshes"] = [{"look": "solid", "material": p.get("material", "steel"), **mesh}]
+        p["size"] = [round(max(LIMITS["size"][0], abs(a[k] - b[k]) + 2 * r), 4) for k in range(3)]
+        p["at"] = [[mid[0], mid[1], mid[2] + z] for z in zs]
+    return out, errs
+
+
 def instances(p):
     """[(id, centre, size)] for every copy of a part; the first keeps the part's id, the others get id#2, id#3..."""
     return [(p["id"] if k == 0 else f"{p['id']}#{k + 1}", c, p["size"]) for k, c in enumerate(p["at"])]
@@ -77,6 +139,7 @@ def check(parts):
     """Errors for parts that pass through each other or float away from the rest. A part declared `inside` another may sit within it."""
     items = [(p["id"], pid, (c, s)) for p in parts for pid, c, s in instances(p)]
     inside = {p["id"]: p.get("inside") for p in parts}
+    members_involved = {p["id"]: True for p in parts if p.get("kind") == "member"}       # tubes meet at joints, so their boxes always overlap: not an error
     lo = [min(_span(*box)[i][0] for _, _, box in items) for i in range(3)]
     hi = [max(_span(*box)[i][1] for _, _, box in items) for i in range(3)]
     extent = max(h - l for h, l in zip(hi, lo))
@@ -91,7 +154,7 @@ def check(parts):
                 continue
             if _gap(a, b) <= max(0.35, 0.06 * extent):
                 near = True
-            if i < j:
+            if i < j and members_involved.get(ida) is None and members_involved.get(idb) is None:
                 f = _overlap(a, b)
                 key = tuple(sorted((pa, pb)))
                 if f > LIMITS["overlap"] and key not in seen:

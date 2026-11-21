@@ -11,7 +11,7 @@ import json, os, re, shutil, subprocess, tempfile, time
 from concurrent.futures import ThreadPoolExecutor
 
 from .. import private
-from . import build, codegen, vocab
+from . import blueprint, build, codegen, vocab
 
 REPAIRS = 2
 TIMEOUT = 150
@@ -48,7 +48,19 @@ TEMPLATES (pick the one that fits the idea; the engine places the parts):
 - "assembly": one machine or vehicle made of pieces, stacked bottom to top. A part may have "attach":{{"to":id,"at":one of {list(vocab.ATTACH_AT)},"count":1-8}} (hung on another part) or "inside":id.
 - "network": one part with "sender":true in the middle (a tower, router, speaker, sun) and the other parts placed around it, each with a "distance" (near, medium, far); a part with "between":[id,id] sits between those two parts as a blocker (a wall, a hill) and weakens the signal.
 
-PARTS ({vocab.LIMITS['parts'][0]}-{vocab.LIMITS['parts'][1]}, aim for 5-8): {{"id":"lowercase_id","kind":"code","label":"up to {vocab.LIMITS['label']} chars, shown on screen",
+JOINTS AND MEMBERS (blueprint lessons, REQUIRED for anything made of tubes, rods, bars or beams: a bicycle frame, a fork, handlebars, stays, a crane, a tower, a bridge, a chair, a ladder).
+Such things are NEVER boxes or code parts. Give the lesson a top-level "joints" object that names points in the machine frame (the same frame as the boxes: x front-to-back with the front at +x, y up with the
+ground at 0, z left-to-right), and draw every tube as a part of kind "member" that runs from one named joint to another, so tubes meet exactly where the real ones do:
+  "joints": {{"bottom_bracket":[0,1.0,0], "seat_top":[-0.5,3.0,0], "head_top":[2.0,3.3,0], "head_bottom":[1.95,2.9,0], "rear_axle":[-2.0,1.4,0], "front_axle":[2.3,1.4,0]}},
+  {{"id":"seat_tube","kind":"member","label":"Seat tube","from":"bottom_bracket","to":"seat_top","radius":0.07,"material":"red"}},
+  {{"id":"down_tube","kind":"member","label":"Down tube","from":"bottom_bracket","to":"head_bottom","radius":0.08,"material":"red"}},
+  {{"id":"chain_stays","kind":"member","label":"Chain stays","from":"bottom_bracket","to":"rear_axle","radius":0.05,"material":"red","z":[-0.18,0.18]}}
+"z":[-0.18,0.18] draws a copy of the member at each of those offsets across the machine (a pair of stays, the two fork blades). A part that sits at a joint uses its name in "at": "at":["rear_axle"]
+(a wheel on its axle, a saddle on the seat-post top, a chainring on the bottom bracket). So first write down the real joints of the machine with real proportions, then connect them with members: a diamond frame has a
+seat tube, a down tube, a top tube and a head tube, plus chain stays and seat stays to the rear axle, and a fork from the head tube to the front axle; every one of them is a member. Members cost nothing to draw, so use as many
+as the real machine has. Only parts with real surface detail (a wheel with spokes, a saddle, a chainring with teeth) are code parts with a brief.
+
+PARTS ({vocab.LIMITS['parts'][0]}-{vocab.LIMITS['parts'][1]} including members; aim for 5-8 code parts): {{"id":"lowercase_id","kind":"code","label":"up to {vocab.LIMITS['label']} chars, shown on screen",
 "brief":"2-4 sentences: what this part looks like, its main shapes, small details (rims, screws, lenses, vents, teeth) and colours, as a real one would look","width":N,"height":N}}
 (In the blueprint template use "size" and "at" instead of width and height.) width and height are the part's size in the scene, between 0.2 and 8: 1 is about a hand-sized object, 2-4 is typical for a main part, small details are 0.4-1. A flat disc is wide and short,
 a tower is narrow and tall. Parts that sit next to each other should be sized sensibly against each other. Every part is kind "code".
@@ -182,9 +194,9 @@ def plan_outline(topic, notes, run, title="", repairs=REPAIRS):
         reply = run(system, prompt if problem is None else prompt + "\n\n" + problem)
         try:
             story = extract_json(reply)
-            others = [p.get("id") for p in story.get("parts", []) if isinstance(p, dict) and p.get("kind") != "code"] if isinstance(story, dict) else []
+            others = [p.get("id") for p in story.get("parts", []) if isinstance(p, dict) and p.get("kind") not in ("code", "member")] if isinstance(story, dict) else []
             if others:
-                raise build.StoryboardError([f"every part must be kind \"code\" (with a brief, width and height); these are not: {', '.join(map(str, others))}"])
+                raise build.StoryboardError([f"every part must be kind \"code\" (with a brief, width and height) or kind \"member\" (a tube between two joints); these are not: {', '.join(map(str, others))}"])
             build.build(story, parts_dir="/nonexistent")
             return story
         except ValueError as e:                     # bad JSON, or a StoryboardError (also a ValueError) with the validator's messages
@@ -262,6 +274,8 @@ def write_part(parts_dir, pid, data):
 
 def write_pending(parts_dir, story):
     for p in story["parts"]:
+        if p.get("kind") != "code":
+            continue
         write_part(parts_dir, p["id"], {"meshes": [], "scale": 1})
 
 
@@ -269,13 +283,13 @@ def first_parts(story):
     """The part ids the first step reveals (so the window can open once they exist); falls back to the first part.
     A blueprint lesson opens by showing the whole machine, so all of its parts count."""
     if story.get("layout", {}).get("template") == "blueprint":
-        return [p["id"] for p in story["parts"]]
+        return [p["id"] for p in story["parts"] if p.get("kind") == "code"]
     ids = []
     for verb in story["steps"][0].get("do", []) or []:
         if "reveal" in verb:
             arg = verb["reveal"]
             ids += arg if isinstance(arg, list) else [arg]
-    known = [p["id"] for p in story["parts"]]
+    known = [p["id"] for p in story["parts"] if p.get("kind") == "code"]
     return [i for i in ids if i in known] or known[:1]
 
 
@@ -283,6 +297,8 @@ def produce(story, topic, run, parts_dir, on_part=None, workers=WORKERS):
     """Make every part in parallel, writing each geometry file the moment it is ready. Returns {id: {"code", "ok", "seconds"}}.
     `on_part(id, ok, seconds)` is called as each part finishes (from a worker thread)."""
     results = {}
+    story = blueprint.resolve(story)[0] if story.get("layout", {}).get("template") == "blueprint" else story      # tubes between joints are boxes here; only code parts need a model call
+    codes = [p for p in story["parts"] if p.get("kind") == "code"]
 
     def one(part):
         t0, ok = time.time(), True
@@ -295,7 +311,7 @@ def produce(story, topic, run, parts_dir, on_part=None, workers=WORKERS):
         if on_part:
             on_part(part["id"], ok, results[part["id"]]["seconds"])
     with ThreadPoolExecutor(max_workers=workers) as pool:
-        list(pool.map(one, story["parts"]))
+        list(pool.map(one, codes))
     return results
 
 
@@ -303,7 +319,8 @@ def full_story(story, results):
     """The outline with every part's code put in, so the lesson can be replayed or rebuilt later without the model."""
     out = json.loads(json.dumps(story))
     for p in out["parts"]:
-        p["code"] = results[p["id"]]["code"]
+        if p.get("kind") == "code":
+            p["code"] = results[p["id"]]["code"]
     return out
 
 

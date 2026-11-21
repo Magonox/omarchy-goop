@@ -94,7 +94,7 @@ def main(job_path):
     log(f"all parts done after {time.time() - t0:.0f}s ({sum(1 for r in results.values() if not r['ok'])} stand-ins)")
     if results:
         play.save(planner.full_story(story, results))            # so the lesson can be replayed later without the model
-    failed = [p["label"] for p in story["parts"] if not results.get(p["id"], {}).get("ok")]
+    failed = [p["label"] for p in story["parts"] if p.get("kind") == "code" and not results.get(p["id"], {}).get("ok")]
     if failed:
         log("stand-ins used for: " + ", ".join(failed))
 

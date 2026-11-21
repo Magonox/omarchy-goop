@@ -235,6 +235,41 @@ function exitDistance(half, dir) {
     return t;
 }
 
+// Where a point of the scene appears in the picture, in pixels, for the camera the lesson describes (the orbit camera of Lesson3D.qml: it looks at `target` from `dist` away, turned
+// `yaw` about the vertical and raised `pitch`, with a 34 degree vertical field of view). Computed here from the same numbers that move the camera, so a label can never disagree
+// with the picture (Qt's own scene-to-screen mapping follows the camera by a frame).
+var FOV = 34;
+function project(cam, pt, width, height) {
+    var yaw = cam.yaw * Math.PI / 180, pitch = -cam.pitch * Math.PI / 180;
+    var vx = pt[0] - cam.target[0], vy = pt[1] - cam.target[1], vz = pt[2] - cam.target[2];
+    var x1 = vx * Math.cos(yaw) - vz * Math.sin(yaw), z1 = vx * Math.sin(yaw) + vz * Math.cos(yaw);
+    var y2 = vy * Math.cos(pitch) + z1 * Math.sin(pitch), z2 = -vy * Math.sin(pitch) + z1 * Math.cos(pitch);
+    var depth = cam.dist - z2;
+    if (depth <= 0.001) return null;
+    var t = Math.tan(FOV * Math.PI / 360), nx = x1 / depth / (t * width / height), ny = y2 / depth / t;
+    return { x: (nx * 0.5 + 0.5) * width, y: (0.5 - ny * 0.5) * height, depth: depth };
+}
+
+// Labels are a pill above a dot. Where pills would overlap on screen, the later one is lifted until it clears, and its leader line grows to match. Returns, for every label,
+// the pill's rectangle {x, y, w, h} in pixels and how far it was lifted. The pill is about 8 pixels per letter plus padding, 28 high, 52 above its dot.
+function spreadLabels(labels, cam, width, height) {
+    var out = [], placed = [];
+    labels.forEach(function (lb) {
+        var pt = project(cam, lb.at, width, height);
+        if (!pt) { out.push({ x: -1000, y: -1000, w: 0, h: 0, lift: 0 }); return; }
+        var w = String(lb.text).length * 8 + 24, h = 28, lift = 0, rect;
+        for (var tries = 0; tries < 12; tries++) {
+            rect = { x: pt.x - w / 2, y: pt.y - 52 - lift - h / 2, w: w, h: h, lift: lift };
+            var clash = placed.some(function (q) { return rect.x < q.x + q.w + 4 && q.x < rect.x + rect.w + 4 && rect.y < q.y + q.h + 4 && q.y < rect.y + rect.h + 4; });
+            if (!clash) break;
+            lift += h + 4;
+        }
+        placed.push(rect);
+        out.push(rect);
+    });
+    return out;
+}
+
 function frac(x) { return x - Math.floor(x); }
 
 // where the effect streams from, in the assembled position: the emitter part if the story named one

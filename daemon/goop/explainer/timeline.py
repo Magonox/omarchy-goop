@@ -14,6 +14,23 @@ GO_AT = 5.4            # seconds into the finale step when the assembled thing s
 PITCH_FOR = {"launch": 5, "drive": 9, "sink": 4, "fly": 9}
 
 
+CAMERA_SETTLE = 2.0           # a label appears once the camera has arrived (the shot eases in over about 1.8 s), so it is never drawn where the picture is not yet looking
+LABEL_HEADROOM = 0.15         # a label's text sits above its dot: shots with labels aim a little above the middle of the parts to leave room
+FOCUS_CONTEXT = 0.6           # a shot on some parts is at least this share of the way out to the whole-model shot
+TAN_FOV = math.tan(math.radians(34) / 2)       # the lesson camera looks with a 34 degree vertical field of view; the picture is wider than tall, so the vertical limit decides
+
+
+def _fit(radius):
+    """How far the camera must be to hold a sphere of this radius in the picture, with a margin."""
+    return radius / TAN_FOV * 1.25 + 0.6
+
+
+def _half(p, k):
+    """Half the size of a placed part along axis k (the box the layout gave it)."""
+    sh = p["shape"]
+    return (sh.get("h", 2 * p["radius"]) / 2) if k == 1 else max(sh.get("r", 0), sh.get("r0", 0), sh.get("w", 0) / 2, sh.get("d", 0) / 2 if k == 2 else 0) or p["radius"]
+
+
 def duration(text):
     return max(5.0, round(len(text.split()) / WORDS_PER_SECOND + 1.4, 2))
 
@@ -86,7 +103,7 @@ def build(story, lay):
             if name == "reveal":
                 pass
             elif name == "label":
-                events.append({"type": "label", "parts": [instances[r][0] for r in (arg if isinstance(arg, list) else [arg])], "t0": round(t0 + 0.7, 2), "t1": round(t1 - 0.2, 2)})
+                events.append({"type": "label", "parts": [instances[r][0] for r in (arg if isinstance(arg, list) else [arg])], "t0": round(t0 + CAMERA_SETTLE, 2), "t1": round(t1 - 0.2, 2)})
             elif name == "highlight":
                 events.append({"type": "highlight", "parts": expand(arg), "t0": round(t0 + 1.0, 2), "t1": round(t1 - 0.3, 2)})
             elif name == "spin":
@@ -107,21 +124,27 @@ def build(story, lay):
                 events.append({"type": "flow", "path": pid, "from": a_["id"], "to": b_["id"], "medium": arg.get("medium", "air"), "color": vocab.MEDIA[arg.get("medium", "air")], "t0": round(t0 + 0.8, 2), "t1": round(t1, 2)})
             elif name == "zoom":
                 zoom_target = arg
-        # the camera: an explicit zoom, else the parts this step introduced, else the whole thing
+        # the camera: an explicit zoom, else every part this step talks about (so a label is never out of the picture), else the whole thing
+        shown = [i for i in dict.fromkeys(mentioned) if not placed[i].get("context")]
+        labelled = [i for a in actions if next(iter(a.items()))[0] == "label" for i in expand(next(iter(a.items()))[1])]
         if zoom_target and zoom_target != "all":
-            focus = expand(zoom_target)
+            focus = list(dict.fromkeys(expand(zoom_target) + labelled))           # the part to look at, and every part a label points at
         elif zoom_target == "all" or st.get("_recap") or st.get("_finale") or n == 0:
             focus = []
         else:
-            focus = newly[:2] if 0 < len(newly) <= 2 else []
+            focus = shown if 0 < len(shown) <= 8 else []
         if focus:
             ps = [placed[i] for i in focus]
             hang = teardown and n >= 1 and not st.get("_finale") and not st.get("_recap")       # the parts hang apart now, so aim where they really are
-            c = [sum(p["pos"][k] + (p["explode"][k] if hang else 0) for p in ps) / len(ps) for k in range(3)]
-            reach = max(p["radius"] for p in ps) + (max(math.dist([p["pos"][k] + (p["explode"][k] if hang else 0) for k in range(3)], c) for p in ps) if len(ps) > 1 else 0)
-            dist = max(MIN_FOCUS[template], reach * 6.0 + 3.0)
+            lo = [min(p["pos"][k] + (p["explode"][k] if hang else 0) - _half(p, k) for p in ps) for k in range(3)]
+            hi = [max(p["pos"][k] + (p["explode"][k] if hang else 0) + _half(p, k) for p in ps) for k in range(3)]
+            c = [(a_ + b_) / 2 for a_, b_ in zip(lo, hi)]
+            reach = math.dist(lo, hi) / 2
+            if any(next(iter(a.items()))[0] == "label" for a in actions):
+                c[1] += LABEL_HEADROOM * reach
+            dist = max(MIN_FOCUS[template], FOCUS_CONTEXT * _fit(bounds["radius"]), _fit(reach * (1 + LABEL_HEADROOM)))      # never closer than part of the way in, so the rest of the model stays in view
         else:
-            c, dist = bounds["center"], max(MIN_WIDE[template], bounds["radius"] * 3.1)
+            c, dist = bounds["center"], max(MIN_WIDE[template], _fit(bounds["radius"]))
         camera.append({"t": round(t0 + 0.2, 2), "target": [round(x, 3) for x in c], "dist": round(dist, 2), "yaw": round(yaw0 + 5 * n, 1),
                        "pitch": PITCH_FOR[fin["motion"]] if st.get("_finale") else pitch})
         t = t1

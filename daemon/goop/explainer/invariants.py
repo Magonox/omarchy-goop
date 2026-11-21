@@ -10,6 +10,8 @@ at many moments, and checks what a viewer would see against the real geometry of
   labels_on_parts      a label sits on its part, wherever the part is (also when it has been pulled apart)
   flows_touch_parts    a stream starts and ends on the parts it joins, at the moment it plays
   explode_proportional parts pulled apart stay near home (a fraction of the model's size), not a fixed distance
+  labels_dont_overlap  label pills (as the renderer lifts them) never cover each other
+  labels_in_picture    every label that is shown is inside the picture, with room for its text above its dot
   camera_frames_subject  the opening shot holds every part, and the finale keeps the moving body in the picture while it is visible
   effects_scale        bubbles, smoke and drops are small against the model, and bubbles stay inside the water
   rolling_is_physical  a rolling wheel turns once per circumference travelled, in the direction that rolls, at the wheel's real radius
@@ -102,14 +104,14 @@ def project(cam, pt):
 
 HARNESS = r"""
 const fs = require("fs");
-const src = fs.readFileSync(process.argv[2], "utf8").replace(".pragma library", "") + "\nmodule.exports = {prepare, state};";
+const src = fs.readFileSync(process.argv[2], "utf8").replace(".pragma library", "") + "\nmodule.exports = {prepare, state, spreadLabels};";
 const m = { exports: {} }; new Function("module", src)(m);
 const scene = JSON.parse(fs.readFileSync(process.argv[3], "utf8"));
 const C = m.exports.prepare(scene);
 const times = JSON.parse(fs.readFileSync(process.argv[4], "utf8"));
 const out = times.map(t => { const st = m.exports.state(C, t);
   return { t, parts: st.parts.map(p => ({ vis: p.vis, dx: p.dx, dy: p.dy, dz: p.dz, spin: p.spin, k: p.k, alpha: p.alpha })),
-           labels: st.labels, drops: st.drops, streams: st.streams, fx: st.fx, root: st.root, env: st.env, cam: st.cam }; });
+           labels: st.labels, pills: m.exports.spreadLabels(st.labels, st.cam, 1000, 640), drops: st.drops, streams: st.streams, fx: st.fx, root: st.root, env: st.env, cam: st.cam }; });
 fs.writeFileSync(process.argv[5], JSON.stringify(out));
 """
 
@@ -217,6 +219,32 @@ def labels_on_parts(scene, states):
                 out.append(Violation("labels_on_parts", f"the label '{lb['text']}' is {best[1]:.2f} units from its part (at most {best[2]:.2f})", st["t"]))
                 break
     return _first_per_message(out)
+
+
+def labels_dont_overlap(scene, states):
+    out = []
+    for st in states:
+        pills = st.get("pills") or []
+        for i, a in enumerate(pills):
+            for b in pills[i + 1:]:
+                if a["w"] and b["w"] and a["x"] < b["x"] + b["w"] and b["x"] < a["x"] + a["w"] and a["y"] < b["y"] + b["h"] and b["y"] < a["y"] + a["h"]:
+                    out.append(Violation("labels_dont_overlap", "two label pills cover each other", st["t"]))
+                    return out
+    return out
+
+
+def labels_in_picture(scene, states):
+    out = []
+    for st in states:
+        for lb in st["labels"]:
+            c = project(st["cam"], lb["at"])
+            if c is None or abs(c[0]) > FRAME * 0.95 or c[1] > FRAME * 0.8 or c[1] < -FRAME:
+                out.append(Violation("labels_in_picture", f"the label '{lb['text']}' is outside the picture (screen position {0 if c is None else c[0]:.2f}, {0 if c is None else c[1]:.2f})", st["t"]))
+                break
+        else:
+            continue
+        break
+    return out
 
 
 def flows_touch_parts(scene, states):
@@ -379,7 +407,7 @@ def _first_per_message(items):
     return out
 
 
-NAMES = ("connections", "people", "sizes_match_plan", "mesh_integrity", "labels_on_parts", "flows_touch_parts", "explode_proportional", "camera_frames_subject",
+NAMES = ("connections", "people", "sizes_match_plan", "mesh_integrity", "labels_on_parts", "labels_in_picture", "labels_dont_overlap", "flows_touch_parts", "explode_proportional", "camera_frames_subject",
          "effects_scale", "rolling_is_physical", "spin_axis_matches_geometry", "coupled_motion")
 
 
@@ -389,7 +417,7 @@ def check_all(scene, story=None, couplings=None, step=1.0):
     found = validate.check(scene, story)                         # once: the geometry checks are the slow part
     return {
         "connections": connections(scene, story, found), "people": people(scene, story, found), "sizes_match_plan": sizes_match_plan(scene, story, found),
-        "mesh_integrity": mesh_integrity(scene), "labels_on_parts": labels_on_parts(scene, states), "flows_touch_parts": flows_touch_parts(scene, states),
+        "mesh_integrity": mesh_integrity(scene), "labels_on_parts": labels_on_parts(scene, states), "labels_in_picture": labels_in_picture(scene, states), "labels_dont_overlap": labels_dont_overlap(scene, states), "flows_touch_parts": flows_touch_parts(scene, states),
         "explode_proportional": explode_proportional(scene), "camera_frames_subject": camera_frames_subject(scene, states),
         "effects_scale": effects_scale(scene, states), "rolling_is_physical": rolling_is_physical(scene, states),
         "spin_axis_matches_geometry": spin_axis_matches_geometry(scene), "coupled_motion": coupled_motion(scene, states, couplings),

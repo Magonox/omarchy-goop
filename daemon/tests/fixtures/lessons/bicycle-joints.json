@@ -1,0 +1,365 @@
+{
+  "version": 1,
+  "title": "How a bicycle stays upright",
+  "layout": {
+    "template": "blueprint"
+  },
+  "joints": {
+    "bottom_bracket": [
+      -0.35,
+      0.85,
+      0
+    ],
+    "seat_top": [
+      -0.7,
+      2.6,
+      0
+    ],
+    "saddle_base": [
+      -0.75,
+      2.9,
+      0
+    ],
+    "head_top": [
+      1.05,
+      2.7,
+      0
+    ],
+    "head_bottom": [
+      1.15,
+      2.3,
+      0
+    ],
+    "rear_axle": [
+      -1.9,
+      1.05,
+      0
+    ],
+    "front_axle": [
+      1.5,
+      1.05,
+      0
+    ],
+    "bar_center": [
+      0.9,
+      3.0,
+      0
+    ],
+    "bar_left": [
+      0.9,
+      3.0,
+      -0.7
+    ],
+    "bar_right": [
+      0.9,
+      3.0,
+      0.7
+    ]
+  },
+  "parts": [
+    {
+      "id": "front_wheel",
+      "kind": "code",
+      "label": "Front wheel",
+      "brief": "A thin road bicycle wheel standing upright in the x-y plane with its axle along z. It has a black rubber tyre with a fine tread around a silver aluminium rim. Thirty-two thin silver spokes run from the rim to a small round hub in the centre, with a short axle sticking out on each side.",
+      "size": [
+        2.1,
+        2.1,
+        0.12
+      ],
+      "at": [
+        "front_axle"
+      ],
+      "code": "function build(M) {\n  const R = 1.05;\n  const tyre = M.T(M.torus(0.99, 0.055, 64, 12), {rx: 90});\n  const tread = [];\n  for (let i = 0; i < 48; i++) {\n    const a = i / 48 * Math.PI * 2;\n    tread.push(M.T(M.box(0.03, 0.02, 0.07, -0.01), {pos: [Math.cos(a) * 1.04, Math.sin(a) * 1.04, 0], rz: a * 180 / Math.PI - 90}));\n  }\n  const rim = M.T(M.lathe([[0.9, -0.025], [0.94, -0.03], [0.94, 0.03], [0.9, 0.025]], 64), {rx: 90});\n  const spokes = [];\n  for (let i = 0; i < 32; i++) {\n    const a = i / 32 * Math.PI * 2, b = a + (i % 2 ? 0.25 : -0.25);\n    const z = i % 2 ? 0.035 : -0.035;\n    spokes.push(M.pipe([Math.cos(b) * 0.05, Math.sin(b) * 0.05, z], [Math.cos(a) * 0.9, Math.sin(a) * 0.9, 0], 0.006, 4));\n  }\n  const hub = M.T(M.lathe([[0.02, -0.045], [0.06, -0.045], [0.06, -0.03], [0.03, -0.025], [0.03, 0.025], [0.06, 0.03], [0.06, 0.045], [0.02, 0.045]], 24), {rx: 90});\n  const axle = M.T(M.cyl(0.012, 0.12, 12, -0.06), {rx: 90});\n  return [\n    {material: \"dark_steel\", look: \"solid\", mesh: M.merge([tyre, ...tread])},\n    {material: \"steel\", look: \"solid\", mesh: M.merge([rim, ...spokes, hub])},\n    {material: \"gold\", look: \"solid\", mesh: axle}\n  ];\n}"
+    },
+    {
+      "id": "rear_wheel",
+      "kind": "code",
+      "label": "Rear wheel",
+      "brief": "A thin bicycle wheel standing upright in the x-y plane with its axle along z. It has a black rubber tyre with a fine tread around a silver aluminium rim. Thirty-two thin silver spokes meet a hub that has a small stack of toothed silver gears (the cassette) on one side.",
+      "size": [
+        2.1,
+        2.1,
+        0.12
+      ],
+      "at": [
+        "rear_axle"
+      ],
+      "code": "function build(M) {\n  const rx = 90;\n  const tyre = M.T(M.torus(0.99, 0.055, 64, 12), {rx});\n  const treads = [];\n  for (let i = 0; i < 60; i++) {\n    const a = i * 6 * Math.PI / 180;\n    treads.push(M.T(M.box(0.02, 0.025, 0.07, -0.0125), {pos: [Math.cos(a) * 1.04, Math.sin(a) * 1.04, 0], rz: i * 6 - 90}));\n  }\n  const rim = M.T(M.lathe([[0.9, -0.03], [0.94, -0.035], [0.94, 0.035], [0.9, 0.03]], 64), {rx});\n  const spokes = [];\n  for (let i = 0; i < 32; i++) {\n    const a = i * Math.PI * 2 / 32;\n    const side = i % 2 ? 0.035 : -0.035;\n    spokes.push(M.pipe([Math.cos(a) * 0.05, Math.sin(a) * 0.05, side], [Math.cos(a) * 0.9, Math.sin(a) * 0.9, 0], 0.006, 4));\n  }\n  const hub = M.merge([\n    M.T(M.cyl(0.035, 0.12, 24, -0.06), {rx}),\n    M.T(M.cyl(0.06, 0.01, 24, -0.045), {rx}),\n    M.T(M.cyl(0.06, 0.01, 24, 0.035), {rx})\n  ]);\n  const gears = [];\n  for (let g = 0; g < 5; g++) {\n    const R = 0.17 - g * 0.025, n = 28 - g * 4, pts = [];\n    for (let k = 0; k < n * 2; k++) {\n      const a = k * Math.PI / n, r = k % 2 ? R : R - 0.012;\n      pts.push([Math.cos(a) * r, Math.sin(a) * r]);\n    }\n    gears.push(M.T(M.extrude(pts, 0.006), {rx, pos: [0, 0, 0.012 + g * 0.009]}));\n  }\n  return [\n    {material: \"dark_steel\", look: \"solid\", mesh: M.merge([tyre, ...treads])},\n    {material: \"steel\", look: \"solid\", mesh: M.merge([rim, ...spokes, hub])},\n    {material: \"dark_steel\", look: \"solid\", mesh: M.merge(gears)}\n  ];\n}"
+    },
+    {
+      "id": "saddle",
+      "kind": "code",
+      "label": "Saddle",
+      "brief": "A narrow bicycle seat seen from the side, long front-to-back along x. It has a black padded top with a pointed nose toward +x and a wider rounded back. Underneath are two thin silver rails that clamp onto the top of the seat post.",
+      "size": [
+        0.8,
+        0.2,
+        0.4
+      ],
+      "at": [
+        [
+          -0.75,
+          3.0,
+          0
+        ]
+      ],
+      "code": "function build(M) {\n  const pts = [];\n  for (let i = 0; i <= 24; i++) {\n    const t = i / 24, x = -0.4 + 0.8 * t;\n    const w = t < 0.4 ? 0.2 * Math.sqrt(1 - Math.pow((0.4 - t) / 0.4, 2) * 0.6) : 0.2 - (t - 0.4) / 0.6 * 0.16;\n    pts.push([x, w]);\n  }\n  const outline = pts.map(p => [p[0], p[1]]).concat(pts.slice().reverse().map(p => [p[0], -p[1]]));\n  const top = M.T(M.extrude(outline, 0.07), {pos: [0, 0.155, 0]});\n  const shell = M.T(M.extrude(outline.map(p => [p[0] * 0.97, p[1] * 0.92]), 0.03), {pos: [0, 0.11, 0]});\n  const rails = [];\n  for (const z of [-0.05, 0.05]) {\n    rails.push(M.pipe([-0.28, 0.1, z * 1.6], [-0.18, 0.04, z], 0.008, 10));\n    rails.push(M.pipe([-0.18, 0.04, z], [0.18, 0.04, z], 0.008, 10));\n    rails.push(M.pipe([0.18, 0.04, z], [0.33, 0.1, z * 0.5], 0.008, 10));\n  }\n  const clamp = M.merge([M.box(0.07, 0.04, 0.14, 0.0), M.T(M.cyl(0.012, 0.16, 12, -0.08), {pos: [0, 0.03, 0], rx: 90})]);\n  const logo = M.T(M.box(0.12, 0.004, 0.06, 0.19), {pos: [-0.2, 0, 0]});\n  return [\n    {material: \"dark_steel\", look: \"solid\", mesh: top},\n    {material: \"concrete\", look: \"solid\", mesh: shell},\n    {material: \"steel\", look: \"solid\", mesh: M.merge(rails)},\n    {material: \"dark_steel\", look: \"solid\", mesh: clamp},\n    {material: \"red\", look: \"solid\", mesh: logo}\n  ];\n}"
+    },
+    {
+      "id": "crankset",
+      "kind": "code",
+      "label": "Pedals and chainring",
+      "brief": "A round silver chainring with about 40 small pointed teeth around its edge, standing upright in the x-y plane. A short black crank arm sits on each side, and the two arms point in opposite directions. At the end of each crank arm is a flat black pedal with a grippy edge, sticking out sideways along z.",
+      "size": [
+        1.0,
+        1.0,
+        0.9
+      ],
+      "at": [
+        "bottom_bracket"
+      ],
+      "code": "function build(M) {\n  const R = 0.3, out = [];\n  for (let i = 0; i < 40; i++) {\n    const a = i / 40 * Math.PI * 2, b = a + Math.PI / 40, c = a + Math.PI / 20;\n    out.push([Math.cos(a) * R, Math.sin(a) * R], [Math.cos(b) * (R + 0.03), Math.sin(b) * (R + 0.03)]);\n  }\n  const ring = M.T(M.extrude(out, 0.02), {rx: 90, pos: [0, 0, 0.1]});\n  const inner = M.T(M.torus(0.22, 0.015, 40, 8), {rx: 90, pos: [0, 0, 0.11]});\n  const spokes = [];\n  for (let i = 0; i < 5; i++) {\n    const a = i / 5 * Math.PI * 2;\n    spokes.push(M.pipe([0, 0, 0.1], [Math.cos(a) * 0.22, Math.sin(a) * 0.22, 0.1], 0.02, 8));\n  }\n  const bolts = [];\n  for (let i = 0; i < 5; i++) {\n    const a = i / 5 * Math.PI * 2 + 0.6;\n    bolts.push(M.T(M.cyl(0.015, 0.02, 12, 0), {rx: 90, pos: [Math.cos(a) * 0.2, Math.sin(a) * 0.2, 0.13]}));\n  }\n  const L = 0.32, ang = 50 * Math.PI / 180;\n  const ex = Math.cos(ang) * L, ey = Math.sin(ang) * L;\n  const arm1 = M.pipe([0, 0, 0.14], [ex, ey, 0.14], 0.03, 12);\n  const arm2 = M.pipe([0, 0, -0.14], [-ex, -ey, -0.14], 0.03, 12);\n  const axle = M.T(M.cyl(0.04, 0.32, 20, -0.16), {rx: 90});\n  const pedal = (x, y, z0) => {\n    const p = [M.T(M.box(0.2, 0.04, 0.24, -0.02), {pos: [x, y, z0]})];\n    for (const dx of [-0.1, 0.1]) p.push(M.T(M.box(0.02, 0.06, 0.24, -0.03, dx), {pos: [x, y, z0]}));\n    return p;\n  };\n  const pedals = [...pedal(ex, ey, 0.32), ...pedal(-ex, -ey, -0.32)];\n  const spindles = [M.pipe([ex, ey, 0.14], [ex, ey, 0.2], 0.012, 8), M.pipe([-ex, -ey, -0.14], [-ex, -ey, -0.2], 0.012, 8)];\n  return [\n    {material: \"steel\", look: \"solid\", mesh: M.merge([ring, inner, ...spokes, ...spindles])},\n    {material: \"dark_steel\", look: \"solid\", mesh: M.merge([arm1, arm2, axle, ...pedals])},\n    {material: \"gold\", look: \"solid\", mesh: M.merge(bolts)}\n  ];\n}"
+    },
+    {
+      "id": "head_tube",
+      "kind": "member",
+      "label": "Head tube",
+      "from": "head_bottom",
+      "to": "head_top",
+      "radius": 0.1,
+      "material": "red"
+    },
+    {
+      "id": "top_tube",
+      "kind": "member",
+      "label": "Top tube",
+      "from": "seat_top",
+      "to": "head_top",
+      "radius": 0.07,
+      "material": "red"
+    },
+    {
+      "id": "down_tube",
+      "kind": "member",
+      "label": "Down tube",
+      "from": "bottom_bracket",
+      "to": "head_bottom",
+      "radius": 0.09,
+      "material": "red"
+    },
+    {
+      "id": "seat_tube",
+      "kind": "member",
+      "label": "Seat tube",
+      "from": "bottom_bracket",
+      "to": "seat_top",
+      "radius": 0.07,
+      "material": "red"
+    },
+    {
+      "id": "chain_stays",
+      "kind": "member",
+      "label": "Chain stays",
+      "from": "bottom_bracket",
+      "to": "rear_axle",
+      "radius": 0.045,
+      "material": "red",
+      "z": [
+        -0.1,
+        0.1
+      ]
+    },
+    {
+      "id": "seat_stays",
+      "kind": "member",
+      "label": "Seat stays",
+      "from": "seat_top",
+      "to": "rear_axle",
+      "radius": 0.04,
+      "material": "red",
+      "z": [
+        -0.1,
+        0.1
+      ]
+    },
+    {
+      "id": "fork",
+      "kind": "member",
+      "label": "Front fork",
+      "from": "head_bottom",
+      "to": "front_axle",
+      "radius": 0.05,
+      "material": "steel",
+      "z": [
+        -0.1,
+        0.1
+      ]
+    },
+    {
+      "id": "seat_post",
+      "kind": "member",
+      "label": "Seat post",
+      "from": "seat_top",
+      "to": "saddle_base",
+      "radius": 0.05,
+      "material": "steel"
+    },
+    {
+      "id": "stem",
+      "kind": "member",
+      "label": "Stem",
+      "from": "head_top",
+      "to": "bar_center",
+      "radius": 0.05,
+      "material": "steel"
+    },
+    {
+      "id": "handlebar",
+      "kind": "member",
+      "label": "Handlebar",
+      "from": "bar_left",
+      "to": "bar_right",
+      "radius": 0.045,
+      "material": "dark_steel"
+    }
+  ],
+  "steps": [
+    {
+      "say": "This is a bicycle. Stand it alone and it falls right over. But give it a push, and it can roll along by itself without tipping! Let's find out how.",
+      "do": [
+        {
+          "zoom": "all"
+        }
+      ]
+    },
+    {
+      "say": "First, the wheels. A bicycle only balances when it is moving. The faster the wheels roll, the steadier the bike feels. Standing still, it has no tricks to use at all.",
+      "do": [
+        {
+          "label": [
+            "front_wheel",
+            "rear_wheel"
+          ]
+        },
+        {
+          "spin": [
+            "front_wheel",
+            "rear_wheel"
+          ]
+        },
+        {
+          "zoom": "front_wheel"
+        }
+      ]
+    },
+    {
+      "say": "Here is the big secret: steering. When the bike starts to lean left, the front wheel turns left too. That swings the wheels back underneath the bike, like moving your hand to keep a broom balanced on your palm.",
+      "do": [
+        {
+          "label": [
+            "handlebar",
+            "stem",
+            "fork"
+          ]
+        },
+        {
+          "highlight": [
+            "handlebar",
+            "fork"
+          ]
+        },
+        {
+          "zoom": "fork"
+        }
+      ]
+    },
+    {
+      "say": "Look inside the head tube. The fork turns in there, and it is tilted, not straight up and down. Because of this tilt, the tyre touches the ground a little behind where the steering line points, just like the wheel on a shopping cart.",
+      "do": [
+        {
+          "label": [
+            "head_tube"
+          ]
+        },
+        {
+          "cutaway": [
+            "head_tube"
+          ]
+        },
+        {
+          "highlight": [
+            "fork"
+          ]
+        },
+        {
+          "zoom": "head_tube"
+        }
+      ]
+    },
+    {
+      "say": "That shopping cart trick means the front wheel steers itself. When the bike leans, the wheel gets pulled to turn into the lean all on its own, catching the fall before you even notice.",
+      "do": [
+        {
+          "highlight": [
+            "front_wheel",
+            "fork"
+          ]
+        },
+        {
+          "zoom": "front_wheel"
+        }
+      ]
+    },
+    {
+      "say": "The frame holds it all in the right shape: the top tube, down tube, seat tube and the stays out to the back wheel. The pedals and chainring keep the bike moving, and moving is what lets the steering trick work.",
+      "do": [
+        {
+          "label": [
+            "top_tube",
+            "down_tube",
+            "seat_tube",
+            "chain_stays",
+            "seat_stays",
+            "crankset"
+          ]
+        },
+        {
+          "highlight": [
+            "crankset"
+          ]
+        },
+        {
+          "spin": [
+            "crankset"
+          ]
+        },
+        {
+          "zoom": "crankset"
+        }
+      ]
+    },
+    {
+      "say": "Now everything comes back together. Rolling wheels plus a tilted fork that steers into every wobble: that is how a moving bicycle keeps itself upright!",
+      "do": [
+        {
+          "label": [
+            "saddle",
+            "seat_post"
+          ]
+        },
+        {
+          "spin": [
+            "front_wheel",
+            "rear_wheel"
+          ]
+        },
+        {
+          "zoom": "all"
+        }
+      ]
+    }
+  ],
+  "recap": "A moving bicycle stays up because its tilted front fork steers the wheel into any lean, putting the wheels back under the bike.",
+  "question": "Have you ever noticed your handlebars turning a little by themselves when you start to wobble?"
+}
