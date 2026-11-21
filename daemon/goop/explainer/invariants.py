@@ -109,7 +109,7 @@ const C = m.exports.prepare(scene);
 const times = JSON.parse(fs.readFileSync(process.argv[4], "utf8"));
 const out = times.map(t => { const st = m.exports.state(C, t);
   return { t, parts: st.parts.map(p => ({ vis: p.vis, dx: p.dx, dy: p.dy, dz: p.dz, spin: p.spin, k: p.k, alpha: p.alpha })),
-           labels: st.labels, drops: st.drops, fx: st.fx, root: st.root, env: st.env, cam: st.cam }; });
+           labels: st.labels, drops: st.drops, streams: st.streams, fx: st.fx, root: st.root, env: st.env, cam: st.cam }; });
 fs.writeFileSync(process.argv[5], JSON.stringify(out));
 """
 
@@ -221,19 +221,31 @@ def labels_on_parts(scene, states):
 
 def flows_touch_parts(scene, states):
     boxes, out, at = _boxes(scene), [], {round(s["t"], 2): s for s in states}
+    index = {p["id"]: n for n, p in enumerate(scene["parts"])}
+
+    def check(st, pid, pt, end, medium):
+        p, box = boxes[pid]
+        lo, hi = world_box(p, box, st["parts"][index[pid]], st["root"])
+        d, allowed = point_box_distance(pt, lo, hi), max(FLOW_TOLERANCE[0], FLOW_TOLERANCE[1] * max(extent(box)))
+        if d > allowed:
+            out.append(Violation("flows_touch_parts", f"the {medium} stream {'starts' if end == 0 else 'ends'} {d:.2f} units from '{pid}' (at most {allowed:.2f})", st["t"]))
+
     for e in scene.get("events", []):
         if e["type"] != "flow":
             continue
         st = at.get(round((e["t0"] + e["t1"]) / 2, 2))
         if not st:
             continue
-        for end, pt in enumerate(scene["paths"][e["path"]]):
+        streams = st.get("streams") or []
+        if streams:                                   # the renderer says where each stream runs, for the parts it joins
+            for sm in streams:
+                if sm["a"] in boxes and sm["b"] in boxes and boxes[sm["a"]][1] and boxes[sm["b"]][1]:
+                    check(st, sm["a"], sm["from"], 0, e["medium"])
+                    check(st, sm["b"], sm["to"], 1, e["medium"])
+            continue
+        for end, pt in enumerate(scene["paths"][e["path"]]):        # an older scene: a fixed path between two points
             pid = min((q for q in scene["parts"] if boxes[q["id"]][1]), key=lambda q: math.dist(q["pos"], pt))["id"]
-            p, box = boxes[pid]
-            lo, hi = world_box(p, box, st["parts"][scene["parts"].index(p)], st["root"])
-            d, allowed = point_box_distance(pt, lo, hi), max(FLOW_TOLERANCE[0], FLOW_TOLERANCE[1] * max(extent(box)))
-            if d > allowed:
-                out.append(Violation("flows_touch_parts", f"the {e['medium']} stream {'starts' if end == 0 else 'ends'} {d:.2f} units from '{pid}' (at most {allowed:.2f})", st["t"]))
+            check(st, pid, pt, end, e["medium"])
     return out
 
 
@@ -284,16 +296,15 @@ def effects_scale(scene, states):
                     out.append(Violation("effects_scale", "bubbles rise above the water surface", st["t"]))
                     break
     boxes = _boxes(scene)
-    for e in scene.get("events", []):
-        if e["type"] != "flow":
+    for st in states:
+        for sm in st.get("streams") or []:
+            sizes = [min(extent(boxes[i][1])) for i in (sm["a"], sm["b"]) if i in boxes and boxes[i][1]]
+            if sizes and sm["size"] > DROP_SHARE * min(sizes):
+                out.append(Violation("effects_scale", f"a flow drop is {sm['size']:.2f} units wide against a part {min(sizes):.2f} across (at most {DROP_SHARE * 100:.0f}%)", st["t"]))
+                break
+        else:
             continue
-        sizes = []
-        for pt in scene["paths"][e["path"]]:
-            pid = min((q for q in scene["parts"] if boxes[q["id"]][1]), key=lambda q: math.dist(q["pos"], pt))["id"]
-            sizes.append(min(extent(boxes[pid][1])))
-        drop = 0.0024 * 100                                                         # lesson.js: the size of a flow drop, as drawn
-        if drop > DROP_SHARE * min(sizes):
-            out.append(Violation("effects_scale", f"a {e['medium']} flow drop is {drop:.2f} units wide against a part {min(sizes):.2f} across (at most {DROP_SHARE * 100:.0f}%)"))
+        break
     return out
 
 

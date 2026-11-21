@@ -89,7 +89,7 @@ PanelWindow {
                     onLoaded: {
                         try {
                             var d = JSON.parse(text());
-                            if (d.meshes && d.meshes.length) pn.subs = S.meshSubs(d.meshes, d.scale);
+                            if (d.meshes && d.meshes.length) { pn.subs = S.meshSubs(d.meshes, d.scale); if (ex.ctx) L.setBox(ex.ctx, pn.index, d.meshes, d.scale); }
                         } catch (e) { console.log("GOOP-EXPLAINER: bad part file:", e); }
                     }
                 }

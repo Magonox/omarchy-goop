@@ -210,9 +210,30 @@ def bp(story):
 TEMPLATES = {"axis": axis, "network": network, "assembly": assembly, "blueprint": bp}
 
 
+EXPLODE_OWN = 1.0           # a part pulled apart moves about its own size ...
+EXPLODE_MAX = 0.25          # ... but never more than this share of the model's radius, and never less than EXPLODE_MIN of it
+EXPLODE_MIN = 0.08
+
+
+def _scale_explode(placed):
+    """The templates give every part a direction to move in when the model is pulled apart; how far is set here, relative to the model and to the part. A fixed distance
+    (2.4 to 2.8 units) moved a part of radius 0.15 as far as one of radius 3 and spread small models over half their own size again."""
+    lo, hi = [1e9] * 3, [-1e9] * 3
+    for pl in placed.values():
+        for k in range(3):
+            lo[k], hi[k] = min(lo[k], pl["pos"][k] - pl["radius"]), max(hi[k], pl["pos"][k] + pl["radius"])
+    R = max(b - a for a, b in zip(lo, hi)) / 2
+    for pl in placed.values():
+        mag = math.dist(pl["explode"], (0, 0, 0))
+        if mag > 0:
+            d = min(EXPLODE_MAX * R, max(EXPLODE_OWN * 2 * pl["radius"], EXPLODE_MIN * R))
+            pl["explode"] = _r3([x / mag * d for x in pl["explode"]])
+
+
 def layout(story):
     out = TEMPLATES[story["layout"]["template"]](story)
     placed, instances = out
+    _scale_explode(placed)
     lo, hi = [1e9] * 3, [-1e9] * 3
     for pl in placed.values():
         for k in range(3):

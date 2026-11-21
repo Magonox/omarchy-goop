@@ -104,7 +104,7 @@ def build(story, lay):
                 flows += 1
                 pid = f"path{flows}"
                 paths[pid] = [list(a_["pos"]), list(b_["pos"])]
-                events.append({"type": "flow", "path": pid, "medium": arg.get("medium", "air"), "color": vocab.MEDIA[arg.get("medium", "air")], "t0": round(t0 + 0.8, 2), "t1": round(t1, 2)})
+                events.append({"type": "flow", "path": pid, "from": a_["id"], "to": b_["id"], "medium": arg.get("medium", "air"), "color": vocab.MEDIA[arg.get("medium", "air")], "t0": round(t0 + 0.8, 2), "t1": round(t1, 2)})
             elif name == "zoom":
                 zoom_target = arg
         # the camera: an explicit zoom, else the parts this step introduced, else the whole thing

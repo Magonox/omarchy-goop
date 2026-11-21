@@ -24,6 +24,22 @@ def part(pid, size, pos=(0, 0, 0), **kw):
             "shape": {"scale": 1, "h": size[1], "meshes": [box_mesh(*size)]}, **kw}
 
 
+class Relative(unittest.TestCase):
+    """Explode distance follows the size of the model and of the part (layout._scale_explode), not a fixed number of units."""
+    def test_small_models_and_small_parts_are_pulled_apart_less(self):
+        from goop.explainer import layout
+
+        def placed(scale):
+            return {"big": {"pos": [0, 0, 0], "radius": 3 * scale, "explode": [2.4, 0, 0]}, "small": {"pos": [5 * scale, 0, 0], "radius": 0.2 * scale, "explode": [0, 2.4, 0]}}
+        a, b = placed(1), placed(0.2)
+        layout._scale_explode(a)
+        layout._scale_explode(b)
+        small_a, small_b = a["small"]["explode"][1], b["small"]["explode"][1]
+        self.assertLess(a["small"]["explode"][1], 2.4)                         # a small part no longer moves as far as a big one
+        self.assertAlmostEqual(small_b / small_a, 0.2, delta=0.02)             # the same lesson at a fifth of the size moves a fifth as far
+        self.assertEqual(a["big"]["explode"][1:], [0, 0])                      # directions are kept
+
+
 class Helpers(unittest.TestCase):
     def test_point_to_box_distance(self):
         self.assertAlmostEqual(inv.point_box_distance((0, 0, 0), (-1, -1, -1), (1, 1, 1)), 0)
@@ -92,15 +108,15 @@ import math  # noqa: E402  (used by the helper test above)
 
 # What is wrong today, by lesson. Every entry must still fail (the list cannot go stale); every other lesson and invariant must pass.
 KNOWN = {
-    "balloon-base": ["connections", "sizes_match_plan", "labels_on_parts", "explode_proportional", "camera_frames_subject", "effects_scale"],
-    "balloon-v2": ["connections", "sizes_match_plan", "mesh_integrity", "labels_on_parts", "explode_proportional", "camera_frames_subject", "effects_scale"],
-    "bicycle-v2": ["connections", "sizes_match_plan", "labels_on_parts", "flows_touch_parts", "explode_proportional", "effects_scale", "coupled_motion"],
-    "engine-base": ["sizes_match_plan", "flows_touch_parts", "explode_proportional", "effects_scale"],
-    "engine-new": ["sizes_match_plan", "flows_touch_parts", "explode_proportional", "effects_scale"],
-    "submarine-v2": ["connections", "sizes_match_plan", "mesh_integrity", "labels_on_parts", "flows_touch_parts", "explode_proportional", "effects_scale"],
-    "antenna": ["effects_scale"],
-    "jet_engine": ["labels_on_parts", "explode_proportional", "effects_scale"],
-    "spacecraft": ["labels_on_parts", "explode_proportional", "camera_frames_subject", "effects_scale"],
+    "balloon-base": ["connections", "sizes_match_plan", "camera_frames_subject", "effects_scale"],
+    "balloon-v2": ["connections", "sizes_match_plan", "mesh_integrity", "camera_frames_subject", "effects_scale"],
+    "bicycle-v2": ["connections", "sizes_match_plan", "coupled_motion"],
+    "engine-base": ["sizes_match_plan"],
+    "engine-new": ["sizes_match_plan"],
+    "submarine-v2": ["connections", "sizes_match_plan", "mesh_integrity"],
+    "antenna": [],
+    "jet_engine": [],
+    "spacecraft": ["camera_frames_subject", "effects_scale"],
     "wifi": [],
 }
 COUPLINGS = {"bicycle-v2": [{"a": "crank", "b": "rear_wheel", "kind": "chain", "ratio": 2.75}]}      # the plan has no links yet (F4): the bicycle's chain, by hand
