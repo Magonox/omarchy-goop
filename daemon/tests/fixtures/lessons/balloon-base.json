@@ -1,0 +1,213 @@
+{
+  "version": 1,
+  "title": "How a hot air balloon rises",
+  "layout": {
+    "template": "assembly"
+  },
+  "parts": [
+    {
+      "id": "basket",
+      "kind": "code",
+      "label": "Wicker Basket",
+      "brief": "A square woven wicker basket, light tan-brown, with a padded leather rim around the top edge. Thin woven strands make a criss-cross pattern on each side, and four steel cables rise from the corners.",
+      "width": 1.6,
+      "height": 1.2,
+      "code": "function build(M) {\n  const W = 1.6, H = 0.8;\n  const body = M.box(W, H, W, 0);\n  const strands = [];\n  for (let i = -3; i <= 3; i++) {\n    const t = i * 0.22;\n    for (const s of [1, -1]) {\n      strands.push(M.pipe([t - 0.2, 0.05, s * 0.81], [t + 0.2, 0.75, s * 0.81], 0.012, 6));\n      strands.push(M.pipe([t + 0.2, 0.05, s * 0.81], [t - 0.2, 0.75, s * 0.81], 0.012, 6));\n      strands.push(M.pipe([s * 0.81, 0.05, t - 0.2], [s * 0.81, 0.75, t + 0.2], 0.012, 6));\n      strands.push(M.pipe([s * 0.81, 0.05, t + 0.2], [s * 0.81, 0.75, t - 0.2], 0.012, 6));\n    }\n  }\n  const rim = [];\n  for (const s of [1, -1]) {\n    rim.push(M.pipe([-0.82, H, s * 0.82], [0.82, H, s * 0.82], 0.05, 12));\n    rim.push(M.pipe([s * 0.82, H, -0.82], [s * 0.82, H, 0.82], 0.05, 12));\n  }\n  const base = M.box(W + 0.06, 0.06, W + 0.06, -0.02);\n  const cables = [];\n  for (const sx of [1, -1]) for (const sz of [1, -1]) {\n    cables.push(M.pipe([sx * 0.78, 0.2, sz * 0.78], [sx * 0.5, 1.2, sz * 0.5], 0.015, 8));\n  }\n  return [\n    {material: \"orange\", look: \"solid\", mesh: body},\n    {material: \"gold\", look: \"solid\", mesh: M.merge(strands)},\n    {material: \"red\", look: \"solid\", mesh: M.merge(rim)},\n    {material: \"dark_steel\", look: \"solid\", mesh: base},\n    {material: \"steel\", look: \"solid\", mesh: M.merge(cables)}\n  ];\n}"
+    },
+    {
+      "id": "fuel_tanks",
+      "kind": "code",
+      "label": "Propane Tanks",
+      "brief": "Two upright metal cylinders with rounded tops, painted silver-grey, standing in the basket corners. Each has a small valve with a red knob on top and a thin hose leading upward.",
+      "width": 0.5,
+      "height": 0.9,
+      "inside": "basket",
+      "code": "function build(M) {\n  const steel = [], dark = [], red = [], blk = [];\n  [-0.13, 0.13].forEach(x => {\n    const body = M.lathe([[0,0],[0.1,0],[0.11,0.02],[0.11,0.6],[0.1,0.66],[0.07,0.7],[0.03,0.72],[0,0.72]], 32);\n    steel.push(M.T(body, {pos: [x, -0.45, 0]}));\n    dark.push(M.T(M.torus(0.11, 0.008, 32, 6), {pos: [x, -0.43, 0]}));\n    dark.push(M.T(M.torus(0.11, 0.008, 32, 6), {pos: [x, 0.1, 0]}));\n    dark.push(M.T(M.cyl(0.025, 0.06, 16, 0.27), {pos: [x, 0, 0]}));\n    dark.push(M.T(M.box(0.06, 0.025, 0.025, 0.3), {pos: [x, 0, 0]}));\n    red.push(M.T(M.cyl(0.04, 0.02, 20, 0.33), {pos: [x, 0, 0]}));\n    blk.push(M.pipe([x + 0.03, 0.31, 0], [x + 0.06, 0.45, 0.02], 0.01, 10));\n  });\n  return [\n    {material: \"steel\", look: \"solid\", mesh: M.merge(steel)},\n    {material: \"dark_steel\", look: \"solid\", mesh: M.merge(dark)},\n    {material: \"red\", look: \"solid\", mesh: M.merge(red)},\n    {material: \"dark_steel\", look: \"solid\", mesh: M.merge(blk)}\n  ];\n}"
+    },
+    {
+      "id": "burner",
+      "kind": "code",
+      "label": "Burner",
+      "brief": "A shiny steel burner frame hung above the basket, with coiled metal pipes around a central nozzle. It has a black handle and a small blue pilot flame, and it shoots a tall orange-yellow flame upward when used.",
+      "width": 1,
+      "height": 0.8,
+      "attach": {
+        "to": "basket",
+        "at": "top",
+        "count": 1
+      },
+      "code": "function build(M) {\n  const frame = M.merge([\n    M.box(1.0, 0.04, 0.6, 0),\n    M.pipe([-0.48,0.02,-0.28],[-0.48,0.3,-0.28],0.02,12),\n    M.pipe([0.48,0.02,-0.28],[0.48,0.3,-0.28],0.02,12),\n    M.pipe([-0.48,0.02,0.28],[-0.48,0.3,0.28],0.02,12),\n    M.pipe([0.48,0.02,0.28],[0.48,0.3,0.28],0.02,12),\n    M.cyl(0.08, 0.12, 24, 0.04),\n    M.frustum(0.07, 0.11, 0.08, 24, 0.16)\n  ]);\n  const coils = [];\n  for (let i = 0; i < 4; i++) coils.push(M.T(M.torus(0.2, 0.025, 36, 10), {pos:[0, 0.08 + i*0.055, 0]}));\n  const handle = M.merge([\n    M.pipe([0.1,0.1,0],[0.42,0.1,0],0.025,12),\n    M.box(0.1, 0.06, 0.06, 0.07, 0.45)\n  ]);\n  const pilot = M.T(M.sphere(0.035, 16, 12), {pos:[0.13,0.26,0], s:[1,1.8,1]});\n  const flame = M.lathe([[0,0.24],[0.09,0.3],[0.11,0.42],[0.08,0.6],[0.04,0.72],[0,0.8]], 32);\n  return [\n    {material:\"steel\", look:\"solid\", mesh:M.merge([frame, M.merge(coils)])},\n    {material:\"dark_steel\", look:\"solid\", mesh:handle},\n    {material:\"blue\", look:\"glow\", mesh:pilot},\n    {material:\"flame\", look:\"glow\", mesh:flame}\n  ];\n}"
+    },
+    {
+      "id": "skirt",
+      "kind": "code",
+      "label": "Skirt (Mouth)",
+      "brief": "A wide, short fabric tube that opens at the bottom of the balloon like a mouth, slightly flared. It is made of dark fire-resistant cloth with stitched seams and a rim of metal load tapes.",
+      "width": 2,
+      "height": 1,
+      "attach": {
+        "to": "burner",
+        "at": "top",
+        "count": 1
+      },
+      "code": "function build(M) {\n  const prof = [[0.75,0],[0.8,0.2],[0.88,0.5],[0.95,0.8],[1.0,1.0],[0.97,1.0],[0.92,0.8],[0.85,0.5],[0.77,0.2],[0.72,0.02],[0.72,0]];\n  const cloth = M.lathe(prof, 48);\n  const seams = [];\n  for (let i = 0; i < 16; i++) {\n    const a = i / 16 * Math.PI * 2, c = Math.cos(a), s = Math.sin(a);\n    seams.push(M.pipe([0.765*c,0.02,0.765*s],[0.81*c,0.25,0.81*s],0.012,6));\n    seams.push(M.pipe([0.81*c,0.25,0.81*s],[0.89*c,0.52,0.89*s],0.012,6));\n    seams.push(M.pipe([0.89*c,0.52,0.89*s],[1.01*c,1.0,1.01*s],0.012,6));\n  }\n  const tapes = M.merge([\n    M.T(M.torus(0.75, 0.03, 48, 8), {pos:[0,0,0]}),\n    M.T(M.torus(0.99, 0.025, 48, 8), {pos:[0,1,0]}),\n    ...Array.from({length:16},(_,i)=>{const a=i/16*Math.PI*2;return M.T(M.sphere(0.035,8,6),{pos:[0.75*Math.cos(a),0,0.75*Math.sin(a)]});})\n  ]);\n  const stitch = M.T(M.torus(0.86, 0.01, 48, 6), {pos:[0,0.45,0]});\n  return [\n    {material:\"dark_steel\", look:\"solid\", mesh:cloth},\n    {material:\"orange\", look:\"solid\", mesh:M.merge([...seams, stitch])},\n    {material:\"steel\", look:\"solid\", mesh:tapes}\n  ];\n}"
+    },
+    {
+      "id": "envelope",
+      "kind": "code",
+      "label": "Envelope",
+      "brief": "The giant teardrop-shaped balloon, round and wide at the top and narrowing toward the bottom. It is made of tough nylon fabric in bright vertical stripes of red, yellow and blue, with stitched seams running from top to bottom.",
+      "width": 6,
+      "height": 7,
+      "attach": {
+        "to": "skirt",
+        "at": "top",
+        "count": 1
+      },
+      "code": "function build(M) {\n  const prof = [];\n  const N = 30;\n  for (let i = 0; i <= N; i++) {\n    const t = i / N;\n    const y = t * 3.5;\n    let r;\n    if (y < 2.3) { const u = y / 2.3; r = 0.5 + 2.5 * Math.sin(u * Math.PI / 2); }\n    else { const u = (y - 2.3) / 1.2; r = 3.0 * Math.sqrt(Math.max(0, 1 - u * u)); }\n    prof.push([r, y]);\n  }\n  prof[prof.length - 1][0] = 0;\n  const gores = 12, segPer = 4;\n  const mats = [\"red\", \"orange\", \"blue\"];\n  const groups = [[], [], []];\n  for (let g = 0; g < gores; g++) {\n    const m = M.mesh();\n    const a0 = g / gores * Math.PI * 2;\n    for (let i = 0; i <= N; i++) {\n      for (let j = 0; j <= segPer; j++) {\n        const a = a0 + j / segPer * Math.PI * 2 / gores;\n        const [r, y] = prof[i];\n        const c = Math.cos(a), s = Math.sin(a);\n        M.vert(m, [r * c, y - 1.75, r * s], [c, 0.2, s]);\n      }\n    }\n    const W = segPer + 1;\n    for (let i = 0; i < N; i++) for (let j = 0; j < segPer; j++) {\n      const a = i * W + j, b = a + 1, c = a + W, d = c + 1;\n      m.i.push(a, c, b, b, c, d);\n    }\n    groups[g % 3].push(m);\n  }\n  const seams = [];\n  for (let g = 0; g < gores; g++) {\n    const a = g / gores * Math.PI * 2;\n    for (let i = 0; i < N; i++) {\n      const p = (k) => [prof[k][0] * 1.005 * Math.cos(a), prof[k][1] - 1.75, prof[k][0] * 1.005 * Math.sin(a)];\n      seams.push(M.pipe(p(i), p(i + 1), 0.025, 6));\n    }\n  }\n  seams.push(M.T(M.torus(0.5, 0.05, 32, 8), { pos: [0, -1.75, 0] }));\n  seams.push(M.T(M.torus(2.95, 0.04, 48, 6), { pos: [0, 0.55, 0] }));\n  return [\n    { material: \"red\", look: \"solid\", mesh: M.merge(groups[0]) },\n    { material: \"orange\", look: \"solid\", mesh: M.merge(groups[1]) },\n    { material: \"blue\", look: \"solid\", mesh: M.merge(groups[2]) },\n    { material: \"white\", look: \"solid\", mesh: M.merge(seams) }\n  ];\n}"
+    },
+    {
+      "id": "vent",
+      "kind": "code",
+      "label": "Top Vent",
+      "brief": "A round fabric flap at the very top of the envelope, like a lid, in a contrasting white colour. Thin cords run down from its edge so the pilot can pull it open to let hot air escape.",
+      "width": 1.5,
+      "height": 0.3,
+      "attach": {
+        "to": "envelope",
+        "at": "top",
+        "count": 1
+      },
+      "code": "function build(M) {\n  const cap = M.lathe([[0,0.2],[0.3,0.19],[0.55,0.15],[0.72,0.08],[0.75,0.03],[0.72,0.03],[0.55,0.11],[0.3,0.155],[0,0.165]], 40);\n  const rim = M.T(M.torus(0.73, 0.025, 40, 8), {pos:[0,0.04,0]});\n  const seams = [];\n  for (let i = 0; i < 8; i++) {\n    const a = i * Math.PI / 4;\n    seams.push(M.pipe([0,0.2,0],[0.74*Math.cos(a),0.04,0.74*Math.sin(a)],0.008,6));\n  }\n  const cords = [];\n  for (let i = 0; i < 12; i++) {\n    const a = i * Math.PI / 6 + 0.1;\n    cords.push(M.pipe([0.72*Math.cos(a),0.04,0.72*Math.sin(a)],[0.5*Math.cos(a),-0.1,0.5*Math.sin(a)],0.006,5));\n    cords.push(M.pipe([0.5*Math.cos(a),-0.1,0.5*Math.sin(a)],[0,-0.1,0],0.005,5));\n  }\n  const hub = M.cyl(0.05, 0.04, 16, -0.12);\n  const crown = M.T(M.torus(0.12, 0.015, 24, 6), {pos:[0,0.2,0]});\n  return [\n    {material:\"white\", look:\"solid\", mesh:M.merge([cap])},\n    {material:\"red\", look:\"solid\", mesh:M.merge([rim, crown, ...seams])},\n    {material:\"dark_steel\", look:\"solid\", mesh:M.merge([...cords, hub])}\n  ];\n}"
+    }
+  ],
+  "steps": [
+    {
+      "say": "This is a hot air balloon! It has no engine and no wings, yet it floats up into the sky. Let's find out how. It all starts down here in the basket, where the pilot stands.",
+      "do": [
+        {
+          "reveal": [
+            "basket",
+            "fuel_tanks"
+          ]
+        },
+        {
+          "zoom": "all"
+        },
+        {
+          "label": [
+            "basket",
+            "fuel_tanks"
+          ]
+        }
+      ]
+    },
+    {
+      "say": "Inside the basket are tanks of propane gas, the same kind of fuel some barbecues use. A hose carries the fuel up to the burner above the pilot's head.",
+      "do": [
+        {
+          "reveal": [
+            "burner"
+          ]
+        },
+        {
+          "label": [
+            "burner"
+          ]
+        },
+        {
+          "flow": {
+            "from": "fuel_tanks",
+            "to": "burner",
+            "medium": "fuel"
+          }
+        }
+      ]
+    },
+    {
+      "say": "Now the giant envelope! It's the big colourful bag. The burner blasts a huge flame up through the open mouth at the bottom, heating the air trapped inside.",
+      "do": [
+        {
+          "reveal": [
+            "skirt",
+            "envelope"
+          ]
+        },
+        {
+          "label": [
+            "skirt",
+            "envelope"
+          ]
+        },
+        {
+          "zoom": "all"
+        },
+        {
+          "flow": {
+            "from": "burner",
+            "to": "envelope",
+            "medium": "air"
+          }
+        }
+      ]
+    },
+    {
+      "say": "Here's the secret: when air gets hot, it spreads out, so a bag full of it weighs less than the same amount of cool air outside. Lighter stuff floats up, like a beach ball pops up in a pool.",
+      "do": [
+        {
+          "highlight": [
+            "envelope"
+          ]
+        },
+        {
+          "pulse": "envelope"
+        }
+      ]
+    },
+    {
+      "say": "Want to go down? The pilot pulls a cord to open the vent at the top. Some hot air escapes, the balloon gets heavier, and it sinks gently. More flame means up, open vent means down!",
+      "do": [
+        {
+          "reveal": [
+            "vent"
+          ]
+        },
+        {
+          "label": [
+            "vent"
+          ]
+        },
+        {
+          "highlight": [
+            "vent"
+          ]
+        },
+        {
+          "zoom": "vent"
+        }
+      ]
+    },
+    {
+      "say": "So that's the whole balloon: tanks, burner, mouth, envelope and vent all working together. There's no steering wheel, so the pilot rides the wind wherever it blows!",
+      "do": [
+        {
+          "zoom": "all"
+        },
+        {
+          "highlight": [
+            "basket",
+            "burner",
+            "envelope"
+          ]
+        }
+      ]
+    }
+  ],
+  "finale": {
+    "say": "Now watch all the parts join together! The burner roars, the air inside heats up... and up, up, up we float into the sky!",
+    "motion": "fly",
+    "emitter": "burner"
+  },
+  "recap": "Hot air is lighter than cool air, so a balloon full of hot air floats up, and letting the hot air out brings it back down.",
+  "question": "If you could ride in a hot air balloon, where would you want the wind to take you?"
+}

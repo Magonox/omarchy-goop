@@ -4,9 +4,12 @@ drives and flies toward +x), y is up with the ground at y = 0, z is left to righ
 centres), and its code only draws ONE copy filling the box.
 
 This module checks a blueprint the way an engineer would: parts that pass through each other and parts floating loose are errors with numbers in them, so the model can fix them."""
-import math
+import copy, math, re
 
-LIMITS = {"coord": 10.0, "size": (0.1, 10.0), "copies": (1, 8), "overlap": 0.35}
+from . import members, solids
+
+LIMITS = {"coord": 10.0, "size": (0.1, 10.0), "copies": (1, 8), "overlap": 0.35, "radius": (0.03, 0.6), "joints": 40}
+_NAME = re.compile(r"^[a-z][a-z0-9_]{0,23}$")
 
 
 def _num(v):
@@ -48,6 +51,276 @@ def validate_part(p, pid):
     return errs
 
 
+def _point(c):
+    return isinstance(c, list) and len(c) == 3 and all(_num(v) and abs(v) <= LIMITS["coord"] for v in c)
+
+
+def resolve(story):
+    """(story, errors): a copy of a blueprint storyboard with its joints resolved. A part's `at` may name a joint instead of giving a point, and a `member` part (a tube from one
+    joint to another) becomes an ordinary box in the machine frame with its mesh attached, so the rest of the pipeline treats it like any other part. Errors are written for the model."""
+    out, errs = copy.deepcopy(story), []
+    joints = out.get("joints")
+    clean = {}
+    if joints is not None:
+        if not isinstance(joints, dict) or len(joints) > LIMITS["joints"]:
+            errs.append(f"joints must be an object of up to {LIMITS['joints']} named points like {{\"bottom_bracket\": [0, 1, 0]}}")
+        else:
+            for name, c in joints.items():
+                if not _NAME.match(str(name)) or not _point(c):
+                    errs.append(f"joint {name!r}: the name must be lowercase letters, digits or _ and the point [x, y, z] with each coordinate within +-{LIMITS['coord']:g}")
+                else:
+                    clean[name] = [float(v) for v in c]
+    for p in out.get("parts", []) if isinstance(out.get("parts"), list) else []:
+        if not isinstance(p, dict):
+            continue
+        pid = p.get("id")
+        if isinstance(p.get("at"), list):
+            new = []
+            for c in p["at"]:
+                if isinstance(c, str):
+                    if c in clean:
+                        new.append(list(clean[c]))
+                    else:
+                        errs.append(f"part {pid!r}: at names a joint {c!r} that is not in joints")
+                        new.append([0, 0, 0])
+                else:
+                    new.append(c)
+            p["at"] = new
+        if p.get("kind") == "solid":
+            errs += _solid(p)
+            continue
+        if p.get("kind") != "member":
+            continue
+        a, b, r = clean.get(p.get("from")), clean.get(p.get("to")), p.get("radius", 0.08)
+        zs = p.get("z", [0])
+        bad = []
+        if a is None or b is None:
+            bad.append(f"from and to must be names of joints (known: {', '.join(clean) or 'none'})")
+        elif a == b:
+            bad.append("from and to are the same joint")
+        if not (_num(r) and LIMITS["radius"][0] <= r <= LIMITS["radius"][1]):
+            bad.append(f"radius must be a number between {LIMITS['radius'][0]:g} and {LIMITS['radius'][1]:g}")
+        if not (isinstance(zs, list) and 1 <= len(zs) <= 4 and all(_num(v) and abs(v) <= LIMITS["coord"] for v in zs)):
+            bad.append("z must be a list of up to 4 offsets across the machine, like [-0.2, 0.2], for a copy on each side")
+        if bad:
+            errs.append(f"member {pid!r}: " + "; ".join(bad))
+            continue
+        mid = [round((a[k] + b[k]) / 2, 4) for k in range(3)]
+        mesh = members.tube([a[k] - mid[k] for k in range(3)], [b[k] - mid[k] for k in range(3)], r)
+        p["_meshes"] = [{"look": "solid", "material": p.get("material", "steel"), **mesh}]
+        p["size"] = [round(max(LIMITS["size"][0], abs(a[k] - b[k]) + 2 * r), 4) for k in range(3)]
+        p["at"] = [[mid[0], mid[1], mid[2] + z] for z in zs]
+    errs += _connections(out)
+    errs += _links(out)
+    return out, errs
+
+
+LINK_KINDS = ("mesh", "chain", "belt", "shaft")
+
+
+def _cross3(a, b):
+    return [a[1] * b[2] - a[2] * b[1], a[2] * b[0] - a[0] * b[2], a[0] * b[1] - a[1] * b[0]]
+
+
+def _links(story):
+    """Work out how fast and which way every driven part turns, from the one that drives it, and return errors for the model.
+
+    links: [{"a": id, "b": id, "kind": "mesh|chain|belt|shaft", "ratio": n (optional for mesh)}]
+      mesh   gears whose teeth touch. The point where they touch is the `connections` point between the two. Both surfaces move together there, which fixes the driven
+             gear's direction for any arrangement (side by side, at right angles like an egg beater's crown wheel and pinions) and its speed from the two radii;
+             "ratio" (how many times faster b turns than a) overrides the speed, not the direction.
+      chain, belt  the same way round, "ratio" times as fast (needed).
+      shaft  fixed together: they turn as one."""
+    links = story.get("links")
+    parts = {p.get("id"): p for p in story.get("parts", []) if isinstance(p, dict)}
+    if links is None:
+        stray = [pid for pid, p in parts.items() if p.get("_spin") and p["_spin"]["rate"] is None]
+        return [f"component {pid!r} has a spin axis but nothing drives it: give it period_s and dir, or link it to the part that drives it" for pid in stray]
+    if not isinstance(links, list) or len(links) > 60:
+        return ["links must be a list of up to 60 items like {\"a\": \"crank\", \"b\": \"gear\", \"kind\": \"mesh\"}"]
+    errs, contact = [], {}
+    for c in story.get("connections") or []:
+        if isinstance(c, dict) and _point(c.get("at")):
+            contact[frozenset((c.get("a"), c.get("b")))] = c["at"]
+    good = []
+    for n, ln in enumerate(links, 1):
+        if not (isinstance(ln, dict) and ln.get("a") in parts and ln.get("b") in parts and ln.get("kind") in LINK_KINDS):
+            errs.append(f"link {n}: needs a and b (ids of components) and kind, one of {', '.join(LINK_KINDS)}")
+            continue
+        a, b = parts[ln["a"]], parts[ln["b"]]
+        if not (a.get("_spin") and b.get("_spin")):
+            errs.append(f"link {ln['a']!r} to {ln['b']!r}: both components need a spin with their axis and pivot")
+            continue
+        ratio = ln.get("ratio")
+        if ln["kind"] in ("chain", "belt") and not (_num(ratio) and ratio > 0):
+            errs.append(f"link {ln['a']!r} to {ln['b']!r}: a {ln['kind']} needs ratio, how many times faster {ln['b']!r} turns")
+            continue
+        if ln["kind"] == "mesh" and frozenset((ln["a"], ln["b"])) not in contact:
+            errs.append(f"link {ln['a']!r} to {ln['b']!r}: meshing gears need a connection with the point where their teeth meet")
+            continue
+        good.append(ln)
+
+    def drive(src, dst, ln):
+        """The driven part's rate (degrees a second about its own axis) from the driver's."""
+        sa, sb = src["_spin"], dst["_spin"]
+        if ln["kind"] == "shaft":
+            return sa["rate"] * sum(sa["axis"][k] * sb["axis"][k] for k in range(3))
+        if ln["kind"] in ("chain", "belt"):
+            same = 1 if sum(sa["axis"][k] * sb["axis"][k] for k in range(3)) >= 0 else -1
+            r = ln["ratio"] if src is parts[ln["a"]] else 1 / ln["ratio"]
+            return sa["rate"] * r * same
+        c = contact[frozenset((ln["a"], ln["b"]))]
+        ra = [c[k] - sa["pivot"][k] for k in range(3)]
+        rb = [c[k] - sb["pivot"][k] for k in range(3)]
+        v = _cross3([x * sa["rate"] for x in sa["axis"]], ra)            # how the driver's surface moves at the contact point
+        bxr = _cross3(sb["axis"], rb)
+        den = sum(x * x for x in bxr)
+        if den < 1e-9 or sum(x * x for x in _cross3(sa["axis"], ra)) < 1e-9:
+            raise ValueError(f"link {ln['a']!r} to {ln['b']!r}: the contact point lies on the axis of one of the gears; put it where their teeth meet, at the rims")
+        rate = sum(v[k] * bxr[k] for k in range(3)) / den              # the driven surface must move the same way there
+        if _num(ln.get("ratio")) and ln["ratio"] > 0 and abs(rate) > 1e-9:
+            r = ln["ratio"] if src is parts[ln["a"]] else 1 / ln["ratio"]
+            rate = abs(sa["rate"]) * r * (1 if rate > 0 else -1)
+        return rate
+
+    train, changed = {}, True
+    for pid, p in parts.items():
+        if p.get("_spin") and p["_spin"]["rate"] is not None:
+            train[pid] = pid
+    while changed:
+        changed = False
+        for ln in good:
+            for src_id, dst_id in ((ln["a"], ln["b"]), (ln["b"], ln["a"])):
+                src, dst = parts[src_id], parts[dst_id]
+                if src["_spin"]["rate"] is None or src_id not in train:
+                    continue
+                try:
+                    rate = drive(src, dst, ln)
+                except ValueError as e:
+                    errs.append(str(e))
+                    good.remove(ln)
+                    changed = True
+                    break
+                if dst["_spin"]["rate"] is None:
+                    dst["_spin"]["rate"] = rate
+                    train[dst_id] = train[src_id]
+                    changed = True
+                elif abs(dst["_spin"]["rate"] - rate) > 0.1 * max(abs(rate), 1e-6) and dst_id != train[src_id]:
+                    errs.append(f"link {ln['a']!r} to {ln['b']!r}: {dst_id!r} is given its own speed, but {src_id!r} drives it at a different one; give period_s and dir "
+                                f"only to the part that drives the others")
+                    good.remove(ln)
+                    changed = True
+                    break
+            if changed:
+                break
+    for pid, p in parts.items():
+        if p.get("_spin"):
+            if p["_spin"]["rate"] is None:
+                errs.append(f"component {pid!r} has a spin axis but nothing drives it: link it to the part that drives it, or give it period_s and dir")
+            else:
+                p["_train"] = train.get(pid, pid)
+    return errs
+
+
+VIEW_AXES = {"front": (0, 1), "side": (2, 1), "top": (0, 2)}       # which two axes of the shared frame each view shows: x and y, z and y, x and z
+
+
+def _solid(p):
+    """Build a sheet component from its features: its meshes (around its own centre), its box and place, its spin; and check what the sheet claims about it. Returns error sentences."""
+    pid, errs = p.get("id"), []
+    try:
+        meshes = solids.compile_component(p.get("features"), p.get("material", "steel"))
+    except ValueError as e:
+        return [f"component {pid!r}: {e}"]
+    lo, hi = solids.bounds(meshes)
+    mid = [(lo[k] + hi[k]) / 2 for k in range(3)]
+    for m in meshes:
+        for k in range(len(m["p"])):
+            m["p"][k] = round(m["p"][k] - mid[k % 3], 4)
+    p["_meshes"] = meshes
+    p["size"] = [round(max(LIMITS["size"][0], hi[k] - lo[k]), 4) for k in range(3)]
+    p["at"] = [[round(x, 4) for x in mid]]
+    p["_span"] = [lo, hi]
+    extent = max(hi[k] - lo[k] for k in range(3))
+    views = p.get("views")
+    if views is not None:
+        if not isinstance(views, dict) or any(k not in VIEW_AXES for k in views):
+            errs.append(f"component {pid!r}: views may hold front [x0, x1, y0, y1], side [z0, z1, y0, y1] and top [x0, x1, z0, z1] only")
+        else:
+            for name, v in views.items():
+                if not (isinstance(v, list) and len(v) == 4 and all(_num(x) for x in v)):
+                    errs.append(f"component {pid!r}: the {name} view must be four numbers {VIEW_AXES_TEXT[name]}")
+                    continue
+                for axis, (want_lo, want_hi) in zip(VIEW_AXES[name], ((v[0], v[1]), (v[2], v[3]))):
+                    tol = max(0.12, 0.08 * extent)
+                    if abs(lo[axis] - want_lo) > tol or abs(hi[axis] - want_hi) > tol:
+                        errs.append(f"component {pid!r}: your {name} view says it spans {'xyz'[axis]} {want_lo:g} to {want_hi:g}, but its features span {'xyz'[axis]} {lo[axis]:.2f} to {hi[axis]:.2f}: "
+                                    f"fix the features or the view so they agree")
+    out = p.get("out")
+    if out is not None:                 # the way this component is taken out of the assembly, stated by the sheet (a dial leaves a watch through the front, not through the case wall)
+        if out not in OUT:
+            errs.append(f"component {pid!r}: out must be one of {', '.join(OUT)} (the direction it is taken out of the assembly; none for the body everything else comes out of)")
+        else:
+            p["_out"] = OUT[out]
+    spin = p.get("spin")
+    if spin is not None:
+        # a part that turns: the driver (the crank a person turns, a motor) gives its real period and direction; a part it drives gives only its axis and pivot,
+        # and its speed and direction are worked out from the links (_links)
+        ok = isinstance(spin, dict) and spin.get("axis", "z") in AXES and _point(spin.get("pivot", mid))
+        per = spin.get("period_s") if isinstance(spin, dict) else None
+        if ok and per is not None and not (_num(per) and per > 0 and spin.get("dir", "cw") in ("cw", "ccw")):
+            ok = False
+        if not ok:
+            errs.append(f"component {pid!r}: spin must be {{\"axis\": \"x|y|z\", \"pivot\": [x, y, z]}} plus, only for the part that drives the others, "
+                        f"\"period_s\": seconds for one turn and \"dir\": \"cw\" or \"ccw\"")
+        else:
+            p["spin_axis"] = spin.get("axis", "z")
+            rate = None
+            if per is not None:              # clockwise seen from the positive end of the axis is a negative turn about it
+                rate = 360.0 / float(per) * (-1 if spin.get("dir", "cw") == "cw" else 1)
+            p["_spin"] = {"pivot": [float(x) for x in spin.get("pivot", mid)], "axis": AXES[spin.get("axis", "z")], "rate": rate}
+    return errs
+
+
+OUT = {"+x": [1.0, 0.0, 0.0], "-x": [-1.0, 0.0, 0.0], "+y": [0.0, 1.0, 0.0], "-y": [0.0, -1.0, 0.0], "+z": [0.0, 0.0, 1.0], "-z": [0.0, 0.0, -1.0], "none": [0.0, 0.0, 0.0]}
+VIEW_AXES_TEXT = {"front": "[x0, x1, y0, y1]", "side": "[z0, z1, y0, y1]", "top": "[x0, x1, z0, z1]"}
+
+
+def _span_of(p):
+    """(lo, hi) of a part in the shared frame (all its copies), or None."""
+    if p.get("_span"):
+        return p["_span"]
+    if isinstance(p.get("size"), list) and isinstance(p.get("at"), list) and p["at"]:
+        lo = [min(c[k] - p["size"][k] / 2 for c in p["at"]) for k in range(3)]
+        hi = [max(c[k] + p["size"][k] / 2 for c in p["at"]) for k in range(3)]
+        return lo, hi
+    return None
+
+
+def _connections(story):
+    """Errors for a sheet's `connections`: [{"a": id, "b": id, "at": [x, y, z]}]. Each point must lie on both components (within a small margin)."""
+    conns = story.get("connections")
+    if conns is None:
+        return []
+    errs, parts = [], {p.get("id"): p for p in story.get("parts", []) if isinstance(p, dict)}
+    if not isinstance(conns, list) or len(conns) > 80:
+        return ["connections must be a list of up to 80 items like {\"a\": \"seat\", \"b\": \"leg\", \"at\": [x, y, z]}"]
+    for n, c in enumerate(conns, 1):
+        if not (isinstance(c, dict) and c.get("a") in parts and c.get("b") in parts and _point(c.get("at"))):
+            errs.append(f"connection {n}: needs a and b (ids of components) and at (the point [x, y, z] where they meet)")
+            continue
+        for who in (c["a"], c["b"]):
+            span = _span_of(parts[who])
+            if not span:
+                continue
+            extent = max(span[1][k] - span[0][k] for k in range(3))
+            tol = max(0.12, 0.05 * extent)
+            d = math.sqrt(sum(max(span[0][k] - c["at"][k], 0, c["at"][k] - span[1][k]) ** 2 for k in range(3)))
+            if d > tol:
+                errs.append(f"connection {c['a']!r} to {c['b']!r}: the point {c['at']} is {d:.2f} units from {who!r}, so they do not meet there; move the point or the component")
+    return errs
+
+
 def instances(p):
     """[(id, centre, size)] for every copy of a part; the first keeps the part's id, the others get id#2, id#3..."""
     return [(p["id"] if k == 0 else f"{p['id']}#{k + 1}", c, p["size"]) for k, c in enumerate(p["at"])]
@@ -77,6 +350,7 @@ def check(parts):
     """Errors for parts that pass through each other or float away from the rest. A part declared `inside` another may sit within it."""
     items = [(p["id"], pid, (c, s)) for p in parts for pid, c, s in instances(p)]
     inside = {p["id"]: p.get("inside") for p in parts}
+    members_involved = {p["id"]: True for p in parts if p.get("kind") == "member"}       # tubes meet at joints, so their boxes always overlap: not an error
     lo = [min(_span(*box)[i][0] for _, _, box in items) for i in range(3)]
     hi = [max(_span(*box)[i][1] for _, _, box in items) for i in range(3)]
     extent = max(h - l for h, l in zip(hi, lo))
@@ -91,7 +365,7 @@ def check(parts):
                 continue
             if _gap(a, b) <= max(0.35, 0.06 * extent):
                 near = True
-            if i < j:
+            if i < j and members_involved.get(ida) is None and members_involved.get(idb) is None:
                 f = _overlap(a, b)
                 key = tuple(sorted((pa, pb)))
                 if f > LIMITS["overlap"] and key not in seen:
@@ -101,6 +375,52 @@ def check(parts):
         if not near and len(items) > 1:
             errs.append(f"part {pa!r} floats away from the rest of the machine; move its box so it touches the part it attaches to")
     return errs[:8]
+
+
+def shift(parts):
+    """The shift `place` applies to every part (centres the machine left-right and front-back and stands it on y = 0)."""
+    items = [(p, pid, c, s) for p in parts for pid, c, s in instances(p)]
+    lo = [min(c[i] - s[i] / 2 for _, _, c, s in items) for i in range(3)]
+    hi = [max(c[i] + s[i] / 2 for _, _, c, s in items) for i in range(3)]
+    return [-(lo[0] + hi[0]) / 2, -lo[1], -(lo[2] + hi[2]) / 2]
+
+
+_DIRS = ([0, 1, 0], [0, -1, 0], [1, 0, 0], [-1, 0, 0], [0, 0, 1], [0, 0, -1])
+
+
+def free_directions(items):
+    """{instance id: unit direction}: for every component, the way it can be pulled out of the assembly with the fewest others in its path. Its box is slid along each of the six axis
+    directions (by its own length along that axis) and the other boxes it would pass through are counted (boxes are shrunk a little, since joined components touch). Ties go to the direction
+    pointing away from the middle of the whole, then to up."""
+    boxes = [(pid, c, s) for _, pid, c, s in items]
+    mid = [sum(c[i] for _, c, _ in boxes) / len(boxes) for i in range(3)]
+    stated = {pid: p["_out"] for p, pid, _, _ in items if p.get("_out") is not None}
+    out = {}
+    for pid, c, s in boxes:
+        if pid in stated:               # the sheet said which way it comes out
+            out[pid] = list(stated[pid])
+            continue
+        best = None
+        for rank, d in enumerate(_DIRS):
+            axis = next(k for k in range(3) if d[k])
+            lo = [c[k] - s[k] / 2 for k in range(3)]
+            hi = [c[k] + s[k] / 2 for k in range(3)]
+            if d[axis] > 0:
+                hi[axis] += s[axis] * 1.2
+            else:
+                lo[axis] -= s[axis] * 1.2
+            blocked = 0
+            for qid, qc, qs in boxes:
+                if qid == pid:
+                    continue
+                if all(min(hi[k], qc[k] + qs[k] * 0.45) > max(lo[k], qc[k] - qs[k] * 0.45) for k in range(3)):
+                    blocked += 1
+            away = sum((c[k] - mid[k]) * d[k] for k in range(3))
+            key = (blocked, -away, rank)
+            if best is None or key < best[0]:
+                best = (key, d)
+        out[pid] = [float(x) for x in best[1]]
+    return out
 
 
 def place(parts):

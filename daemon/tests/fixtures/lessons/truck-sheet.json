@@ -1,0 +1,1570 @@
+{
+  "version": 1,
+  "title": "How a Monster Truck Works",
+  "parts": [
+    {
+      "id": "frame",
+      "kind": "solid",
+      "label": "Steel Frame",
+      "material": "dark_steel",
+      "features": [
+        {
+          "shape": "cylinder",
+          "from": [
+            -3.4,
+            2.6,
+            1.0
+          ],
+          "to": [
+            3.4,
+            2.6,
+            1.0
+          ],
+          "radius": 0.12
+        },
+        {
+          "shape": "cylinder",
+          "from": [
+            -3.4,
+            2.6,
+            -1.0
+          ],
+          "to": [
+            3.4,
+            2.6,
+            -1.0
+          ],
+          "radius": 0.12
+        },
+        {
+          "shape": "cylinder",
+          "from": [
+            3.4,
+            2.6,
+            -1.0
+          ],
+          "to": [
+            3.4,
+            2.6,
+            1.0
+          ],
+          "radius": 0.12
+        },
+        {
+          "shape": "cylinder",
+          "from": [
+            0.6,
+            2.6,
+            -1.0
+          ],
+          "to": [
+            0.6,
+            2.6,
+            1.0
+          ],
+          "radius": 0.12
+        },
+        {
+          "shape": "cylinder",
+          "from": [
+            -1.2,
+            2.6,
+            -1.0
+          ],
+          "to": [
+            -1.2,
+            2.6,
+            1.0
+          ],
+          "radius": 0.12
+        },
+        {
+          "shape": "cylinder",
+          "from": [
+            -3.4,
+            2.6,
+            -1.0
+          ],
+          "to": [
+            -3.4,
+            2.6,
+            1.0
+          ],
+          "radius": 0.12
+        }
+      ],
+      "views": {
+        "front": [
+          -3.52,
+          3.52,
+          2.48,
+          2.72
+        ],
+        "side": [
+          -1.12,
+          1.12,
+          2.48,
+          2.72
+        ],
+        "top": [
+          -3.52,
+          3.52,
+          -1.12,
+          1.12
+        ]
+      },
+      "out": "none"
+    },
+    {
+      "id": "body",
+      "kind": "solid",
+      "label": "Truck Body",
+      "material": "red",
+      "features": [
+        {
+          "shape": "box",
+          "center": [
+            0,
+            3.3,
+            0
+          ],
+          "size": [
+            7.2,
+            1.16,
+            2.8
+          ]
+        },
+        {
+          "shape": "box",
+          "center": [
+            -0.4,
+            4.5,
+            0
+          ],
+          "size": [
+            2.4,
+            1.24,
+            2.6
+          ]
+        },
+        {
+          "shape": "box",
+          "center": [
+            0.82,
+            4.5,
+            0
+          ],
+          "size": [
+            0.04,
+            0.9,
+            2.2
+          ],
+          "material": "glass"
+        },
+        {
+          "shape": "box",
+          "center": [
+            -0.4,
+            4.55,
+            1.31
+          ],
+          "size": [
+            1.8,
+            0.7,
+            0.04
+          ],
+          "material": "glass"
+        },
+        {
+          "shape": "box",
+          "center": [
+            -0.4,
+            4.55,
+            -1.31
+          ],
+          "size": [
+            1.8,
+            0.7,
+            0.04
+          ],
+          "material": "glass"
+        },
+        {
+          "shape": "box",
+          "center": [
+            3.61,
+            3.5,
+            0.9
+          ],
+          "size": [
+            0.04,
+            0.25,
+            0.4
+          ],
+          "material": "white"
+        },
+        {
+          "shape": "box",
+          "center": [
+            3.61,
+            3.5,
+            -0.9
+          ],
+          "size": [
+            0.04,
+            0.25,
+            0.4
+          ],
+          "material": "white"
+        },
+        {
+          "shape": "box",
+          "center": [
+            3.61,
+            3.25,
+            0
+          ],
+          "size": [
+            0.04,
+            0.4,
+            1.2
+          ],
+          "material": "black"
+        }
+      ],
+      "views": {
+        "front": [
+          -3.6,
+          3.63,
+          2.72,
+          5.12
+        ],
+        "side": [
+          -1.4,
+          1.4,
+          2.72,
+          5.12
+        ],
+        "top": [
+          -3.6,
+          3.63,
+          -1.4,
+          1.4
+        ]
+      },
+      "out": "+y"
+    },
+    {
+      "id": "engine",
+      "kind": "solid",
+      "label": "Engine",
+      "material": "steel",
+      "features": [
+        {
+          "shape": "box",
+          "center": [
+            0.6,
+            3.22,
+            0
+          ],
+          "size": [
+            1.6,
+            1.0,
+            1.2
+          ],
+          "material": "dark_steel"
+        },
+        {
+          "shape": "box",
+          "center": [
+            0.6,
+            3.95,
+            0
+          ],
+          "size": [
+            0.6,
+            0.46,
+            0.5
+          ],
+          "material": "steel"
+        },
+        {
+          "shape": "box",
+          "center": [
+            0.6,
+            4.28,
+            0
+          ],
+          "size": [
+            0.5,
+            0.2,
+            0.4
+          ],
+          "material": "black"
+        }
+      ],
+      "views": {
+        "front": [
+          -0.2,
+          1.4,
+          2.72,
+          4.38
+        ],
+        "side": [
+          -0.6,
+          0.6,
+          2.72,
+          4.38
+        ],
+        "top": [
+          -0.2,
+          1.4,
+          -0.6,
+          0.6
+        ]
+      },
+      "out": "+y"
+    },
+    {
+      "id": "front_driveshaft",
+      "kind": "solid",
+      "label": "Front Driveshaft",
+      "material": "steel",
+      "features": [
+        {
+          "shape": "tube",
+          "from": [
+            1.4,
+            2.9,
+            0
+          ],
+          "to": [
+            2.4,
+            1.3,
+            0
+          ],
+          "radius": 0.08
+        }
+      ],
+      "views": {
+        "front": [
+          1.32,
+          2.48,
+          1.22,
+          2.98
+        ],
+        "side": [
+          -0.08,
+          0.08,
+          1.22,
+          2.98
+        ],
+        "top": [
+          1.32,
+          2.48,
+          -0.08,
+          0.08
+        ]
+      },
+      "out": "-y"
+    },
+    {
+      "id": "rear_driveshaft",
+      "kind": "solid",
+      "label": "Rear Driveshaft",
+      "material": "steel",
+      "features": [
+        {
+          "shape": "tube",
+          "from": [
+            -0.2,
+            2.9,
+            0
+          ],
+          "to": [
+            -2.4,
+            1.3,
+            0
+          ],
+          "radius": 0.08
+        }
+      ],
+      "views": {
+        "front": [
+          -2.48,
+          -0.12,
+          1.22,
+          2.98
+        ],
+        "side": [
+          -0.08,
+          0.08,
+          1.22,
+          2.98
+        ],
+        "top": [
+          -2.48,
+          -0.12,
+          -0.08,
+          0.08
+        ]
+      },
+      "out": "-y"
+    },
+    {
+      "id": "front_axle",
+      "kind": "solid",
+      "label": "Front Axle",
+      "material": "dark_steel",
+      "features": [
+        {
+          "shape": "cylinder",
+          "from": [
+            2.4,
+            1.3,
+            -2.2
+          ],
+          "to": [
+            2.4,
+            1.3,
+            2.2
+          ],
+          "radius": 0.15
+        },
+        {
+          "shape": "sphere",
+          "center": [
+            2.4,
+            1.3,
+            0
+          ],
+          "radius": 0.35
+        }
+      ],
+      "views": {
+        "front": [
+          2.05,
+          2.75,
+          0.95,
+          1.65
+        ],
+        "side": [
+          -2.2,
+          2.2,
+          0.95,
+          1.65
+        ],
+        "top": [
+          2.05,
+          2.75,
+          -2.2,
+          2.2
+        ]
+      },
+      "out": "-y"
+    },
+    {
+      "id": "rear_axle",
+      "kind": "solid",
+      "label": "Rear Axle",
+      "material": "dark_steel",
+      "features": [
+        {
+          "shape": "cylinder",
+          "from": [
+            -2.4,
+            1.3,
+            -2.2
+          ],
+          "to": [
+            -2.4,
+            1.3,
+            2.2
+          ],
+          "radius": 0.15
+        },
+        {
+          "shape": "sphere",
+          "center": [
+            -2.4,
+            1.3,
+            0
+          ],
+          "radius": 0.35
+        }
+      ],
+      "views": {
+        "front": [
+          -2.75,
+          -2.05,
+          0.95,
+          1.65
+        ],
+        "side": [
+          -2.2,
+          2.2,
+          0.95,
+          1.65
+        ],
+        "top": [
+          -2.75,
+          -2.05,
+          -2.2,
+          2.2
+        ]
+      },
+      "out": "-y"
+    },
+    {
+      "id": "shock_fr",
+      "kind": "solid",
+      "label": "Shock Absorber",
+      "material": "steel",
+      "features": [
+        {
+          "shape": "tube",
+          "from": [
+            2.4,
+            1.3,
+            1.0
+          ],
+          "to": [
+            1.9,
+            2.6,
+            1.0
+          ],
+          "radius": 0.07
+        },
+        {
+          "shape": "cylinder",
+          "from": [
+            2.25,
+            1.69,
+            1.0
+          ],
+          "to": [
+            2.0,
+            2.34,
+            1.0
+          ],
+          "radius": 0.15,
+          "material": "orange"
+        }
+      ],
+      "views": {
+        "front": [
+          1.83,
+          2.47,
+          1.23,
+          2.67
+        ],
+        "side": [
+          0.85,
+          1.15,
+          1.23,
+          2.67
+        ],
+        "top": [
+          1.83,
+          2.47,
+          0.85,
+          1.15
+        ]
+      },
+      "out": "+z"
+    },
+    {
+      "id": "shock_fl",
+      "kind": "solid",
+      "label": "Shock Absorber",
+      "material": "steel",
+      "features": [
+        {
+          "shape": "tube",
+          "from": [
+            2.4,
+            1.3,
+            -1.0
+          ],
+          "to": [
+            1.9,
+            2.6,
+            -1.0
+          ],
+          "radius": 0.07
+        },
+        {
+          "shape": "cylinder",
+          "from": [
+            2.25,
+            1.69,
+            -1.0
+          ],
+          "to": [
+            2.0,
+            2.34,
+            -1.0
+          ],
+          "radius": 0.15,
+          "material": "orange"
+        }
+      ],
+      "views": {
+        "front": [
+          1.83,
+          2.47,
+          1.23,
+          2.67
+        ],
+        "side": [
+          -1.15,
+          -0.85,
+          1.23,
+          2.67
+        ],
+        "top": [
+          1.83,
+          2.47,
+          -1.15,
+          -0.85
+        ]
+      },
+      "out": "-z"
+    },
+    {
+      "id": "shock_rr",
+      "kind": "solid",
+      "label": "Shock Absorber",
+      "material": "steel",
+      "features": [
+        {
+          "shape": "tube",
+          "from": [
+            -2.4,
+            1.3,
+            1.0
+          ],
+          "to": [
+            -1.9,
+            2.6,
+            1.0
+          ],
+          "radius": 0.07
+        },
+        {
+          "shape": "cylinder",
+          "from": [
+            -2.25,
+            1.69,
+            1.0
+          ],
+          "to": [
+            -2.0,
+            2.34,
+            1.0
+          ],
+          "radius": 0.15,
+          "material": "orange"
+        }
+      ],
+      "views": {
+        "front": [
+          -2.47,
+          -1.83,
+          1.23,
+          2.67
+        ],
+        "side": [
+          0.85,
+          1.15,
+          1.23,
+          2.67
+        ],
+        "top": [
+          -2.47,
+          -1.83,
+          0.85,
+          1.15
+        ]
+      },
+      "out": "+z"
+    },
+    {
+      "id": "shock_rl",
+      "kind": "solid",
+      "label": "Shock Absorber",
+      "material": "steel",
+      "features": [
+        {
+          "shape": "tube",
+          "from": [
+            -2.4,
+            1.3,
+            -1.0
+          ],
+          "to": [
+            -1.9,
+            2.6,
+            -1.0
+          ],
+          "radius": 0.07
+        },
+        {
+          "shape": "cylinder",
+          "from": [
+            -2.25,
+            1.69,
+            -1.0
+          ],
+          "to": [
+            -2.0,
+            2.34,
+            -1.0
+          ],
+          "radius": 0.15,
+          "material": "orange"
+        }
+      ],
+      "views": {
+        "front": [
+          -2.47,
+          -1.83,
+          1.23,
+          2.67
+        ],
+        "side": [
+          -1.15,
+          -0.85,
+          1.23,
+          2.67
+        ],
+        "top": [
+          -2.47,
+          -1.83,
+          -1.15,
+          -0.85
+        ]
+      },
+      "out": "-z"
+    },
+    {
+      "id": "wheel_fr",
+      "kind": "solid",
+      "label": "Giant Tire",
+      "material": "black",
+      "features": [
+        {
+          "shape": "cylinder",
+          "from": [
+            2.4,
+            1.3,
+            1.5
+          ],
+          "to": [
+            2.4,
+            1.3,
+            2.7
+          ],
+          "radius": 1.24
+        },
+        {
+          "shape": "radial",
+          "center": [
+            2.4,
+            1.3,
+            2.1
+          ],
+          "axis": "z",
+          "count": 16,
+          "item": {
+            "shape": "box",
+            "center": [
+              2.4,
+              2.57,
+              2.1
+            ],
+            "size": [
+              0.25,
+              0.06,
+              1.2
+            ]
+          }
+        },
+        {
+          "shape": "cylinder",
+          "from": [
+            2.4,
+            1.3,
+            2.6
+          ],
+          "to": [
+            2.4,
+            1.3,
+            2.78
+          ],
+          "radius": 0.55,
+          "material": "steel"
+        },
+        {
+          "shape": "radial",
+          "center": [
+            2.4,
+            1.3,
+            2.8
+          ],
+          "axis": "z",
+          "count": 8,
+          "item": {
+            "shape": "cylinder",
+            "from": [
+              2.4,
+              1.6,
+              2.78
+            ],
+            "to": [
+              2.4,
+              1.6,
+              2.84
+            ],
+            "radius": 0.05,
+            "material": "dark_steel"
+          }
+        }
+      ],
+      "views": {
+        "front": [
+          1.09,
+          3.71,
+          -0.01,
+          2.61
+        ],
+        "side": [
+          1.5,
+          2.84,
+          -0.01,
+          2.61
+        ],
+        "top": [
+          1.09,
+          3.71,
+          1.5,
+          2.84
+        ]
+      },
+      "out": "+z",
+      "spin": {
+        "axis": "z",
+        "pivot": [
+          2.4,
+          1.3,
+          2.1
+        ],
+        "period_s": 1,
+        "dir": "cw"
+      }
+    },
+    {
+      "id": "wheel_fl",
+      "kind": "solid",
+      "label": "Giant Tire",
+      "material": "black",
+      "features": [
+        {
+          "shape": "cylinder",
+          "from": [
+            2.4,
+            1.3,
+            -1.5
+          ],
+          "to": [
+            2.4,
+            1.3,
+            -2.7
+          ],
+          "radius": 1.24
+        },
+        {
+          "shape": "radial",
+          "center": [
+            2.4,
+            1.3,
+            -2.1
+          ],
+          "axis": "z",
+          "count": 16,
+          "item": {
+            "shape": "box",
+            "center": [
+              2.4,
+              2.57,
+              -2.1
+            ],
+            "size": [
+              0.25,
+              0.06,
+              1.2
+            ]
+          }
+        },
+        {
+          "shape": "cylinder",
+          "from": [
+            2.4,
+            1.3,
+            -2.6
+          ],
+          "to": [
+            2.4,
+            1.3,
+            -2.78
+          ],
+          "radius": 0.55,
+          "material": "steel"
+        },
+        {
+          "shape": "radial",
+          "center": [
+            2.4,
+            1.3,
+            -2.8
+          ],
+          "axis": "z",
+          "count": 8,
+          "item": {
+            "shape": "cylinder",
+            "from": [
+              2.4,
+              1.6,
+              -2.78
+            ],
+            "to": [
+              2.4,
+              1.6,
+              -2.84
+            ],
+            "radius": 0.05,
+            "material": "dark_steel"
+          }
+        }
+      ],
+      "views": {
+        "front": [
+          1.09,
+          3.71,
+          -0.01,
+          2.61
+        ],
+        "side": [
+          -2.84,
+          -1.5,
+          -0.01,
+          2.61
+        ],
+        "top": [
+          1.09,
+          3.71,
+          -2.84,
+          -1.5
+        ]
+      },
+      "out": "-z",
+      "spin": {
+        "axis": "z",
+        "pivot": [
+          2.4,
+          1.3,
+          -2.1
+        ],
+        "period_s": 1,
+        "dir": "cw"
+      }
+    },
+    {
+      "id": "wheel_rr",
+      "kind": "solid",
+      "label": "Giant Tire",
+      "material": "black",
+      "features": [
+        {
+          "shape": "cylinder",
+          "from": [
+            -2.4,
+            1.3,
+            1.5
+          ],
+          "to": [
+            -2.4,
+            1.3,
+            2.7
+          ],
+          "radius": 1.24
+        },
+        {
+          "shape": "radial",
+          "center": [
+            -2.4,
+            1.3,
+            2.1
+          ],
+          "axis": "z",
+          "count": 16,
+          "item": {
+            "shape": "box",
+            "center": [
+              -2.4,
+              2.57,
+              2.1
+            ],
+            "size": [
+              0.25,
+              0.06,
+              1.2
+            ]
+          }
+        },
+        {
+          "shape": "cylinder",
+          "from": [
+            -2.4,
+            1.3,
+            2.6
+          ],
+          "to": [
+            -2.4,
+            1.3,
+            2.78
+          ],
+          "radius": 0.55,
+          "material": "steel"
+        },
+        {
+          "shape": "radial",
+          "center": [
+            -2.4,
+            1.3,
+            2.8
+          ],
+          "axis": "z",
+          "count": 8,
+          "item": {
+            "shape": "cylinder",
+            "from": [
+              -2.4,
+              1.6,
+              2.78
+            ],
+            "to": [
+              -2.4,
+              1.6,
+              2.84
+            ],
+            "radius": 0.05,
+            "material": "dark_steel"
+          }
+        }
+      ],
+      "views": {
+        "front": [
+          -3.71,
+          -1.09,
+          -0.01,
+          2.61
+        ],
+        "side": [
+          1.5,
+          2.84,
+          -0.01,
+          2.61
+        ],
+        "top": [
+          -3.71,
+          -1.09,
+          1.5,
+          2.84
+        ]
+      },
+      "out": "+z",
+      "spin": {
+        "axis": "z",
+        "pivot": [
+          -2.4,
+          1.3,
+          2.1
+        ],
+        "period_s": 1,
+        "dir": "cw"
+      }
+    },
+    {
+      "id": "wheel_rl",
+      "kind": "solid",
+      "label": "Giant Tire",
+      "material": "black",
+      "features": [
+        {
+          "shape": "cylinder",
+          "from": [
+            -2.4,
+            1.3,
+            -1.5
+          ],
+          "to": [
+            -2.4,
+            1.3,
+            -2.7
+          ],
+          "radius": 1.24
+        },
+        {
+          "shape": "radial",
+          "center": [
+            -2.4,
+            1.3,
+            -2.1
+          ],
+          "axis": "z",
+          "count": 16,
+          "item": {
+            "shape": "box",
+            "center": [
+              -2.4,
+              2.57,
+              -2.1
+            ],
+            "size": [
+              0.25,
+              0.06,
+              1.2
+            ]
+          }
+        },
+        {
+          "shape": "cylinder",
+          "from": [
+            -2.4,
+            1.3,
+            -2.6
+          ],
+          "to": [
+            -2.4,
+            1.3,
+            -2.78
+          ],
+          "radius": 0.55,
+          "material": "steel"
+        },
+        {
+          "shape": "radial",
+          "center": [
+            -2.4,
+            1.3,
+            -2.8
+          ],
+          "axis": "z",
+          "count": 8,
+          "item": {
+            "shape": "cylinder",
+            "from": [
+              -2.4,
+              1.6,
+              -2.78
+            ],
+            "to": [
+              -2.4,
+              1.6,
+              -2.84
+            ],
+            "radius": 0.05,
+            "material": "dark_steel"
+          }
+        }
+      ],
+      "views": {
+        "front": [
+          -3.71,
+          -1.09,
+          -0.01,
+          2.61
+        ],
+        "side": [
+          -2.84,
+          -1.5,
+          -0.01,
+          2.61
+        ],
+        "top": [
+          -3.71,
+          -1.09,
+          -2.84,
+          -1.5
+        ]
+      },
+      "out": "-z",
+      "spin": {
+        "axis": "z",
+        "pivot": [
+          -2.4,
+          1.3,
+          -2.1
+        ],
+        "period_s": 1,
+        "dir": "cw"
+      }
+    }
+  ],
+  "connections": [
+    {
+      "a": "body",
+      "b": "frame",
+      "at": [
+        0,
+        2.72,
+        1.0
+      ]
+    },
+    {
+      "a": "engine",
+      "b": "frame",
+      "at": [
+        0.6,
+        2.72,
+        0
+      ]
+    },
+    {
+      "a": "engine",
+      "b": "body",
+      "at": [
+        0.6,
+        3.88,
+        0
+      ]
+    },
+    {
+      "a": "front_driveshaft",
+      "b": "engine",
+      "at": [
+        1.4,
+        2.9,
+        0
+      ]
+    },
+    {
+      "a": "front_driveshaft",
+      "b": "front_axle",
+      "at": [
+        2.4,
+        1.3,
+        0
+      ]
+    },
+    {
+      "a": "rear_driveshaft",
+      "b": "engine",
+      "at": [
+        -0.2,
+        2.9,
+        0
+      ]
+    },
+    {
+      "a": "rear_driveshaft",
+      "b": "rear_axle",
+      "at": [
+        -2.4,
+        1.3,
+        0
+      ]
+    },
+    {
+      "a": "shock_fr",
+      "b": "front_axle",
+      "at": [
+        2.4,
+        1.3,
+        1.0
+      ]
+    },
+    {
+      "a": "shock_fr",
+      "b": "frame",
+      "at": [
+        1.9,
+        2.6,
+        1.0
+      ]
+    },
+    {
+      "a": "shock_fl",
+      "b": "front_axle",
+      "at": [
+        2.4,
+        1.3,
+        -1.0
+      ]
+    },
+    {
+      "a": "shock_fl",
+      "b": "frame",
+      "at": [
+        1.9,
+        2.6,
+        -1.0
+      ]
+    },
+    {
+      "a": "shock_rr",
+      "b": "rear_axle",
+      "at": [
+        -2.4,
+        1.3,
+        1.0
+      ]
+    },
+    {
+      "a": "shock_rr",
+      "b": "frame",
+      "at": [
+        -1.9,
+        2.6,
+        1.0
+      ]
+    },
+    {
+      "a": "shock_rl",
+      "b": "rear_axle",
+      "at": [
+        -2.4,
+        1.3,
+        -1.0
+      ]
+    },
+    {
+      "a": "shock_rl",
+      "b": "frame",
+      "at": [
+        -1.9,
+        2.6,
+        -1.0
+      ]
+    },
+    {
+      "a": "wheel_fr",
+      "b": "front_axle",
+      "at": [
+        2.4,
+        1.3,
+        2.0
+      ]
+    },
+    {
+      "a": "wheel_fl",
+      "b": "front_axle",
+      "at": [
+        2.4,
+        1.3,
+        -2.0
+      ]
+    },
+    {
+      "a": "wheel_rr",
+      "b": "rear_axle",
+      "at": [
+        -2.4,
+        1.3,
+        2.0
+      ]
+    },
+    {
+      "a": "wheel_rl",
+      "b": "rear_axle",
+      "at": [
+        -2.4,
+        1.3,
+        -2.0
+      ]
+    }
+  ],
+  "timelapse": 0.125,
+  "steps": [
+    {
+      "say": "Meet the monster truck! Its tires are almost as tall as a grown-up, and its body sits way up high. Let's take it apart and find out how it can jump and climb over cars.",
+      "do": [
+        {
+          "reveal": [
+            "frame",
+            "body",
+            "engine",
+            "front_driveshaft",
+            "rear_driveshaft",
+            "front_axle",
+            "rear_axle",
+            "shock_fr",
+            "shock_fl",
+            "shock_rr",
+            "shock_rl",
+            "wheel_fr",
+            "wheel_fl",
+            "wheel_rr",
+            "wheel_rl"
+          ]
+        },
+        {
+          "zoom": "all"
+        }
+      ]
+    },
+    {
+      "say": "First we lift off the shiny body. It is mostly a light shell, like a costume. Underneath is the strong steel frame, the truck's skeleton, holding every other part in place.",
+      "do": [
+        {
+          "explode": [
+            "body"
+          ]
+        },
+        {
+          "label": [
+            "body",
+            "frame"
+          ]
+        },
+        {
+          "highlight": [
+            "frame"
+          ]
+        },
+        {
+          "zoom": "frame"
+        }
+      ]
+    },
+    {
+      "say": "In the middle sits the big engine. It burns fuel to make powerful turning force, like a giant heart pumping strength into the whole truck.",
+      "do": [
+        {
+          "label": [
+            "engine"
+          ]
+        },
+        {
+          "highlight": [
+            "engine"
+          ]
+        },
+        {
+          "zoom": "engine"
+        }
+      ]
+    },
+    {
+      "say": "Two spinning rods called driveshafts carry that turning force from the engine to the front and rear axles. Because both axles get power, all four wheels push, so the truck can climb almost anything.",
+      "do": [
+        {
+          "label": [
+            "front_driveshaft",
+            "rear_driveshaft",
+            "front_axle",
+            "rear_axle"
+          ]
+        },
+        {
+          "highlight": [
+            "front_driveshaft",
+            "rear_driveshaft",
+            "front_axle",
+            "rear_axle"
+          ]
+        },
+        {
+          "spin": [
+            "wheel_fr",
+            "wheel_fl",
+            "wheel_rr",
+            "wheel_rl"
+          ]
+        },
+        {
+          "zoom": "all"
+        }
+      ]
+    },
+    {
+      "say": "These long shock absorbers join the axles to the frame. When the truck lands a jump, they squish and stretch like a pogo stick, so the truck does not crash down hard.",
+      "do": [
+        {
+          "label": [
+            "shock_fr",
+            "shock_fl",
+            "shock_rr",
+            "shock_rl"
+          ]
+        },
+        {
+          "highlight": [
+            "shock_fr",
+            "shock_fl",
+            "shock_rr",
+            "shock_rl"
+          ]
+        },
+        {
+          "zoom": "shock_fr"
+        }
+      ]
+    },
+    {
+      "say": "Last come the giant tires. They are soft and wide with chunky treads that grab dirt like the bumpy sole of a hiking boot, and they bounce a bit too.",
+      "do": [
+        {
+          "explode": [
+            "wheel_fr",
+            "wheel_fl",
+            "wheel_rr",
+            "wheel_rl"
+          ]
+        },
+        {
+          "label": [
+            "wheel_fr"
+          ]
+        },
+        {
+          "highlight": [
+            "wheel_fr",
+            "wheel_fl",
+            "wheel_rr",
+            "wheel_rl"
+          ]
+        },
+        {
+          "zoom": "wheel_fr"
+        }
+      ]
+    },
+    {
+      "say": "Now let's put it all back together. Engine, driveshafts, axles, shocks and tires all team up to make one roaring, jumping monster truck!",
+      "do": [
+        {
+          "explode": []
+        },
+        {
+          "zoom": "all"
+        },
+        {
+          "spin": [
+            "wheel_fr",
+            "wheel_fl",
+            "wheel_rr",
+            "wheel_rl"
+          ]
+        }
+      ]
+    }
+  ],
+  "recap": "A monster truck's engine sends power through driveshafts to both axles so all four giant tires push, while long shock absorbers soak up the bumps from big jumps.",
+  "question": "Would you like to know how the driver steers such a huge truck?",
+  "layout": {
+    "template": "blueprint",
+    "explode": "free"
+  }
+}

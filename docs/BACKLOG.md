@@ -7,7 +7,7 @@ Once the repo is public this becomes GitHub Issues (one issue per item, same IDs
 item ID in the message (`V1: wobbly outline`), then delete it from here. New ideas go under *Ideas* first.
 Status: `todo` · `doing` · `blocked` · `decision` (needs the owner).
 
-Tracks: **L** launch · **V** visual · **A** agent · **P** other apps · **T** voice · **Q** quality
+Tracks: **L** launch · **V** visual · **A** agent · **P** other apps · **T** voice · **Q** quality · **F** 3D physics foundation
 
 ## Decisions needed first
 
@@ -59,6 +59,27 @@ file. Goal: install, see goop, and be talking to it within two minutes, with not
 | A1 | Test the OpenAI-compatible provider against a real model | blocked | Needs an API key or a local Ollama. |
 | A2 | Per-goop provider: peel a copy and make it a different LLM, color-coded | todo | `agent.py --provider` exists; the shell must remember one per goop. |
 | P1 | Browser adapter (Chromium debug port, read pages via CDP) | todo | |
+
+## 3D lessons built on physics (track F; design in `docs/design/3d-physics-foundation.md`, proposed 2026-11-21)
+
+Owner feedback 2026-11-21: placement, size ratios, physics and effects (bubbles too big, outside their container) are wrong in many lessons; lessons show the machine alone, no people. Plan: real units, physical
+primitives, placement by relations, motion from laws, checks by numbers. Prove it on a bicycle without a rider, the balloon and the submarine, then compare blind against the old lessons.
+
+| ID | Item | Status | Notes |
+|---|---|---|---|
+| L10 | Planner prompts follow the real machine; no people | done locally, push later | Branch `l10-planner-prompts` (`3a3f6b2`, `b7168bf`). Engine pair preferred in a blind test; balloon pair not judged. Wait for the marketplace review of #13859 before pushing. |
+| L11 | Geometry validator prototype | done locally, push later | Branch `l11-geometry-validator` (`b610f72`), 10 tests, about 0.5 s per lesson. Not wired into the planner. |
+| L12 | Scene invariants suite | done locally, push later | Branch `l11-geometry-validator`. `invariants.py`, `check_lessons.py`, `test_scene_invariants.py` (10 saved lessons, about 20 s, needs node and deno). The KNOWN list in the test is the baseline: each fix in track F removes entries. |
+| F1 | Units: the model gives real sizes in metres; one display scale; plausible-range tables per primitive and material | todo | Fixes size ratios by construction. |
+| F2 | Physical primitives (box, cylinder, tube, sphere, cone, torus, wheel, gear, pulley, spring, tank) with derived quantities | todo | Formulas in the design doc; unit tests check them. Partly reverses E5c (ready-made shapes), now parametric and physical. |
+| F3 | Relations and a solver (tangent, concentric, coincident anchors, mesh, inside, above or hang, hinge, slider) | partly | Done 2026-11-21 for tube structures: named joints and `member` parts (`members.py`, `blueprint.resolve`), a part can sit at a joint. Still to do: round parts (a hull or envelope with named stations and rings that other parts attach to), tangent, mesh, hinge, slider. Version 1 lessons keep playing. |
+| F4 | Laws that drive motion (rolling, gears, crank-slider, lever, pulley, buoyancy, hot air, hydrostatic, flow, ideal gas, Ohm, waves, refraction, stability) | todo | Pure functions with unit tests; the renderer reads the value. |
+| F5 | Effects in physical units and clipped to a container (bubbles, flow drops, smoke, sparks) | todo | Causes found in `shell/explainer3d/lesson.js`: absolute sizes, no bounds. Needs a visual check, on workspace 9 with a warning first. |
+| F6 | Validator in the repair loop: ratios against real sizes, anchor reach, law consistency, effect bounds | todo | Builds on L11. |
+| F7 | Prompt and schema for storyboard v2 (primitives, anchors, relations, laws) | todo | After F1 to F4. |
+| F8 | Proof lessons: bicycle without a rider, balloon, submarine; blind side-by-side against the old ones | todo | Success: validator clean, owner prefers the new one, build time near a minute, no more model calls. |
+| F9 | Optional render-and-review pass with a vision model | idea | Only if F6 leaves visible faults. |
+| F10 | Model sheet: the AI draws an assembled, connected multi-view sheet, code builds and checks it | in the app (router in the sheet prompt) | Branch `l11-geometry-validator`. `solids.py`, `blueprint.resolve` (solid kind, views, connections, spin), `plan_sheet` in `planner.py`, `plan_lesson.py --sheet`. Chair and watch pass. Wired into `explain_run.py` with the router (2026-11-21). To do: moving connections (hinge, slider, gears, chain, crank), section views for internals, a 10-20 topic test, early start while the sheet is checked, a vision check. |
 
 ## 3D explainers (owner idea 2026-10-30; research in `docs/design/3d-explainer.md`)
 

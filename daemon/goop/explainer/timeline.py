@@ -14,6 +14,47 @@ GO_AT = 5.4            # seconds into the finale step when the assembled thing s
 PITCH_FOR = {"launch": 5, "drive": 9, "sink": 4, "fly": 9}
 
 
+CAMERA_SETTLE = 2.0           # a label appears once the camera has arrived (the shot eases in over about 1.8 s), so it is never drawn where the picture is not yet looking
+LABEL_HEADROOM = 0.28         # a label's text sits above its dot: shots with labels aim a little above the middle of the parts to leave room
+FOCUS_CONTEXT = 0.6           # a shot on some parts is at least this share of the way out to the whole-model shot
+TAN_FOV = math.tan(math.radians(34) / 2)       # the lesson camera looks with a 34 degree vertical field of view; the picture is wider than tall, so the vertical limit decides
+
+
+def _fit(radius):
+    """How far the camera must be to hold a sphere of this radius in the picture, with a margin."""
+    return radius / TAN_FOV * 1.25 + 0.6
+
+
+def _half(p, k):
+    """Half the size of a placed part along axis k (the box the layout gave it)."""
+    sh = p["shape"]
+    return (sh.get("h", 2 * p["radius"]) / 2) if k == 1 else max(sh.get("r", 0), sh.get("r0", 0), sh.get("w", 0) / 2, sh.get("d", 0) / 2 if k == 2 else 0) or p["radius"]
+
+
+def _eye(target, dist, yaw, pitch):
+    """Where the lesson camera is: it orbits `target` at `dist`, turned `yaw` about the vertical and raised `pitch` (Lesson3D.qml, lesson.js project)."""
+    y, p = math.radians(yaw), math.radians(pitch)
+    return [target[0] + dist * math.cos(p) * math.sin(y), target[1] + dist * math.sin(p), target[2] + dist * math.cos(p) * math.cos(y)]
+
+
+def _segment_hits(a, b, lo, hi):
+    """Does the straight line from a to b pass through the box (lo, hi)? Slab test; a box that holds b (a body around an engine) counts."""
+    t0, t1 = 0.0, 1.0
+    for k in range(3):
+        d = b[k] - a[k]
+        if abs(d) < 1e-9:
+            if a[k] < lo[k] or a[k] > hi[k]:
+                return False
+            continue
+        u, v = (lo[k] - a[k]) / d, (hi[k] - a[k]) / d
+        if u > v:
+            u, v = v, u
+        t0, t1 = max(t0, u), min(t1, v)
+        if t0 > t1:
+            return False
+    return t1 > 0.02
+
+
 def duration(text):
     return max(5.0, round(len(text.split()) / WORDS_PER_SECOND + 1.4, 2))
 
@@ -22,6 +63,10 @@ def build(story, lay):
     placed, instances, bounds = lay["placed"], lay["instances"], lay["bounds"]
     template = story["layout"]["template"]
     yaw0, pitch = TEMPLATE_VIEW[template]
+    if template == "blueprint":        # parts that come out toward the viewer (z) would hide each other seen from the front: turn the view further round, by how much of the take-apart is along z
+        total = sum(math.dist(p["explode"], (0, 0, 0)) for p in placed.values()) or 1.0
+        toward = sum(abs(p["explode"][2]) for p in placed.values()) / total
+        yaw0, pitch = yaw0 - 24 * toward, pitch + 6 * toward
     movable = [i for i, p in placed.items() if not p["spanning"] and not p.get("context")]
 
     def expand(ids):
@@ -86,11 +131,18 @@ def build(story, lay):
             if name == "reveal":
                 pass
             elif name == "label":
-                events.append({"type": "label", "parts": [instances[r][0] for r in (arg if isinstance(arg, list) else [arg])], "t0": round(t0 + 0.7, 2), "t1": round(t1 - 0.2, 2)})
+                events.append({"type": "label", "parts": [instances[r][0] for r in (arg if isinstance(arg, list) else [arg])], "t0": round(t0 + CAMERA_SETTLE, 2), "t1": round(t1 - 0.2, 2)})
             elif name == "highlight":
                 events.append({"type": "highlight", "parts": expand(arg), "t0": round(t0 + 1.0, 2), "t1": round(t1 - 0.3, 2)})
             elif name == "spin":
-                events.append({"type": "spin", "parts": expand(arg), "rate": 140, "t0": round(t0 + 0.9, 2)})
+                ids = expand(arg)
+                trains = {placed[i].get("train") for i in ids} - {None}      # turning one part of a gear train turns all of it
+                ids += [j for j, q in placed.items() if q.get("train") in trains and j not in ids]
+                ev = {"type": "spin", "parts": ids, "rate": 140, "t0": round(t0 + 0.9, 2)}
+                rates = {i: placed[i]["spin_rate"] for i in ids if placed[i].get("spin_rate")}       # a part with a real period turns at its own rate
+                if rates:
+                    ev["rates"] = rates
+                events.append(ev)
             elif name == "cutaway":
                 events.append({"type": "cutaway", "parts": expand(arg), "t0": round(t0 + 0.4, 2), "t1": round(t1 - 0.2, 2), "alpha": 0.18})
             elif name == "explode":
@@ -98,32 +150,64 @@ def build(story, lay):
                 if ids:
                     events.append({"type": "explode", "parts": ids, "t0": round(t0 + 0.6, 2), "t1": round(t1 - 0.2, 2)})
             elif name == "pulse":
-                events.append({"type": "pulse", "source": instances[arg][0], "t0": round(t0 + 0.6, 2)})
+                ev = {"type": "pulse", "source": instances[arg][0], "t0": round(t0 + 0.6, 2)}
+                if template != "network":          # outside a signal lesson a pulse is a short burst from the part (a spark, a bang), over when the step is
+                    ev["t1"] = round(t1, 2)
+                events.append(ev)
             elif name == "flow":
                 a_, b_ = placed[instances[arg["from"]][0]], placed[instances[arg["to"]][0]]
                 flows += 1
                 pid = f"path{flows}"
                 paths[pid] = [list(a_["pos"]), list(b_["pos"])]
-                events.append({"type": "flow", "path": pid, "medium": arg.get("medium", "air"), "color": vocab.MEDIA[arg.get("medium", "air")], "t0": round(t0 + 0.8, 2), "t1": round(t1, 2)})
+                events.append({"type": "flow", "path": pid, "from": a_["id"], "to": b_["id"], "medium": arg.get("medium", "air"), "color": vocab.MEDIA[arg.get("medium", "air")], "t0": round(t0 + 0.8, 2), "t1": round(t1, 2)})
             elif name == "zoom":
                 zoom_target = arg
-        # the camera: an explicit zoom, else the parts this step introduced, else the whole thing
+        # the camera: an explicit zoom, else every part this step talks about (so a label is never out of the picture), else the whole thing
+        shown = [i for i in dict.fromkeys(mentioned) if not placed[i].get("context")]
+        labelled = [i for a in actions if next(iter(a.items()))[0] == "label" for i in expand(next(iter(a.items()))[1])]
         if zoom_target and zoom_target != "all":
-            focus = expand(zoom_target)
+            focus = list(dict.fromkeys(expand(zoom_target) + labelled))           # the part to look at, and every part a label points at
         elif zoom_target == "all" or st.get("_recap") or st.get("_finale") or n == 0:
             focus = []
         else:
-            focus = newly[:2] if 0 < len(newly) <= 2 else []
+            focus = shown if 0 < len(shown) <= 8 else []
         if focus:
             ps = [placed[i] for i in focus]
             hang = teardown and n >= 1 and not st.get("_finale") and not st.get("_recap")       # the parts hang apart now, so aim where they really are
-            c = [sum(p["pos"][k] + (p["explode"][k] if hang else 0) for p in ps) / len(ps) for k in range(3)]
-            reach = max(p["radius"] for p in ps) + (max(math.dist([p["pos"][k] + (p["explode"][k] if hang else 0) for k in range(3)], c) for p in ps) if len(ps) > 1 else 0)
-            dist = max(MIN_FOCUS[template], reach * 6.0 + 3.0)
+            lo = [min(p["pos"][k] + (p["explode"][k] if hang else 0) - _half(p, k) for p in ps) for k in range(3)]
+            hi = [max(p["pos"][k] + (p["explode"][k] if hang else 0) + _half(p, k) for p in ps) for k in range(3)]
+            c = [(a_ + b_) / 2 for a_, b_ in zip(lo, hi)]
+            reach = math.dist(lo, hi) / 2
+            if any(next(iter(a.items()))[0] == "label" for a in actions):
+                c[1] += LABEL_HEADROOM * reach
+            dist = max(MIN_FOCUS[template], FOCUS_CONTEXT * _fit(bounds["radius"]), _fit(reach * (1 + LABEL_HEADROOM)))      # never closer than part of the way in, so the rest of the model stays in view
         else:
-            c, dist = bounds["center"], max(MIN_WIDE[template], bounds["radius"] * 3.1)
-        camera.append({"t": round(t0 + 0.2, 2), "target": [round(x, 3) for x in c], "dist": round(dist, 2), "yaw": round(yaw0 + 5 * n, 1),
-                       "pitch": PITCH_FOR[fin["motion"]] if st.get("_finale") else pitch})
+            c, dist = list(bounds["center"]), max(MIN_WIDE[template], _fit(bounds["radius"]))
+            if labelled:                 # a whole-model shot with labels: room above the top parts for the label text
+                c[1] += LABEL_HEADROOM * bounds["radius"] * 0.5
+                dist = max(dist, _fit(bounds["radius"] * (1 + LABEL_HEADROOM * 0.5)))
+        cam_pitch = PITCH_FOR[fin["motion"]] if st.get("_finale") else pitch
+        camera.append({"t": round(t0 + 0.2, 2), "target": [round(x, 3) for x in c], "dist": round(dist, 2), "yaw": round(yaw0 + 5 * n, 1), "pitch": cam_pitch})
+        # a part the step points at must be seen: whatever lies between the camera and it (a body around an engine, a big wheel in front of small gears) turns see-through
+        pointed = [i for a in actions if next(iter(a.items()))[0] in ("label", "highlight") for i in expand(next(iter(a.items()))[1])]
+        if pointed and not st.get("_finale"):
+            hang = teardown and n >= 1 and not st.get("_recap")
+            eye = _eye(c, dist, yaw0 + 5 * n, cam_pitch)
+            already = {i for a in actions if next(iter(a.items()))[0] == "cutaway" for i in expand(next(iter(a.items()))[1])}
+            hiders = []
+            for target in dict.fromkeys(pointed):
+                tp = placed[target]
+                goal = [tp["pos"][k] + (tp["explode"][k] if hang else 0) for k in range(3)]
+                for j, q in placed.items():
+                    if j in pointed or j in already or j in hiders or q.get("context") or q["spanning"]:
+                        continue
+                    centre = [q["pos"][k] + (q["explode"][k] if hang else 0) for k in range(3)]
+                    lo = [centre[k] - _half(q, k) * 0.95 for k in range(3)]
+                    hi = [centre[k] + _half(q, k) * 0.95 for k in range(3)]
+                    if _segment_hits(eye, goal, lo, hi):
+                        hiders.append(j)
+            if hiders:
+                events.append({"type": "cutaway", "parts": hiders, "t0": round(t0 + 0.4, 2), "t1": round(t1 - 0.2, 2), "alpha": 0.18, "auto": True})
         t = t1
     end = t + 2.0
     if teardown and len(step_t0) > 1:      # one long explode: out at the start of step 2, held through the explanations, back together as the finale (or the recap) begins

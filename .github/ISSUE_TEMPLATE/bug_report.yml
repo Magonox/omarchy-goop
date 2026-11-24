@@ -1,0 +1,44 @@
+name: Bug report
+description: Something does not work, or a 3D lesson looks wrong
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for helping. **Please do not paste private text.** Goop's logs and screenshots can contain what was on your screen; look at them and remove anything private first.
+        For a security problem use the private route in [SECURITY.md](https://github.com/Magonox/omarchy-goop/blob/main/SECURITY.md) instead.
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened
+      description: What you did, what you expected, what you saw. For a 3D lesson, the topic you asked about and what looked wrong (a part in the wrong place, a label off its part, something that did not move correctly).
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      placeholder: "1. Click a goop on a terminal\n2. Ask ...\n3. ..."
+  - type: input
+    id: version
+    attributes:
+      label: Goop version or commit
+      description: "`version` in manifest.json, or the commit shown by `git log -1` if you installed from git"
+      placeholder: "0.1.0"
+  - type: textarea
+    id: doctor
+    attributes:
+      label: Output of the setup check
+      description: Run `python3 daemon/doctor.py` in the plugin folder (usually `~/.config/omarchy/plugins/io.github.magonox.goop`) and paste the result. It lists which tools Goop found; it does not include your questions.
+      render: json
+  - type: textarea
+    id: env
+    attributes:
+      label: Omarchy, Hyprland and GPU
+      description: Versions if you know them, and whether 3D lessons use qt6-quick3d (and deno, for the older lesson method). Integrated or discrete GPU.
+  - type: textarea
+    id: logs
+    attributes:
+      label: Log lines (optional, redacted)
+      description: "`quickshell log -p /usr/share/omarchy/shell | grep -i goop`, with anything private removed."
+      render: text

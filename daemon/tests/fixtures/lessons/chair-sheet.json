@@ -1,0 +1,1156 @@
+{
+  "version": 1,
+  "title": "How a Chair Is Built and Holds You Up",
+  "parts": [
+    {
+      "id": "seat",
+      "kind": "solid",
+      "label": "Seat",
+      "material": "wood",
+      "features": [
+        {
+          "shape": "box",
+          "center": [
+            0,
+            3.875,
+            0.1875
+          ],
+          "size": [
+            4,
+            0.25,
+            3.625
+          ]
+        }
+      ],
+      "views": {
+        "front": [
+          -2,
+          2,
+          3.75,
+          4
+        ],
+        "side": [
+          -1.625,
+          2,
+          3.75,
+          4
+        ],
+        "top": [
+          -2,
+          2,
+          -1.625,
+          2
+        ]
+      }
+    },
+    {
+      "id": "leg_fl",
+      "kind": "solid",
+      "label": "Front left leg",
+      "material": "dark_wood",
+      "features": [
+        {
+          "shape": "box",
+          "center": [
+            -1.8,
+            1.925,
+            1.8
+          ],
+          "size": [
+            0.35,
+            3.65,
+            0.35
+          ]
+        },
+        {
+          "shape": "cylinder",
+          "from": [
+            -1.8,
+            0,
+            1.8
+          ],
+          "to": [
+            -1.8,
+            0.1,
+            1.8
+          ],
+          "radius": 0.15,
+          "material": "black"
+        }
+      ],
+      "views": {
+        "front": [
+          -1.975,
+          -1.625,
+          0,
+          3.75
+        ],
+        "side": [
+          1.625,
+          1.975,
+          0,
+          3.75
+        ],
+        "top": [
+          -1.975,
+          -1.625,
+          1.625,
+          1.975
+        ]
+      }
+    },
+    {
+      "id": "leg_fr",
+      "kind": "solid",
+      "label": "Front right leg",
+      "material": "dark_wood",
+      "features": [
+        {
+          "shape": "box",
+          "center": [
+            1.8,
+            1.925,
+            1.8
+          ],
+          "size": [
+            0.35,
+            3.65,
+            0.35
+          ]
+        },
+        {
+          "shape": "cylinder",
+          "from": [
+            1.8,
+            0,
+            1.8
+          ],
+          "to": [
+            1.8,
+            0.1,
+            1.8
+          ],
+          "radius": 0.15,
+          "material": "black"
+        }
+      ],
+      "views": {
+        "front": [
+          1.625,
+          1.975,
+          0,
+          3.75
+        ],
+        "side": [
+          1.625,
+          1.975,
+          0,
+          3.75
+        ],
+        "top": [
+          1.625,
+          1.975,
+          1.625,
+          1.975
+        ]
+      }
+    },
+    {
+      "id": "leg_bl",
+      "kind": "solid",
+      "label": "Back left leg",
+      "material": "dark_wood",
+      "features": [
+        {
+          "shape": "box",
+          "center": [
+            -1.8,
+            4.05,
+            -1.8
+          ],
+          "size": [
+            0.35,
+            7.9,
+            0.35
+          ]
+        },
+        {
+          "shape": "cylinder",
+          "from": [
+            -1.8,
+            0,
+            -1.8
+          ],
+          "to": [
+            -1.8,
+            0.1,
+            -1.8
+          ],
+          "radius": 0.15,
+          "material": "black"
+        }
+      ],
+      "views": {
+        "front": [
+          -1.975,
+          -1.625,
+          0,
+          8
+        ],
+        "side": [
+          -1.975,
+          -1.625,
+          0,
+          8
+        ],
+        "top": [
+          -1.975,
+          -1.625,
+          -1.975,
+          -1.625
+        ]
+      }
+    },
+    {
+      "id": "leg_br",
+      "kind": "solid",
+      "label": "Back right leg",
+      "material": "dark_wood",
+      "features": [
+        {
+          "shape": "box",
+          "center": [
+            1.8,
+            4.05,
+            -1.8
+          ],
+          "size": [
+            0.35,
+            7.9,
+            0.35
+          ]
+        },
+        {
+          "shape": "cylinder",
+          "from": [
+            1.8,
+            0,
+            -1.8
+          ],
+          "to": [
+            1.8,
+            0.1,
+            -1.8
+          ],
+          "radius": 0.15,
+          "material": "black"
+        }
+      ],
+      "views": {
+        "front": [
+          1.625,
+          1.975,
+          0,
+          8
+        ],
+        "side": [
+          -1.975,
+          -1.625,
+          0,
+          8
+        ],
+        "top": [
+          1.625,
+          1.975,
+          -1.975,
+          -1.625
+        ]
+      }
+    },
+    {
+      "id": "apron_front",
+      "kind": "solid",
+      "label": "Front apron rail",
+      "material": "dark_wood",
+      "features": [
+        {
+          "shape": "box",
+          "center": [
+            0,
+            3.5,
+            1.8
+          ],
+          "size": [
+            3.25,
+            0.5,
+            0.2
+          ]
+        }
+      ],
+      "views": {
+        "front": [
+          -1.625,
+          1.625,
+          3.25,
+          3.75
+        ],
+        "side": [
+          1.7,
+          1.9,
+          3.25,
+          3.75
+        ],
+        "top": [
+          -1.625,
+          1.625,
+          1.7,
+          1.9
+        ]
+      }
+    },
+    {
+      "id": "apron_back",
+      "kind": "solid",
+      "label": "Back apron rail",
+      "material": "dark_wood",
+      "features": [
+        {
+          "shape": "box",
+          "center": [
+            0,
+            3.5,
+            -1.8
+          ],
+          "size": [
+            3.25,
+            0.5,
+            0.2
+          ]
+        }
+      ],
+      "views": {
+        "front": [
+          -1.625,
+          1.625,
+          3.25,
+          3.75
+        ],
+        "side": [
+          -1.9,
+          -1.7,
+          3.25,
+          3.75
+        ],
+        "top": [
+          -1.625,
+          1.625,
+          -1.9,
+          -1.7
+        ]
+      }
+    },
+    {
+      "id": "apron_left",
+      "kind": "solid",
+      "label": "Left apron rail",
+      "material": "dark_wood",
+      "features": [
+        {
+          "shape": "box",
+          "center": [
+            -1.8,
+            3.5,
+            0
+          ],
+          "size": [
+            0.2,
+            0.5,
+            3.25
+          ]
+        }
+      ],
+      "views": {
+        "front": [
+          -1.9,
+          -1.7,
+          3.25,
+          3.75
+        ],
+        "side": [
+          -1.625,
+          1.625,
+          3.25,
+          3.75
+        ],
+        "top": [
+          -1.9,
+          -1.7,
+          -1.625,
+          1.625
+        ]
+      }
+    },
+    {
+      "id": "apron_right",
+      "kind": "solid",
+      "label": "Right apron rail",
+      "material": "dark_wood",
+      "features": [
+        {
+          "shape": "box",
+          "center": [
+            1.8,
+            3.5,
+            0
+          ],
+          "size": [
+            0.2,
+            0.5,
+            3.25
+          ]
+        }
+      ],
+      "views": {
+        "front": [
+          1.7,
+          1.9,
+          3.25,
+          3.75
+        ],
+        "side": [
+          -1.625,
+          1.625,
+          3.25,
+          3.75
+        ],
+        "top": [
+          1.7,
+          1.9,
+          -1.625,
+          1.625
+        ]
+      }
+    },
+    {
+      "id": "stretcher_left",
+      "kind": "solid",
+      "label": "Left stretcher",
+      "material": "wood",
+      "features": [
+        {
+          "shape": "cylinder",
+          "from": [
+            -1.8,
+            1,
+            1.625
+          ],
+          "to": [
+            -1.8,
+            1,
+            -1.625
+          ],
+          "radius": 0.1
+        }
+      ],
+      "views": {
+        "front": [
+          -1.9,
+          -1.7,
+          0.9,
+          1.1
+        ],
+        "side": [
+          -1.625,
+          1.625,
+          0.9,
+          1.1
+        ],
+        "top": [
+          -1.9,
+          -1.7,
+          -1.625,
+          1.625
+        ]
+      }
+    },
+    {
+      "id": "stretcher_right",
+      "kind": "solid",
+      "label": "Right stretcher",
+      "material": "wood",
+      "features": [
+        {
+          "shape": "cylinder",
+          "from": [
+            1.8,
+            1,
+            1.625
+          ],
+          "to": [
+            1.8,
+            1,
+            -1.625
+          ],
+          "radius": 0.1
+        }
+      ],
+      "views": {
+        "front": [
+          1.7,
+          1.9,
+          0.9,
+          1.1
+        ],
+        "side": [
+          -1.625,
+          1.625,
+          0.9,
+          1.1
+        ],
+        "top": [
+          1.7,
+          1.9,
+          -1.625,
+          1.625
+        ]
+      }
+    },
+    {
+      "id": "rail_lower",
+      "kind": "solid",
+      "label": "Lower back rail",
+      "material": "dark_wood",
+      "features": [
+        {
+          "shape": "box",
+          "center": [
+            0,
+            4.75,
+            -1.8
+          ],
+          "size": [
+            3.25,
+            0.3,
+            0.2
+          ]
+        }
+      ],
+      "views": {
+        "front": [
+          -1.625,
+          1.625,
+          4.6,
+          4.9
+        ],
+        "side": [
+          -1.9,
+          -1.7,
+          4.6,
+          4.9
+        ],
+        "top": [
+          -1.625,
+          1.625,
+          -1.9,
+          -1.7
+        ]
+      }
+    },
+    {
+      "id": "rail_top",
+      "kind": "solid",
+      "label": "Top back rail",
+      "material": "dark_wood",
+      "features": [
+        {
+          "shape": "box",
+          "center": [
+            0,
+            7.5,
+            -1.8
+          ],
+          "size": [
+            3.25,
+            0.6,
+            0.2
+          ]
+        }
+      ],
+      "views": {
+        "front": [
+          -1.625,
+          1.625,
+          7.2,
+          7.8
+        ],
+        "side": [
+          -1.9,
+          -1.7,
+          7.2,
+          7.8
+        ],
+        "top": [
+          -1.625,
+          1.625,
+          -1.9,
+          -1.7
+        ]
+      }
+    },
+    {
+      "id": "slat_left",
+      "kind": "solid",
+      "label": "Left back slat",
+      "material": "wood",
+      "features": [
+        {
+          "shape": "beam",
+          "from": [
+            -0.9,
+            4.9,
+            -1.8
+          ],
+          "to": [
+            -0.9,
+            7.2,
+            -1.8
+          ],
+          "width": 0.4,
+          "thickness": 0.12,
+          "normal": [
+            0,
+            0,
+            1
+          ]
+        }
+      ],
+      "views": {
+        "front": [
+          -1.1,
+          -0.7,
+          4.9,
+          7.2
+        ],
+        "side": [
+          -1.86,
+          -1.74,
+          4.9,
+          7.2
+        ],
+        "top": [
+          -1.1,
+          -0.7,
+          -1.86,
+          -1.74
+        ]
+      }
+    },
+    {
+      "id": "slat_mid",
+      "kind": "solid",
+      "label": "Middle back slat",
+      "material": "wood",
+      "features": [
+        {
+          "shape": "beam",
+          "from": [
+            0,
+            4.9,
+            -1.8
+          ],
+          "to": [
+            0,
+            7.2,
+            -1.8
+          ],
+          "width": 0.4,
+          "thickness": 0.12,
+          "normal": [
+            0,
+            0,
+            1
+          ]
+        }
+      ],
+      "views": {
+        "front": [
+          -0.2,
+          0.2,
+          4.9,
+          7.2
+        ],
+        "side": [
+          -1.86,
+          -1.74,
+          4.9,
+          7.2
+        ],
+        "top": [
+          -0.2,
+          0.2,
+          -1.86,
+          -1.74
+        ]
+      }
+    },
+    {
+      "id": "slat_right",
+      "kind": "solid",
+      "label": "Right back slat",
+      "material": "wood",
+      "features": [
+        {
+          "shape": "beam",
+          "from": [
+            0.9,
+            4.9,
+            -1.8
+          ],
+          "to": [
+            0.9,
+            7.2,
+            -1.8
+          ],
+          "width": 0.4,
+          "thickness": 0.12,
+          "normal": [
+            0,
+            0,
+            1
+          ]
+        }
+      ],
+      "views": {
+        "front": [
+          0.7,
+          1.1,
+          4.9,
+          7.2
+        ],
+        "side": [
+          -1.86,
+          -1.74,
+          4.9,
+          7.2
+        ],
+        "top": [
+          0.7,
+          1.1,
+          -1.86,
+          -1.74
+        ]
+      }
+    }
+  ],
+  "connections": [
+    {
+      "a": "seat",
+      "b": "leg_fl",
+      "at": [
+        -1.8,
+        3.75,
+        1.8
+      ]
+    },
+    {
+      "a": "seat",
+      "b": "leg_fr",
+      "at": [
+        1.8,
+        3.75,
+        1.8
+      ]
+    },
+    {
+      "a": "seat",
+      "b": "leg_bl",
+      "at": [
+        -1.8,
+        3.875,
+        -1.625
+      ]
+    },
+    {
+      "a": "seat",
+      "b": "leg_br",
+      "at": [
+        1.8,
+        3.875,
+        -1.625
+      ]
+    },
+    {
+      "a": "apron_front",
+      "b": "leg_fl",
+      "at": [
+        -1.625,
+        3.5,
+        1.8
+      ]
+    },
+    {
+      "a": "apron_front",
+      "b": "leg_fr",
+      "at": [
+        1.625,
+        3.5,
+        1.8
+      ]
+    },
+    {
+      "a": "apron_front",
+      "b": "seat",
+      "at": [
+        0,
+        3.75,
+        1.8
+      ]
+    },
+    {
+      "a": "apron_back",
+      "b": "leg_bl",
+      "at": [
+        -1.625,
+        3.5,
+        -1.8
+      ]
+    },
+    {
+      "a": "apron_back",
+      "b": "leg_br",
+      "at": [
+        1.625,
+        3.5,
+        -1.8
+      ]
+    },
+    {
+      "a": "apron_left",
+      "b": "leg_fl",
+      "at": [
+        -1.8,
+        3.5,
+        1.625
+      ]
+    },
+    {
+      "a": "apron_left",
+      "b": "leg_bl",
+      "at": [
+        -1.8,
+        3.5,
+        -1.625
+      ]
+    },
+    {
+      "a": "apron_left",
+      "b": "seat",
+      "at": [
+        -1.8,
+        3.75,
+        0
+      ]
+    },
+    {
+      "a": "apron_right",
+      "b": "leg_fr",
+      "at": [
+        1.8,
+        3.5,
+        1.625
+      ]
+    },
+    {
+      "a": "apron_right",
+      "b": "leg_br",
+      "at": [
+        1.8,
+        3.5,
+        -1.625
+      ]
+    },
+    {
+      "a": "apron_right",
+      "b": "seat",
+      "at": [
+        1.8,
+        3.75,
+        0
+      ]
+    },
+    {
+      "a": "stretcher_left",
+      "b": "leg_fl",
+      "at": [
+        -1.8,
+        1,
+        1.625
+      ]
+    },
+    {
+      "a": "stretcher_left",
+      "b": "leg_bl",
+      "at": [
+        -1.8,
+        1,
+        -1.625
+      ]
+    },
+    {
+      "a": "stretcher_right",
+      "b": "leg_fr",
+      "at": [
+        1.8,
+        1,
+        1.625
+      ]
+    },
+    {
+      "a": "stretcher_right",
+      "b": "leg_br",
+      "at": [
+        1.8,
+        1,
+        -1.625
+      ]
+    },
+    {
+      "a": "rail_lower",
+      "b": "leg_bl",
+      "at": [
+        -1.625,
+        4.75,
+        -1.8
+      ]
+    },
+    {
+      "a": "rail_lower",
+      "b": "leg_br",
+      "at": [
+        1.625,
+        4.75,
+        -1.8
+      ]
+    },
+    {
+      "a": "rail_top",
+      "b": "leg_bl",
+      "at": [
+        -1.625,
+        7.5,
+        -1.8
+      ]
+    },
+    {
+      "a": "rail_top",
+      "b": "leg_br",
+      "at": [
+        1.625,
+        7.5,
+        -1.8
+      ]
+    },
+    {
+      "a": "slat_left",
+      "b": "rail_lower",
+      "at": [
+        -0.9,
+        4.9,
+        -1.8
+      ]
+    },
+    {
+      "a": "slat_left",
+      "b": "rail_top",
+      "at": [
+        -0.9,
+        7.2,
+        -1.8
+      ]
+    },
+    {
+      "a": "slat_mid",
+      "b": "rail_lower",
+      "at": [
+        0,
+        4.9,
+        -1.8
+      ]
+    },
+    {
+      "a": "slat_mid",
+      "b": "rail_top",
+      "at": [
+        0,
+        7.2,
+        -1.8
+      ]
+    },
+    {
+      "a": "slat_right",
+      "b": "rail_lower",
+      "at": [
+        0.9,
+        4.9,
+        -1.8
+      ]
+    },
+    {
+      "a": "slat_right",
+      "b": "rail_top",
+      "at": [
+        0.9,
+        7.2,
+        -1.8
+      ]
+    }
+  ],
+  "steps": [
+    {
+      "say": "Here is a simple wooden chair. It looks plain, but every piece has a job. Together they hold you up safely every time you sit down. Let's take it apart and see how!",
+      "do": [
+        {
+          "reveal": [
+            "seat",
+            "leg_fl",
+            "leg_fr",
+            "leg_bl",
+            "leg_br",
+            "apron_front",
+            "apron_back",
+            "apron_left",
+            "apron_right",
+            "stretcher_left",
+            "stretcher_right",
+            "rail_lower",
+            "rail_top",
+            "slat_left",
+            "slat_mid",
+            "slat_right"
+          ]
+        },
+        {
+          "zoom": "all"
+        }
+      ]
+    },
+    {
+      "say": "First, the four legs. When you sit, your weight pushes down, and the legs carry it straight to the floor, like four friends each holding one corner of a heavy box. Four corners spread out make it hard to tip over.",
+      "do": [
+        {
+          "explode": "all"
+        },
+        {
+          "label": [
+            "leg_fl",
+            "leg_fr",
+            "leg_bl",
+            "leg_br"
+          ]
+        },
+        {
+          "highlight": [
+            "leg_fl",
+            "leg_fr",
+            "leg_bl",
+            "leg_br"
+          ]
+        },
+        {
+          "zoom": "leg_fl"
+        }
+      ]
+    },
+    {
+      "say": "Legs alone would wobble and splay apart. So rails called aprons join the tops of the legs in a square frame, and stretchers tie them together lower down. It's like holding hands in a circle so nobody falls over.",
+      "do": [
+        {
+          "label": [
+            "apron_front",
+            "apron_back",
+            "apron_left",
+            "apron_right",
+            "stretcher_left",
+            "stretcher_right"
+          ]
+        },
+        {
+          "highlight": [
+            "apron_front",
+            "apron_back",
+            "apron_left",
+            "apron_right",
+            "stretcher_left",
+            "stretcher_right"
+          ]
+        },
+        {
+          "zoom": "apron_left"
+        }
+      ]
+    },
+    {
+      "say": "The seat rests on top of the apron frame and the legs. It spreads your weight out over the whole frame, the way a tray spreads the load of a pile of books.",
+      "do": [
+        {
+          "label": [
+            "seat"
+          ]
+        },
+        {
+          "highlight": [
+            "seat"
+          ]
+        },
+        {
+          "zoom": "seat"
+        }
+      ]
+    },
+    {
+      "say": "Look how the back legs keep going up past the seat. Two rails run between them, and slats fill the gap. When you lean back, the slats push on the rails, and the rails pass that push into the tall back legs.",
+      "do": [
+        {
+          "label": [
+            "rail_top",
+            "rail_lower",
+            "slat_left",
+            "slat_mid",
+            "slat_right"
+          ]
+        },
+        {
+          "highlight": [
+            "rail_top",
+            "rail_lower",
+            "slat_left",
+            "slat_mid",
+            "slat_right",
+            "leg_bl",
+            "leg_br"
+          ]
+        },
+        {
+          "zoom": "rail_top"
+        }
+      ]
+    },
+    {
+      "say": "Now let's put it all back together. Legs, frame, seat and back all lock into each other, so the chair works as one strong, steady team.",
+      "do": [
+        {
+          "explode": []
+        },
+        {
+          "zoom": "all"
+        }
+      ]
+    }
+  ],
+  "recap": "A chair stays strong because its legs carry your weight to the floor while rails tie the legs into a steady frame.",
+  "question": "Have you ever wondered why some stools only need three legs to stand without wobbling?",
+  "layout": {
+    "template": "blueprint",
+    "explode": "free"
+  }
+}

@@ -1,0 +1,5 @@
+blank_issues_enabled: true
+contact_links:
+  - name: Report a security problem privately
+    url: https://github.com/Magonox/omarchy-goop/security/advisories/new
+    about: Questions, window text and approvals are sensitive. Please do not describe a vulnerability in a public issue.

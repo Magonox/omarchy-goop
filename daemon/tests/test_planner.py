@@ -97,6 +97,18 @@ class Outline(unittest.TestCase):
             planner.plan_outline("t", "", model)
         self.assertEqual(len(model.calls), planner.REPAIRS + 1)
 
+    def test_prompts_teach_the_real_thing_rules(self):
+        # L10: rules taken from the `teardown` skill's review, judged better by the owner in a blind engine test (see CHANGELOG)
+        sp = planner.outline_system()
+        for word in ("START FROM THE REAL THING", "THE WORKING PART OPENS UP", "CHECK BEFORE YOU ANSWER", "state a number only when you are sure"):
+            self.assertIn(word, sp)
+        self.assertIn("BUILD THE REAL THING", planner.part_system())
+
+    def test_prompts_keep_people_out_of_lessons(self):
+        # owner decision 2026-11-21: a rider placed wrongly on a bicycle seat; lessons show the machine alone
+        self.assertIn("NO PEOPLE", planner.outline_system())
+        self.assertIn("Never draw a person", planner.part_system())
+
     def test_prompts_teach_the_staged_format(self):
         sp = planner.outline_system()
         for word in ("brief", "width", "sender", "first step should reveal only"):
@@ -276,9 +288,9 @@ class Tool(unittest.TestCase):
                     tools.call("explain_in_3d", "0xabc", {"topic": topic})
 
     def test_missing_sandbox_or_a_lesson_already_building_is_explained(self):
-        with mock.patch.object(tools.codegen, "available", return_value=False):
+        with mock.patch.object(tools.codegen, "available", return_value=False):          # only the outline method runs shape code; a model sheet needs no deno
             with self.assertRaises(tools.ToolError) as cm:
-                self.call(explainers="auto")
+                self.call(explainers="auto", explain_method="outline")
         self.assertIn("deno", str(cm.exception))
         with mock.patch.object(tools, "_builder_running", return_value=True):
             with self.assertRaises(tools.ToolError) as cm:

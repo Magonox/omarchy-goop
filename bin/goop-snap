@@ -1,0 +1,4 @@
+#!/usr/bin/env bash
+# Render a 3D lesson to pictures (and a labelled contact sheet) on a throwaway virtual monitor, so the lesson can be looked at without touching your screen.
+#   goop-snap lesson.json [--times auto|5,20,45] [--out DIR] [--size 1280x800]
+exec python3 "$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)/daemon/snap.py" "$@"

@@ -1,0 +1,961 @@
+{
+  "version": 1,
+  "title": "Hand-Crank Egg Beater",
+  "parts": [
+    {
+      "id": "frame",
+      "kind": "solid",
+      "label": "Frame",
+      "material": "steel",
+      "features": [
+        {
+          "shape": "beam",
+          "from": [
+            0,
+            2.6,
+            0
+          ],
+          "to": [
+            0,
+            7.0,
+            0
+          ],
+          "width": 0.3,
+          "thickness": 0.2,
+          "normal": [
+            0,
+            0,
+            1
+          ]
+        },
+        {
+          "shape": "box",
+          "center": [
+            0,
+            2.5,
+            0
+          ],
+          "size": [
+            1.6,
+            0.2,
+            0.2
+          ]
+        },
+        {
+          "shape": "box",
+          "center": [
+            0.35,
+            6.7,
+            0
+          ],
+          "size": [
+            0.8,
+            0.15,
+            0.2
+          ]
+        },
+        {
+          "shape": "box",
+          "center": [
+            -0.35,
+            3.95,
+            0
+          ],
+          "size": [
+            0.8,
+            0.15,
+            0.2
+          ]
+        },
+        {
+          "shape": "cylinder",
+          "from": [
+            0,
+            5,
+            0
+          ],
+          "to": [
+            0,
+            5,
+            0.45
+          ],
+          "radius": 0.12,
+          "material": "dark_steel"
+        }
+      ],
+      "views": {
+        "front": [
+          -0.8,
+          0.8,
+          2.4,
+          7.0
+        ],
+        "side": [
+          -0.1,
+          0.45,
+          2.4,
+          7.0
+        ],
+        "top": [
+          -0.8,
+          0.8,
+          -0.1,
+          0.45
+        ]
+      },
+      "out": "none"
+    },
+    {
+      "id": "handle",
+      "kind": "solid",
+      "label": "Top Handle",
+      "material": "wood",
+      "features": [
+        {
+          "shape": "revolve",
+          "base": [
+            0,
+            7.0,
+            0
+          ],
+          "axis": "y",
+          "profile": [
+            [
+              0.12,
+              0
+            ],
+            [
+              0.28,
+              0.2
+            ],
+            [
+              0.32,
+              0.6
+            ],
+            [
+              0.28,
+              0.95
+            ],
+            [
+              0,
+              1.0
+            ]
+          ]
+        }
+      ],
+      "views": {
+        "front": [
+          -0.32,
+          0.32,
+          7.0,
+          8.0
+        ],
+        "side": [
+          -0.32,
+          0.32,
+          7.0,
+          8.0
+        ],
+        "top": [
+          -0.32,
+          0.32,
+          -0.32,
+          0.32
+        ]
+      },
+      "out": "+y"
+    },
+    {
+      "id": "crank_wheel",
+      "kind": "solid",
+      "label": "Crank Wheel",
+      "material": "steel",
+      "features": [
+        {
+          "shape": "cylinder",
+          "from": [
+            0,
+            5,
+            0.5
+          ],
+          "to": [
+            0,
+            5,
+            0.62
+          ],
+          "radius": 1.6
+        },
+        {
+          "shape": "ring",
+          "center": [
+            0,
+            5,
+            0.56
+          ],
+          "axis": "z",
+          "radius": 1.55,
+          "tube": 0.08
+        },
+        {
+          "shape": "radial",
+          "center": [
+            0,
+            5,
+            0.43
+          ],
+          "axis": "z",
+          "count": 32,
+          "item": {
+            "shape": "box",
+            "center": [
+              0,
+              6.45,
+              0.43
+            ],
+            "size": [
+              0.1,
+              0.14,
+              0.14
+            ]
+          }
+        },
+        {
+          "shape": "cylinder",
+          "from": [
+            0,
+            5,
+            0.36
+          ],
+          "to": [
+            0,
+            5,
+            0.8
+          ],
+          "radius": 0.2,
+          "material": "dark_steel"
+        },
+        {
+          "shape": "beam",
+          "from": [
+            0,
+            5,
+            0.74
+          ],
+          "to": [
+            1.3,
+            5,
+            0.74
+          ],
+          "width": 0.25,
+          "thickness": 0.08,
+          "normal": [
+            0,
+            0,
+            1
+          ]
+        },
+        {
+          "shape": "cylinder",
+          "from": [
+            1.3,
+            5,
+            0.78
+          ],
+          "to": [
+            1.3,
+            5,
+            1.5
+          ],
+          "radius": 0.15,
+          "material": "red"
+        }
+      ],
+      "views": {
+        "front": [
+          -1.63,
+          1.63,
+          3.37,
+          6.63
+        ],
+        "side": [
+          0.36,
+          1.5,
+          3.37,
+          6.63
+        ],
+        "top": [
+          -1.63,
+          1.63,
+          0.36,
+          1.5
+        ]
+      },
+      "out": "+z",
+      "spin": {
+        "axis": "z",
+        "pivot": [
+          0,
+          5,
+          0.5
+        ],
+        "period_s": 1.2,
+        "dir": "cw"
+      }
+    },
+    {
+      "id": "pinion_left",
+      "kind": "solid",
+      "label": "Left Small Gear",
+      "material": "dark_steel",
+      "features": [
+        {
+          "shape": "cylinder",
+          "from": [
+            -0.55,
+            2.4,
+            0
+          ],
+          "to": [
+            -0.55,
+            3.9,
+            0
+          ],
+          "radius": 0.06,
+          "material": "steel"
+        },
+        {
+          "shape": "cylinder",
+          "from": [
+            -0.55,
+            3.6,
+            0
+          ],
+          "to": [
+            -0.55,
+            3.72,
+            0
+          ],
+          "radius": 0.3
+        },
+        {
+          "shape": "radial",
+          "center": [
+            -0.55,
+            3.66,
+            0
+          ],
+          "axis": "y",
+          "count": 10,
+          "item": {
+            "shape": "box",
+            "center": [
+              -0.55,
+              3.66,
+              0.33
+            ],
+            "size": [
+              0.1,
+              0.12,
+              0.1
+            ]
+          }
+        }
+      ],
+      "views": {
+        "front": [
+          -0.93,
+          -0.17,
+          2.4,
+          3.9
+        ],
+        "side": [
+          -0.38,
+          0.38,
+          2.4,
+          3.9
+        ],
+        "top": [
+          -0.93,
+          -0.17,
+          -0.38,
+          0.38
+        ]
+      },
+      "out": "+z",
+      "spin": {
+        "axis": "y",
+        "pivot": [
+          -0.55,
+          3.66,
+          0
+        ]
+      }
+    },
+    {
+      "id": "pinion_right",
+      "kind": "solid",
+      "label": "Right Small Gear",
+      "material": "dark_steel",
+      "features": [
+        {
+          "shape": "cylinder",
+          "from": [
+            0.55,
+            2.4,
+            0
+          ],
+          "to": [
+            0.55,
+            6.63,
+            0
+          ],
+          "radius": 0.06,
+          "material": "steel"
+        },
+        {
+          "shape": "cylinder",
+          "from": [
+            0.55,
+            6.28,
+            0
+          ],
+          "to": [
+            0.55,
+            6.4,
+            0
+          ],
+          "radius": 0.3
+        },
+        {
+          "shape": "radial",
+          "center": [
+            0.55,
+            6.34,
+            0
+          ],
+          "axis": "y",
+          "count": 10,
+          "item": {
+            "shape": "box",
+            "center": [
+              0.55,
+              6.34,
+              0.33
+            ],
+            "size": [
+              0.1,
+              0.12,
+              0.1
+            ]
+          }
+        }
+      ],
+      "views": {
+        "front": [
+          0.17,
+          0.93,
+          2.4,
+          6.63
+        ],
+        "side": [
+          -0.38,
+          0.38,
+          2.4,
+          6.63
+        ],
+        "top": [
+          0.17,
+          0.93,
+          -0.38,
+          0.38
+        ]
+      },
+      "out": "+z",
+      "spin": {
+        "axis": "y",
+        "pivot": [
+          0.55,
+          6.34,
+          0
+        ]
+      }
+    },
+    {
+      "id": "beater_left",
+      "kind": "solid",
+      "label": "Left Beater",
+      "material": "steel",
+      "features": [
+        {
+          "shape": "cylinder",
+          "from": [
+            -0.55,
+            2.1,
+            0
+          ],
+          "to": [
+            -0.55,
+            2.4,
+            0
+          ],
+          "radius": 0.09,
+          "material": "dark_steel"
+        },
+        {
+          "shape": "cylinder",
+          "from": [
+            -0.55,
+            0.05,
+            0
+          ],
+          "to": [
+            -0.55,
+            2.1,
+            0
+          ],
+          "radius": 0.05
+        },
+        {
+          "shape": "radial",
+          "center": [
+            -0.55,
+            0,
+            0
+          ],
+          "axis": "y",
+          "count": 4,
+          "item": {
+            "shape": "band",
+            "points": [
+              [
+                -0.55,
+                2.1,
+                0
+              ],
+              [
+                -0.1,
+                1.7,
+                0
+              ],
+              [
+                0,
+                0.8,
+                0
+              ],
+              [
+                -0.2,
+                0.15,
+                0
+              ],
+              [
+                -0.55,
+                0.05,
+                0
+              ]
+            ],
+            "width": 0.15,
+            "thickness": 0.04,
+            "normal": [
+              0,
+              0,
+              1
+            ]
+          }
+        }
+      ],
+      "views": {
+        "front": [
+          -1.18,
+          0.08,
+          0,
+          2.4
+        ],
+        "side": [
+          -0.63,
+          0.63,
+          0,
+          2.4
+        ],
+        "top": [
+          -1.18,
+          0.08,
+          -0.63,
+          0.63
+        ]
+      },
+      "out": "-y",
+      "spin": {
+        "axis": "y",
+        "pivot": [
+          -0.55,
+          0,
+          0
+        ]
+      }
+    },
+    {
+      "id": "beater_right",
+      "kind": "solid",
+      "label": "Right Beater",
+      "material": "steel",
+      "features": [
+        {
+          "shape": "cylinder",
+          "from": [
+            0.55,
+            2.1,
+            0
+          ],
+          "to": [
+            0.55,
+            2.4,
+            0
+          ],
+          "radius": 0.09,
+          "material": "dark_steel"
+        },
+        {
+          "shape": "cylinder",
+          "from": [
+            0.55,
+            0.05,
+            0
+          ],
+          "to": [
+            0.55,
+            2.1,
+            0
+          ],
+          "radius": 0.05
+        },
+        {
+          "shape": "radial",
+          "center": [
+            0.55,
+            0,
+            0
+          ],
+          "axis": "y",
+          "count": 4,
+          "item": {
+            "shape": "band",
+            "points": [
+              [
+                0.55,
+                2.1,
+                0
+              ],
+              [
+                0.868,
+                1.7,
+                0.318
+              ],
+              [
+                0.939,
+                0.8,
+                0.389
+              ],
+              [
+                0.797,
+                0.15,
+                0.247
+              ],
+              [
+                0.55,
+                0.05,
+                0
+              ]
+            ],
+            "width": 0.15,
+            "thickness": 0.04,
+            "normal": [
+              -0.7071,
+              0,
+              0.7071
+            ]
+          }
+        }
+      ],
+      "views": {
+        "front": [
+          -0.08,
+          1.18,
+          0,
+          2.4
+        ],
+        "side": [
+          -0.63,
+          0.63,
+          0,
+          2.4
+        ],
+        "top": [
+          -0.08,
+          1.18,
+          -0.63,
+          0.63
+        ]
+      },
+      "out": "-y",
+      "spin": {
+        "axis": "y",
+        "pivot": [
+          0.55,
+          0,
+          0
+        ]
+      }
+    }
+  ],
+  "connections": [
+    {
+      "a": "frame",
+      "b": "handle",
+      "at": [
+        0,
+        7.0,
+        0
+      ]
+    },
+    {
+      "a": "frame",
+      "b": "crank_wheel",
+      "at": [
+        0,
+        5,
+        0.42
+      ]
+    },
+    {
+      "a": "frame",
+      "b": "pinion_left",
+      "at": [
+        -0.55,
+        2.5,
+        0
+      ]
+    },
+    {
+      "a": "frame",
+      "b": "pinion_right",
+      "at": [
+        0.55,
+        2.5,
+        0
+      ]
+    },
+    {
+      "a": "crank_wheel",
+      "b": "pinion_left",
+      "at": [
+        -0.55,
+        3.658,
+        0.37
+      ]
+    },
+    {
+      "a": "crank_wheel",
+      "b": "pinion_right",
+      "at": [
+        0.55,
+        6.342,
+        0.37
+      ]
+    },
+    {
+      "a": "pinion_left",
+      "b": "beater_left",
+      "at": [
+        -0.55,
+        2.4,
+        0
+      ]
+    },
+    {
+      "a": "pinion_right",
+      "b": "beater_right",
+      "at": [
+        0.55,
+        2.4,
+        0
+      ]
+    }
+  ],
+  "links": [
+    {
+      "a": "crank_wheel",
+      "b": "pinion_left",
+      "kind": "mesh"
+    },
+    {
+      "a": "crank_wheel",
+      "b": "pinion_right",
+      "kind": "mesh"
+    },
+    {
+      "a": "pinion_left",
+      "b": "beater_left",
+      "kind": "shaft"
+    },
+    {
+      "a": "pinion_right",
+      "b": "beater_right",
+      "kind": "shaft"
+    }
+  ],
+  "timelapse": 0.04,
+  "steps": [
+    {
+      "say": "This is a hand-crank egg beater. You hold the top handle, turn the red knob on the big wheel, and the two metal beaters at the bottom whirl around to whip eggs or cream.",
+      "do": [
+        {
+          "reveal": [
+            "frame",
+            "handle",
+            "crank_wheel",
+            "pinion_left",
+            "pinion_right",
+            "beater_left",
+            "beater_right"
+          ]
+        },
+        {
+          "zoom": "all"
+        }
+      ]
+    },
+    {
+      "say": "Everything hangs on the frame, a strong metal bar. The handle on top is where you hold it steady, like holding a flashlight pointing down.",
+      "do": [
+        {
+          "label": [
+            "frame",
+            "handle"
+          ]
+        },
+        {
+          "highlight": [
+            "frame",
+            "handle"
+          ]
+        },
+        {
+          "zoom": "frame"
+        }
+      ]
+    },
+    {
+      "say": "Your hand turns the crank wheel. The red knob sits on an arm fixed to the big wheel, so every time your hand goes around once, the whole wheel goes around once.",
+      "do": [
+        {
+          "label": [
+            "crank_wheel"
+          ]
+        },
+        {
+          "highlight": [
+            "crank_wheel"
+          ]
+        },
+        {
+          "spin": [
+            "crank_wheel"
+          ]
+        },
+        {
+          "zoom": "crank_wheel"
+        }
+      ]
+    },
+    {
+      "say": "Look through the big wheel. It has teeth on its back face, and they catch two small gears. The small gears are much smaller, so they spin several times for every turn of the big wheel, like a little bike wheel racing to keep up.",
+      "do": [
+        {
+          "cutaway": [
+            "crank_wheel"
+          ]
+        },
+        {
+          "label": [
+            "pinion_left",
+            "pinion_right"
+          ]
+        },
+        {
+          "highlight": [
+            "pinion_left",
+            "pinion_right"
+          ]
+        },
+        {
+          "spin": [
+            "crank_wheel"
+          ]
+        },
+        {
+          "zoom": "crank_wheel"
+        }
+      ]
+    },
+    {
+      "say": "One small gear is caught at the bottom of the big wheel and the other at the top, so they turn opposite ways. That is how the two beaters spin against each other.",
+      "do": [
+        {
+          "explode": "all"
+        },
+        {
+          "highlight": [
+            "crank_wheel",
+            "pinion_left",
+            "pinion_right"
+          ]
+        },
+        {
+          "zoom": "all"
+        }
+      ]
+    },
+    {
+      "say": "Each small gear has a long shaft, and a beater sits on the end. The curved blades slice through the egg and fold in air bubbles, which makes it fluffy.",
+      "do": [
+        {
+          "label": [
+            "beater_left",
+            "beater_right"
+          ]
+        },
+        {
+          "highlight": [
+            "beater_left",
+            "beater_right"
+          ]
+        },
+        {
+          "zoom": "beater_left"
+        }
+      ]
+    },
+    {
+      "say": "Now let's put it all back together and give it a spin. One slow turn of your hand becomes fast whirling beaters!",
+      "do": [
+        {
+          "explode": []
+        },
+        {
+          "spin": [
+            "crank_wheel"
+          ]
+        },
+        {
+          "zoom": "all"
+        }
+      ]
+    }
+  ],
+  "recap": "An egg beater uses a big gear to turn two small gears fast, so a slow turn of the crank makes the beaters whirl quickly in opposite directions.",
+  "question": "What else do you think uses a big gear and a small gear to make something spin faster?",
+  "layout": {
+    "template": "blueprint",
+    "explode": "free"
+  }
+}

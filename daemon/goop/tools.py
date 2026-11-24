@@ -126,16 +126,17 @@ def explain_in_3d(address, args):
         _approve(address, "lesson", f"Build a 3D lesson about \"{topic}\"?",
                  "Goop plans it with a strong model (a minute or so), then shows a narrated 3D model on screen. "
                  "Your topic and these notes are sent to the model.\n" + notes[:300])
-    if not codegen.available():
+    method = config.load().get("explain_method") if config.load().get("explain_method") in ("auto", "outline") else "auto"
+    if method == "outline" and not codegen.available():             # a model sheet needs no shape code; only the outline method runs code in the sandbox
         raise ToolError("3D lessons need the deno runtime to run the model's shape code safely; the user can install it with: sudo pacman -S deno")
     if not shutil.which("claude"):
         raise ToolError("3D lessons are planned with the claude CLI for now, and it was not found")
     if _builder_running():
         raise ToolError("a 3D lesson is already being built; wait for it to start")
     _spawn_builder({"topic": topic, "notes": notes, "title": w.get("title") or "", "address": address,
-                    "model": config.load().get("explain_model") or "opus",
+                    "model": config.load().get("explain_model") or "opus", "method": method,
                     "outline_effort": config.load().get("explain_outline_effort"), "part_effort": config.load().get("explain_part_effort")})
-    return {"text": "The lesson is being built and will start playing by itself in about half a minute, narrated by this goop. "
+    return {"text": "The lesson is being built and will start playing by itself in about a minute, narrated by this goop. "
                     "Say at most one short sentence, for example that you are building it now."}
 
 

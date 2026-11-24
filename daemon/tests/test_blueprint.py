@@ -133,7 +133,9 @@ class Teardown(unittest.TestCase):
         frame_step = sc["steps"][1]
         cam = min((c for c in sc["camera"] if c["t"] >= frame_step["t0"]), key=lambda c: c["t"])
         want = [by["frame"]["pos"][k] + by["frame"]["explode"][k] for k in range(3)]
-        self.assertTrue(all(abs(cam["target"][k] - want[k]) < 0.01 for k in range(3)), (cam["target"], want))
+        # it aims at where the part hangs, not where it sits assembled; a shot with a label aims a little higher to leave room for the label's text above the part
+        self.assertTrue(abs(cam["target"][0] - want[0]) < 0.01 and abs(cam["target"][2] - want[2]) < 0.01, (cam["target"], want))
+        self.assertTrue(-0.01 <= cam["target"][1] - want[1] <= 1.5, (cam["target"], want))      # the headroom grows with the size of what is labelled
 
     def test_other_templates_are_unchanged(self):
         s = {"version": 1, "title": "T", "layout": {"template": "axis"},

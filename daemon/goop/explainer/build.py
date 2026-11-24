@@ -1,7 +1,7 @@
 """storyboard (what the model writes) -> resolved scene (what the renderer plays): validate, lay out, schedule."""
 import copy, json, os
 
-from . import codegen, layout, schema, timeline, vocab
+from . import blueprint, codegen, layout, schema, timeline, vocab
 
 
 class StoryboardError(ValueError):
@@ -17,6 +17,8 @@ def build(story, parts_dir=None):
     if errors:
         raise StoryboardError(errors)
     story = copy.deepcopy(story)                 # code parts get their sandbox results attached; the caller's storyboard stays clean
+    if story["layout"]["template"] == "blueprint":
+        story, _ = blueprint.resolve(story)     # joints become points, member parts become boxes with their tube meshes
     if parts_dir is not None:
         for p in story["parts"]:
             if p["kind"] == "code":
@@ -33,8 +35,8 @@ def build(story, parts_dir=None):
     parts = []
     for pid, p in lay["placed"].items():
         mat = vocab.MATERIALS[p["material"]]
-        palette = dict(vocab.MATERIALS) if p["kind"] == "code" else {}
-        parts.append({k: p[k] for k in ("id", "group", "kind", "label", "shape", "pos", "rot", "explode", "radius", "spin_axis") if k in p}
+        palette = dict(vocab.MATERIALS) if p["kind"] in ("code", "solid") else {}
+        parts.append({k: p[k] for k in ("id", "group", "kind", "label", "shape", "pos", "rot", "explode", "radius", "spin_axis", "spin_pivot", "spin_rate") if k in p}
                      | {"material": {"name": p["material"], **mat}, "context": bool(p.get("context")), "spanning": p["spanning"]}
                      | ({"palette": palette} if palette else {})
                      | ({"signal": p["signal"], "distance": p["distance"]} if "signal" in p else {}))

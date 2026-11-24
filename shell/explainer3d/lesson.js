@@ -8,9 +8,33 @@ function ramp(u) { u = clamp(u); return u * u * (3 - 2 * u); }
 function lerp(a, b, u) { return a + (b - a) * u; }
 var WAVE_SPEED = 2.2, WAVE_LIFE = 5.5, WAVE_EVERY = 0.9;
 
+// The real size of a part: the box around its mesh (after the part's own scale), in the part's own frame, as {lo, hi}. A part whose geometry has not arrived yet has none,
+// and the planned size stands in for it.
+function boxOf(meshes, k) {
+    var lo = [1e9, 1e9, 1e9], hi = [-1e9, -1e9, -1e9], any = false;
+    (meshes || []).forEach(function (m) {
+        var p = m.p || [];
+        for (var i = 0; i + 2 < p.length; i += 3) for (var a = 0; a < 3; a++) {
+            var v = p[i + a] * (k || 1);
+            if (v < lo[a]) lo[a] = v;
+            if (v > hi[a]) hi[a] = v;
+            any = true;
+        }
+    });
+    return any ? { lo: lo, hi: hi } : null;
+}
+
+// Called when a part's geometry file has been read, so labels and streams use the real size from then on.
+function setBox(C, i, meshes, k) { C.box[i] = boxOf(meshes, k); }
+
+function plannedBox(p) {
+    var sh = p.shape, w = Math.max(sh.r || 0, sh.r0 || 0, (sh.w || 0) / 2), h = (sh.h || 2 * w) / 2, d = Math.max(sh.r || 0, sh.r0 || 0, (sh.d || 0) / 2);
+    return { lo: [-w, -h, -d], hi: [w, h, d] };
+}
+
 function prepare(scene) {
-    var C = { finale: scene.finale || null,  scene: scene, idx: {}, reveal: [], ev: { spin: [], highlight: [], explode: [], cutaway: [], label: [], flow: [], pulse: [] }, bars: [], pulse: null };
-    scene.parts.forEach(function (p, i) { C.idx[p.id] = i; C.reveal.push(undefined); });
+    var C = { finale: scene.finale || null,  scene: scene, idx: {}, reveal: [], box: [], ev: { spin: [], highlight: [], explode: [], cutaway: [], label: [], flow: [], pulse: [] }, bars: [], pulse: null };
+    scene.parts.forEach(function (p, i) { C.idx[p.id] = i; C.reveal.push(undefined); C.box.push(p.shape && p.shape.meshes ? boxOf(p.shape.meshes, p.shape.scale) : null); });
     scene.events.forEach(function (e) {
         if (e.type === "reveal") {
             e.parts.forEach(function (id) { var i = C.idx[id]; if (C.reveal[i] === undefined || e.t0 < C.reveal[i]) C.reveal[i] = e.t0; });
@@ -19,6 +43,7 @@ function prepare(scene) {
             (e.parts || []).forEach(function (id) { set[C.idx[id]] = true; });
             var copy = {}; for (var k in e) copy[k] = e[k];
             copy.set = set;
+            if (e.rates) { copy.rates_i = {}; for (var rid in e.rates) copy.rates_i[C.idx[rid]] = e.rates[rid]; }       // a part with its own rate (degrees a second)
             C.ev[e.type].push(copy);
         }
     });
@@ -42,7 +67,7 @@ function material(part, role, dyn) {
     case "accent": c = c.map(function (x) { return x * 0.62; }); break;
     case "dark": c = [90, 98, 116]; metal = 0.25; rough = 0.45; break;
     case "blade": c = c.map(function (x) { return Math.min(255, x * 1.2 + 24); }); metal = 0.3; rough = 0.35; break;
-    case "glass": a = 0.3; c = c.map(function (x) { return Math.min(255, x * 0.55 + 100); }); metal = 0; rough = 0.08; break;
+    case "glass": a = 0.16; c = c.map(function (x) { return Math.min(255, x * 0.75 + 40); }); metal = 0; rough = 0.08; break;      // clear enough to see what is behind it (both faces are drawn)
     case "glow": c = [255, 150, 60]; em = [0.9, 0.4, 0.1]; a = 0.88; metal = 0; break;
     case "screen": c = [40, 72, 116]; em = [0.12, 0.34, 0.8]; metal = 0.1; rough = 0.2; break;
     case "led": c = [60, 220, 110]; em = [0.08, 0.8, 0.25]; break;
@@ -69,7 +94,8 @@ function state(C, t) {
         ev.spin.forEach(function (e) {
             if (!e.set[i]) return;
             var age = Math.min(t, C.finale ? C.finale.t0 : t) - e.t0;      // a demonstration spin stops when the finale begins, so rolling is the only turning left
-            if (age > 0) s.spin += e.rate * (age < 1.5 ? age * age / 3 : age - 0.75);
+            var rate = e.rates_i && e.rates_i[i] !== undefined ? e.rates_i[i] : e.rate;
+            if (age > 0) s.spin += rate * (age < 1.5 ? age * age / 3 : age - 0.75);
         });
         ev.explode.forEach(function (e) {
             if (!e.set[i]) return;
@@ -112,31 +138,61 @@ function state(C, t) {
         e.parts.forEach(function (id) {
             var i = C.idx[id], p = scene.parts[i], s = parts[i];
             if (!s.vis) return;
-            labels.push({ text: p.label, a: a * Math.min(1, s.k) * outro, at: [p.pos[0] + s.dx, p.pos[1] + s.dy + p.radius * 0.85, p.pos[2] + s.dz] });
+            var bx = C.box[i] || plannedBox(p), top = bx.hi[1] + 0.02 * (bx.hi[1] - bx.lo[1]);       // the dot sits on the top of the part as it really is, wherever it has been pulled to
+            labels.push({ text: p.label, a: a * Math.min(1, s.k) * outro, at: [p.pos[0] + s.dx + (bx.lo[0] + bx.hi[0]) / 2, p.pos[1] + s.dy + top, p.pos[2] + s.dz + (bx.lo[2] + bx.hi[2]) / 2] });
         });
     });
 
-    var drops = [];
+    var drops = [], streams = [];
     ev.flow.forEach(function (e) {
         var fade = Math.min(ramp((t - e.t0) / 0.6), ramp((e.t1 - t) / 0.6));
         if (fade < 0.02) return;
-        var path = scene.paths[e.path], n = 16;
+        var path = scene.paths[e.path], n = 16, size = 0.1, spread = 0.13, a0 = path[0], b0 = path[1];
+        if (e.from !== undefined && C.idx[e.from] !== undefined && C.idx[e.to] !== undefined) {
+            // a stream runs between the two parts where they are now (pulled apart or not), from the surface of one to the surface of the other, and is drawn
+            // small against the smaller of the two
+            var ia = C.idx[e.from], ib = C.idx[e.to], pa = scene.parts[ia], pb = scene.parts[ib];
+            var ba = C.box[ia] || plannedBox(pa), bb = C.box[ib] || plannedBox(pb), sa = parts[ia], sb = parts[ib];
+            var ca = [0, 1, 2].map(function (k) { return pa.pos[k] + [sa.dx, sa.dy, sa.dz][k] + (ba.lo[k] + ba.hi[k]) / 2; });
+            var cb = [0, 1, 2].map(function (k) { return pb.pos[k] + [sb.dx, sb.dy, sb.dz][k] + (bb.lo[k] + bb.hi[k]) / 2; });
+            var dir = [0, 1, 2].map(function (k) { return cb[k] - ca[k]; }), len = Math.sqrt(dir[0] * dir[0] + dir[1] * dir[1] + dir[2] * dir[2]) || 1;
+            dir = dir.map(function (x) { return x / len; });
+            var ha = [0, 1, 2].map(function (k) { return (ba.hi[k] - ba.lo[k]) / 2; }), hb = [0, 1, 2].map(function (k) { return (bb.hi[k] - bb.lo[k]) / 2; });
+            var ra = exitDistance(ha, dir), rb = exitDistance(hb, dir);
+            a0 = [0, 1, 2].map(function (k) { return ca[k] + dir[k] * ra * 0.85; });
+            b0 = [0, 1, 2].map(function (k) { return cb[k] - dir[k] * rb * 0.85; });
+            var small = Math.min(2 * Math.min(ha[0], ha[1], ha[2]), 2 * Math.min(hb[0], hb[1], hb[2]));
+            size = Math.max(0.03, Math.min(0.3, 0.12 * small));
+            spread = 0.2 * small;
+            streams.push({ from: a0, to: b0, a: e.from, b: e.to, size: size });
+        }
         for (var j = 0; j < n; j++) {
             var s = ((t - e.t0) * 0.22 + j / n) % 1;
-            drops.push({ x: lerp(path[0][0], path[1][0], s) + 0, y: lerp(path[0][1], path[1][1], s) + ((j % 5) - 2) * 0.13, z: lerp(path[0][2], path[1][2], s) + (((j * 7) % 5) - 2) * 0.13,
-                         s: 0.0024 * fade, r: e.color[0] / 255, g: e.color[1] / 255, b: e.color[2] / 255 });
+            drops.push({ x: lerp(a0[0], b0[0], s), y: lerp(a0[1], b0[1], s) + ((j % 5) - 2) * 0.5 * spread, z: lerp(a0[2], b0[2], s) + (((j * 7) % 5) - 2) * 0.5 * spread,
+                         s: size / 100 * fade, r: e.color[0] / 255, g: e.color[1] / 255, b: e.color[2] / 255 });
         }
     });
 
-    var rings = [], pu = C.pulse;
-    if (pu && !(C.finale && t >= C.finale.t0)) {            // the ripples stop when the finale begins
-        var src = scene.parts[C.idx[pu.source]], first = Math.max(0, Math.floor((t - pu.t0 - WAVE_LIFE) / WAVE_EVERY)), last = Math.floor((t - pu.t0) / WAVE_EVERY);
+    var rings = [];
+    ev.pulse.forEach(function (pu, n) {
+        if (C.finale && t >= C.finale.t0) return;            // the ripples stop when the finale begins
+        var burst = pu.t1 !== undefined;
+        if (!burst && n > 0) return;                         // a signal lesson has one sender
+        var si = C.idx[pu.source], src = scene.parts[si], ps = parts[si];
+        var life = burst ? 1.6 : WAVE_LIFE, every = burst ? 0.5 : WAVE_EVERY, bx = C.box[si] || plannedBox(src);
+        var size = Math.max(bx.hi[0] - bx.lo[0], bx.hi[1] - bx.lo[1], bx.hi[2] - bx.lo[2]);
+        var until = burst ? Math.min(t, pu.t1 - life) : t;
+        var first = Math.max(0, Math.floor((t - pu.t0 - life) / every)), last = Math.floor((until - pu.t0) / every);
         for (var n2 = first; n2 <= last; n2++) {
-            var age = t - pu.t0 - n2 * WAVE_EVERY;
-            if (age < 0 || age > WAVE_LIFE) continue;
-            rings.push({ x: src.pos[0], y: 0.08, z: src.pos[2], radius: 0.3 + WAVE_SPEED * age, a: Math.pow(1 - age / WAVE_LIFE, 1.3) * 0.8 });
+            var age = t - pu.t0 - n2 * every;
+            if (age < 0 || age > life) continue;
+            if (burst)        // small rings around the part itself, where it is now
+                rings.push({ x: src.pos[0] + ps.dx, y: src.pos[1] + ps.dy, z: src.pos[2] + ps.dz, radius: size * (0.4 + 1.1 * age / life), a: Math.pow(1 - age / life, 1.3) * 0.8 });
+            else
+                rings.push({ x: src.pos[0], y: 0.08, z: src.pos[2], radius: 0.3 + WAVE_SPEED * age, a: Math.pow(1 - age / WAVE_LIFE, 1.3) * 0.8 });
         }
-    }
+    });
+    var pu = C.pulse;
 
     var bars = C.bars.map(function (b) {
         var p = scene.parts[b.part], s = parts[b.part], h = 0.1 + 0.09 * b.k;
@@ -151,7 +207,7 @@ function state(C, t) {
     var b2 = cams[i], a2 = cams[Math.max(0, i - 1)], u2 = ramp((t - b2.t) / 1.8);
     var cam = { target: [0, 1, 2].map(function (k) { return lerp(a2.target[k], b2.target[k], u2); }), dist: lerp(a2.dist, b2.dist, u2),
                 yaw: lerp(a2.yaw, b2.yaw, u2) + 2.5 * Math.sin(t * 0.17), pitch: lerp(a2.pitch, b2.pitch, u2) };
-    return { parts: parts, labels: labels, drops: drops, rings: rings, bars: bars, cam: cam, root: root, fx: fx, env: env };
+    return { parts: parts, labels: labels, drops: drops, streams: streams, rings: rings, bars: bars, cam: cam, root: root, fx: fx, env: env };
 }
 
 // ---- the finale ----
@@ -182,6 +238,48 @@ function finaleMotion(f, t) {
     else if (m === "drive") { out.d[1] += 0.04 * R * Math.sin(u * 11) * ramp(u / 0.8); out.rot = [0, 0, -2 * ramp(u / 1.2)]; }   // bouncing along, nose up
     else if (m === "sink") { out.rot = [0, 0, 7 * Math.sin(u * 1.4) * ramp(u / 0.6)]; out.alpha = 1 - ramp((p - 0.45) / 0.55); }  // swaying down, fading into the dark
     else if (m === "fly") out.rot = [0, 0, 14 * ramp(u / 1.5)];
+    return out;
+}
+
+// how far from the centre of a box with these half sizes the ray along `dir` leaves it
+function exitDistance(half, dir) {
+    var t = 1e9;
+    for (var k = 0; k < 3; k++) if (Math.abs(dir[k]) > 1e-6) t = Math.min(t, half[k] / Math.abs(dir[k]));
+    return t;
+}
+
+// Where a point of the scene appears in the picture, in pixels, for the camera the lesson describes (the orbit camera of Lesson3D.qml: it looks at `target` from `dist` away, turned
+// `yaw` about the vertical and raised `pitch`, with a 34 degree vertical field of view). Computed here from the same numbers that move the camera, so a label can never disagree
+// with the picture (Qt's own scene-to-screen mapping follows the camera by a frame).
+var FOV = 34;
+function project(cam, pt, width, height) {
+    var yaw = cam.yaw * Math.PI / 180, pitch = -cam.pitch * Math.PI / 180;
+    var vx = pt[0] - cam.target[0], vy = pt[1] - cam.target[1], vz = pt[2] - cam.target[2];
+    var x1 = vx * Math.cos(yaw) - vz * Math.sin(yaw), z1 = vx * Math.sin(yaw) + vz * Math.cos(yaw);
+    var y2 = vy * Math.cos(pitch) + z1 * Math.sin(pitch), z2 = -vy * Math.sin(pitch) + z1 * Math.cos(pitch);
+    var depth = cam.dist - z2;
+    if (depth <= 0.001) return null;
+    var t = Math.tan(FOV * Math.PI / 360), nx = x1 / depth / (t * width / height), ny = y2 / depth / t;
+    return { x: (nx * 0.5 + 0.5) * width, y: (0.5 - ny * 0.5) * height, depth: depth };
+}
+
+// Labels are a pill above a dot. Where pills would overlap on screen, the later one is lifted until it clears, and its leader line grows to match. Returns, for every label,
+// the pill's rectangle {x, y, w, h} in pixels and how far it was lifted. The pill is about 8 pixels per letter plus padding, 28 high, 52 above its dot.
+function spreadLabels(labels, cam, width, height) {
+    var out = [], placed = [];
+    labels.forEach(function (lb) {
+        var pt = project(cam, lb.at, width, height);
+        if (!pt) { out.push({ x: -1000, y: -1000, w: 0, h: 0, lift: 0 }); return; }
+        var w = String(lb.text).length * 8 + 24, h = 28, lift = 0, rect;
+        for (var tries = 0; tries < 12; tries++) {
+            rect = { x: pt.x - w / 2, y: pt.y - 52 - lift - h / 2, w: w, h: h, lift: lift };
+            var clash = placed.some(function (q) { return rect.x < q.x + q.w + 4 && q.x < rect.x + rect.w + 4 && rect.y < q.y + q.h + 4 && q.y < rect.y + rect.h + 4; });
+            if (!clash) break;
+            lift += h + 4;
+        }
+        placed.push(rect);
+        out.push(rect);
+    });
     return out;
 }
 

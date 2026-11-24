@@ -1,6 +1,9 @@
 #!/usr/bin/env python3
 """Build and play one lesson, from the outline to the last part. Started detached by the explain_in_3d tool (the agent's own process ends as soon as it has
-answered, so this cannot run inside it):   explain_run.py job.json    job = {"topic", "notes", "title", "address", "model"}
+answered, so this cannot run inside it):   explain_run.py job.json    job = {"topic", "notes", "title", "address", "model", "method"}
+
+  method "auto": a model sheet of the whole object first (one call, the lesson opens complete); if the topic is not an object, or the sheet cannot be made, the outline method below.
+  method "outline" (or no method):
 
   1. outline   (one model call: the steps, the narration, every part's brief and size)
   2. parts     (one call per part, in parallel; each geometry file is written the moment it is ready)
@@ -10,7 +13,7 @@ import json, os, re, shutil, subprocess, sys, threading, time
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from goop import private, say as goop_say  # noqa: E402
-from goop.explainer import build, planner, play  # noqa: E402
+from goop.explainer import build, codegen, planner, play  # noqa: E402
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 CTL = os.path.join(HERE, "..", "bin", "goopctl")
@@ -46,6 +49,37 @@ def prune():
             shutil.rmtree(path, ignore_errors=True) if os.path.isdir(path) else os.remove(path)
 
 
+def _stem(title):
+    slug = re.sub(r"[^a-z0-9]+", "_", title.lower()).strip("_")[:30] or "lesson"
+    return f"{slug}-{int(time.time())}"
+
+
+def sheet_lesson(job, run, address, t0):
+    """The model sheet method (docs/design/3d-model-sheet.md): one call draws the whole object, code builds and checks it, the lesson opens complete. True when it played;
+    False when the topic is not an object (the router said so) or the sheet could not be made, so the outline method should try."""
+    topic = job["topic"]
+    try:
+        story = planner.plan_sheet(topic, job.get("notes", ""), run)
+    except planner.NotAnObject as e:
+        log(f"router: not an object ({e}), using the outline method")
+        return False
+    except planner.PlanError as e:
+        log(f"model sheet failed ({str(e)[:160]}), using the outline method")
+        return False
+    log(f"model sheet ready after {time.time() - t0:.0f}s: {len(story['parts'])} components")
+    private.makedirs(SCENES)
+    prune()
+    scene_path = os.path.join(SCENES, _stem(story["title"]) + ".scene.json")
+    scene = build.build(story)
+    with private.open_file(scene_path) as f:
+        json.dump(scene, f, separators=(",", ":"))
+    play.stop()
+    play.launch_scene(scene_path, address)
+    log(f"lesson window opened after {time.time() - t0:.0f}s")
+    play.save(story)                                          # complete already: a sheet has no parts drawn later
+    return True
+
+
 def main(job_path):
     with open(job_path) as f:
         job = json.load(f)
@@ -54,7 +88,13 @@ def main(job_path):
     run = planner.claude_runner(model, job.get("outline_effort"))
     part_run = planner.claude_runner(model, job.get("part_effort"))
     t0 = time.time()
-    say(address, f"Okay, let me build a model of {topic}. Give me a few seconds.")
+    method = job.get("method", "outline")          # jobs from before the sheet method have no "method"
+    say(address, f"Okay, let me build a model of {topic}. " + ("This takes about a minute." if method == "auto" else "Give me a few seconds."))
+    sheet_run = planner.claude_runner(model, job.get("outline_effort"), timeout=planner.SHEET_TIMEOUT)
+    if method == "auto" and sheet_lesson(job, sheet_run, address, t0):
+        return
+    if method == "auto" and not codegen.available():
+        return tell(address, "Sorry, I can only show that one with the deno runtime installed (sudo pacman -S deno).")
     try:
         story = planner.plan_outline(topic, job.get("notes", ""), run, title=job.get("title", ""))
     except planner.PlanError as e:
@@ -63,8 +103,7 @@ def main(job_path):
 
     private.makedirs(SCENES)
     prune()
-    slug = re.sub(r"[^a-z0-9]+", "_", story["title"].lower()).strip("_")[:30] or "lesson"
-    stem = f"{slug}-{int(time.time())}"
+    stem = _stem(story["title"])
     parts_dir, scene_path = os.path.join(SCENES, stem + ".parts"), os.path.join(SCENES, stem + ".scene.json")
     planner.write_pending(parts_dir, story)
     scene = build.build(story, parts_dir=parts_dir)
@@ -94,7 +133,7 @@ def main(job_path):
     log(f"all parts done after {time.time() - t0:.0f}s ({sum(1 for r in results.values() if not r['ok'])} stand-ins)")
     if results:
         play.save(planner.full_story(story, results))            # so the lesson can be replayed later without the model
-    failed = [p["label"] for p in story["parts"] if not results.get(p["id"], {}).get("ok")]
+    failed = [p["label"] for p in story["parts"] if p.get("kind") == "code" and not results.get(p["id"], {}).get("ok")]
     if failed:
         log("stand-ins used for: " + ", ".join(failed))
 
