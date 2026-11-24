@@ -90,7 +90,8 @@ def main(job_path):
     t0 = time.time()
     method = job.get("method", "outline")          # jobs from before the sheet method have no "method"
     say(address, f"Okay, let me build a model of {topic}. " + ("This takes about a minute." if method == "auto" else "Give me a few seconds."))
-    if method == "auto" and sheet_lesson(job, run, address, t0):
+    sheet_run = planner.claude_runner(model, job.get("outline_effort"), timeout=planner.SHEET_TIMEOUT)
+    if method == "auto" and sheet_lesson(job, sheet_run, address, t0):
         return
     if method == "auto" and not codegen.available():
         return tell(address, "Sorry, I can only show that one with the deno runtime installed (sudo pacman -S deno).")

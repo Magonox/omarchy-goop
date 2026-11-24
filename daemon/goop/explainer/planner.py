@@ -15,6 +15,7 @@ from . import blueprint, build, codegen, validate, vocab
 
 REPAIRS = 2
 TIMEOUT = 150
+SHEET_TIMEOUT = 420         # a model sheet is one long answer (a crane, an engine, a bicycle run to 8,000 tokens and more); a part's code is short
 WORKERS = 8
 RUN_DIR = os.path.expanduser("~/.cache/goop/run")
 
@@ -425,7 +426,7 @@ def full_story(story, results):
 
 # ---- the model call ----
 
-def claude_runner(model="opus", effort=None):
+def claude_runner(model="opus", effort=None, timeout=None):
     """The default model call: the claude CLI with no tools, no MCP servers and no user settings (a bare call, a fraction of a cent of input).
     `effort` (low/medium/high) sets how much the model thinks first: low writes a part about 2.7x faster than the default with no visible loss."""
     if not shutil.which("claude"):
@@ -436,9 +437,9 @@ def claude_runner(model="opus", effort=None):
         cmd = ["claude", "-p", "--model", model, "--output-format", "json", "--tools", "", "--no-session-persistence",
                "--strict-mcp-config", "--setting-sources", "", "--system-prompt", system] + (["--effort", effort] if effort else [])
         try:
-            r = subprocess.run(cmd, input=prompt, capture_output=True, text=True, timeout=TIMEOUT, cwd=RUN_DIR)
+            r = subprocess.run(cmd, input=prompt, capture_output=True, text=True, timeout=timeout or TIMEOUT, cwd=RUN_DIR)
         except subprocess.TimeoutExpired:
-            raise PlanError(f"the model took longer than {TIMEOUT}s")
+            raise PlanError(f"the model took longer than {timeout or TIMEOUT}s")
         try:
             d = json.loads(r.stdout)
         except ValueError:

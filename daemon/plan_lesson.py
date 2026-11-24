@@ -28,7 +28,7 @@ def main():
     ap.add_argument("--no-refit", action="store_true", help="skip laying the lesson out again with the sizes the parts really came out at")
     a = ap.parse_args()
     notes = open(a.notes_file).read() if a.notes_file else a.notes
-    run, part_run, t0 = planner.claude_runner(a.model, a.outline_effort), planner.claude_runner(a.model, a.part_effort), time.time()
+    run, part_run, t0 = planner.claude_runner(a.model, a.outline_effort, timeout=planner.SHEET_TIMEOUT if a.sheet else None), planner.claude_runner(a.model, a.part_effort), time.time()
     if a.sheet:
         try:
             story = planner.plan_sheet(a.topic, notes, run)

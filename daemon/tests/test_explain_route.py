@@ -89,6 +89,23 @@ class Route(unittest.TestCase):
         self.assertIn('"route":"diagram"', planner.sheet_system())
 
 
+class Timeout(unittest.TestCase):
+    def test_a_sheet_gets_longer_than_a_part_to_be_written(self):
+        seen = []
+
+        def fake_run(cmd, **kw):
+            seen.append(kw["timeout"])
+            class R:
+                stdout, stderr = json.dumps({"result": "{}", "is_error": False}), ""
+            return R()
+        with mock.patch.object(planner.shutil, "which", return_value="/usr/bin/claude"), mock.patch.object(planner.subprocess, "run", side_effect=fake_run), \
+                mock.patch.object(planner.private, "makedirs"):
+            planner.claude_runner("opus", None)("s", "p")
+            planner.claude_runner("opus", None, timeout=planner.SHEET_TIMEOUT)("s", "p")
+        self.assertEqual(seen, [planner.TIMEOUT, planner.SHEET_TIMEOUT])
+        self.assertGreater(planner.SHEET_TIMEOUT, 2 * planner.TIMEOUT)
+
+
 class Tool(unittest.TestCase):
     def spawned(self, cfg, deno=True):
         jobs = []
