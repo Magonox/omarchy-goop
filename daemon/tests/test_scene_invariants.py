@@ -79,6 +79,13 @@ class Helpers(unittest.TestCase):
         self.assertEqual(inv.spin_axis_matches_geometry(scene([0, 0, 1])), [])
         self.assertEqual(len(inv.spin_axis_matches_geometry(scene([0, 1, 0]))), 1)
 
+    def test_a_part_orbiting_a_distant_pivot_is_not_a_disc_on_its_own_axle(self):
+        pedal = part("pedal", (0.4, 0.12, 0.43), spin_axis=[0, 0, 1], spin_pivot=[0.0, 0.9, 0.0])         # a pedal turns with the crank about the bottom bracket
+        scene = {"parts": [pedal], "events": [{"type": "spin", "parts": ["pedal"]}]}
+        self.assertEqual(inv.spin_axis_matches_geometry(scene), [])
+        pedal["spin_pivot"] = [0.0, 0.0, 0.0]                                                            # the same box turning about its own centre is a disc, and wrong
+        self.assertEqual(len(inv.spin_axis_matches_geometry(scene)), 1)
+
     def test_parts_pulled_apart_by_a_fixed_distance_are_reported(self):
         near = {"bounds": {"radius": 10}, "parts": [part("a", (1, 1, 1), explode=[1, 0, 0]), part("b", (1, 1, 1), explode=[0, 2, 0])]}
         far = {"bounds": {"radius": 10}, "parts": [part("a", (1, 1, 1), explode=[4, 0, 0]), part("b", (1, 1, 1), explode=[0, 5, 0])]}

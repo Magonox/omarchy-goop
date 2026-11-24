@@ -365,6 +365,9 @@ def spin_axis_matches_geometry(scene):
         if not box:
             continue
         ext = extent(box)
+        offset = math.sqrt(sum(v * v for v in (p.get("spin_pivot") or [0, 0, 0])))
+        if offset > 0.5 * max(ext):                    # it turns about a point well away from itself (a pedal on a crank): it orbits, it is not a disc on its own axle
+            continue
         order = sorted(range(3), key=lambda a: ext[a])
         thin, mid, wide = order
         if ext[wide] > 0 and ext[mid] >= 0.75 * ext[wide] and ext[thin] < 0.6 * ext[wide]:        # a disc: two long sides alike, one short
