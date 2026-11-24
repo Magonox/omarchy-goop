@@ -12,3 +12,5 @@ Thanks for helping. The short version:
 Changes that touch `setup.sh`, `bin/goop-install-pagereader`, `browser/pagereader/`, the 3D code sandbox (`daemon/goop/explainer/codegen.py`), or anything that sends data off the machine get a closer look. Please explain them clearly.
 
 See [`docs/DEVELOPMENT.md`](docs/DEVELOPMENT.md) for the dev loop.
+
+Found a security problem? Please report it privately, see [`SECURITY.md`](SECURITY.md). For other problems and ideas, the issue templates ask for what helps most (the setup check output and, for a 3D lesson, the topic).

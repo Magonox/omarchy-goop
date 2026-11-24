@@ -1,0 +1,20 @@
+name: Idea or feature request
+description: Something Goop could do, or a kind of thing it should be able to explain in 3D
+labels: ["enhancement"]
+body:
+  - type: textarea
+    id: idea
+    attributes:
+      label: What would you like Goop to do
+      description: Describe the situation first (what you were doing, what was in the window), then what you would want to happen.
+    validations:
+      required: true
+  - type: input
+    id: topic
+    attributes:
+      label: If it is a 3D lesson, the topic
+      description: "For example: how a camera lens focuses, how a lock works. Say what a good lesson would show, and what you would expect to move."
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Anything you tried instead
