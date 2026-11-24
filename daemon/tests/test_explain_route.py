@@ -26,13 +26,14 @@ class Runner:
         return self.sheet
 
 
-def run_job(job, runner, outline_error=True):
+def run_job(job, runner, deno=True):
     with tempfile.TemporaryDirectory() as d, \
             mock.patch.object(explain_run, "SCENES", d), mock.patch.object(explain_run, "LOG", os.path.join(d, "log")), \
             mock.patch.object(explain_run.planner, "claude_runner", return_value=runner), \
             mock.patch.object(explain_run, "say"), mock.patch.object(explain_run, "tell") as tell, \
             mock.patch.object(explain_run.play, "stop"), mock.patch.object(explain_run.play, "launch_scene") as launch, \
             mock.patch.object(explain_run.play, "save") as save, \
+            mock.patch.object(explain_run.codegen, "available", return_value=deno), \
             mock.patch.object(explain_run.planner, "plan_outline", side_effect=planner.PlanError("outline tried")) as outline:
         path = os.path.join(d, "job.json")
         with open(path, "w") as f:
@@ -65,6 +66,13 @@ class Route(unittest.TestCase):
         r = run_job({"topic": "how a toaster works", "address": "0xabc", "method": "auto"}, runner)
         self.assertEqual(runner.calls, planner.REPAIRS + 1)
         r["outline"].assert_called_once()
+
+    def test_without_deno_a_topic_for_the_outline_method_is_explained_not_attempted(self):
+        runner = Runner(json.dumps({"route": "diagram", "why": "wifi is signals"}))
+        r = run_job({"topic": "how wifi works", "address": "0xabc", "method": "auto"}, runner, deno=False)
+        r["outline"].assert_not_called()
+        r["tell"].assert_called_once()
+        self.assertIn("deno", r["tell"].call_args.args[1])
 
     def test_the_outline_method_never_draws_a_sheet(self):
         with mock.patch.object(explain_run.planner, "plan_sheet", side_effect=AssertionError("no sheet in outline mode")):
